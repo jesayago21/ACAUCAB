@@ -47,7 +47,9 @@ CREATE TABLE presentacion (
     cantidad_unidades INT NOT NULL,
     fk_cerveza INT NOT NULL,
     CONSTRAINT pk_presentacion PRIMARY KEY (clave),
-    CONSTRAINT fk_cerveza_presentacion FOREIGN KEY (fk_cerveza) REFERENCES cerveza(clave) 
+    CONSTRAINT fk_cerveza_presentacion FOREIGN KEY (fk_cerveza) REFERENCES cerveza(clave), 
+    CONSTRAINT chk_ean_13 CHECK (EAN_13 > 0 AND EAN_13 < 10000000000000),
+    CONSTRAINT chk_cantidad_unidades CHECK (cantidad_unidades > 0)
 );
 
 CREATE TABLE oferta (
@@ -461,9 +463,8 @@ CREATE TABLE metodo_de_pago (
          valor IS NULL AND
          numero_cheque IS NULL)
         OR
-        -- Esta es la parte para 'Puntos' que asegura que todos los demás campos específicos son NULL
         (tipo = 'Puntos' AND
-         valor IS NULL AND -- Asumo que 'valor' también debe ser NULL para puntos, si no, ajusta esta línea
+         valor IS NULL AND
          numero_cheque IS NULL AND
          numero_tarjeta IS NULL AND
          fecha_vencimiento IS NULL AND
@@ -471,6 +472,7 @@ CREATE TABLE metodo_de_pago (
     )
 );
  ---faltan checks
+
 
 
 
