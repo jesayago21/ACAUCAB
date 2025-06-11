@@ -1,3 +1,7 @@
+/* Tablas creadas, cheqquear en:
+https://www.canva.com/design/DAGqE0e9XEM/PXLuCVMecbLF0AXxoVMUxw/edit?utm_content=DAGqE0e9XEM&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
+*/
+
 CREATE TABLE lugar (
     clave SERIAL,
     nombre VARCHAR (50) NOT NULL,
@@ -34,6 +38,29 @@ CREATE TABLE cerveza (
     CONSTRAINT fk_receta_cerveza FOREIGN KEY (fk_receta) REFERENCES receta(clave),
     CONSTRAINT fk_miembro_cerveza FOREIGN KEY (fk_miembro) REFERENCES miembro(rif),
     CONSTRAINT uq_cerveza UNIQUE (fk_receta)
+);
+
+CREATE TABLE presentacion (
+    clave SERIAL,
+    EAN_13 BIGINT NOT NULL,
+    nombre VARCHAR (50) NOT NULL,
+    cantidad_unidades INT NOT NULL,
+    fk_cerveza INT NOT NULL,
+    CONSTRAINT pk_presentacion PRIMARY KEY (clave),
+    CONSTRAINT fk_cerveza_presentacion FOREIGN KEY (fk_cerveza) REFERENCES cerveza(clave) 
+);
+
+CREATE TABLE oferta (
+    clave SERIAL,
+    porcentaje_descuento INT NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE NOT NULL, 
+    fk_presentacion INT NOT NULL,
+    CONSTRAINT pk_oferta1 PRIMARY KEY (clave),
+    CONSTRAINT pk_oferta2 PRIMARY KEY (fk_presentacion),
+    CONSTRAINT fk_presentacion_oferta FOREIGN KEY (fk_presentacion) REFERENCES presentacion(clave),
+    CONSTRAINT chk_fecha_oferta CHECK (fecha_inicio < fecha_fin),
+    CONSTRAINT chk_porcentaje_oferta CHECK (porcentaje_descuento > 0 AND porcentaje_descuento <= 100),
 );
 
 CREATE TABLE ingrediente (
@@ -351,7 +378,71 @@ CREATE TABLE rol_pri (
     CONSTRAINT fk_privilegio_rol_pri FOREIGN KEY (fk_privilegio) REFERENCES privilegio(clave)
 );
 
+CREATE TABLE inventario_evento (
+    clave SERIAL,
+    fk_presentacion INT NOT NULL,
+    fk_evento INT NOT NULL,
+    cantidad_unidades INT NOT NULL,
+    CONSTRAINT pk_inventario_evento PRIMARY KEY (clave, fk_presentacion, fk_evento),
+    CONSTRAINT fk_presentacion_inventario_evento FOREIGN KEY (fk_presentacion) REFERENCES presentacion(clave),
+    CONSTRAINT fk_evento_inventario_evento FOREIGN KEY (fk_evento) REFERENCES evento(clave)
+    CONSTRAINT chk_cantidad_unidades CHECK (cantidad_unidades >= 0);--permite que el stock se acabe
+);
 
+CREATE TABLE almacen (
+    fk_presentacion INT NOT NULL,
+    cantidad_unidades INT NOT NULL,
+    CONSTRAINT pk_almacen PRIMARY KEY (fk_presentacion),
+    CONSTRAINT fk_presentacion_almacen FOREIGN KEY (fk_presentacion) REFERENCES presentacion(clave),
+    CONSTRAINT chk_cantidad_unidades CHECK (cantidad_unidades > 0);--creo que no podia llegar a 0 jamas
+);
+
+CREATE TABLE detalle_compra (
+    clave SERIAL,
+    fk_almacen INT NOT NULL,
+    fk_compra INT NOT NULL,
+    cantidad INT NOT NULL,
+    precio_unitario INT NOT NULL,
+    CONSTRAINT pk_detalle_compra PRIMARY KEY (clave, fk_almacen, fk_compra),
+    CONSTRAINT fk_almacen_detalle_compra FOREIGN KEY (fk_almacen) REFERENCES almacen(clave),
+    CONSTRAINT fk_compra_detalle_compra FOREIGN KEY (fk_compra) REFERENCES compra(clave),
+    CONSTRAINT chk_cantidad CHECK (cantidad > 0),
+    CONSTRAINT chk_precio_unitario CHECK (precio_unitario > 0)
+);
+
+CREATE TYPE tipo_moneda AS ENUM (
+    'USD',
+    'EUR',
+    'VES'
+);
+
+CREATE TABLE metodo_de_pago (
+    clave SERIAL,
+    moneda tipo_moneda NOT NULL,
+    metodo_preferido BOOLEAN NOT NULL DEFAULT FALSE,
+    fk_usuario INT,
+    valor INT,
+    numero_cheque INT,
+    fecha_vencimiento DATE,
+    banco VARCHAR(50),
+    tipo VARCHAR(50) NOT NULL,
+    CONSTRAINT pk_metodo_de_pago PRIMARY KEY (clave),
+    CONSTRAINT fk_usuario_metodo_de_pago FOREIGN KEY (fk_usuario) REFERENCES usuario(clave)
+    ---faltan checks
+);
+
+
+
+
+
+
+
+
+
+
+
+
+--FALTA POR CREAR ARRIBA CLIENTE OJO
 CREATE TABLE usuario (
     clave SERIAL,
     username VARCHAR (50) NOT NULL,
@@ -365,4 +456,16 @@ CREATE TABLE usuario (
     CONSTRAINT fk_empleado_usuario FOREIGN KEY (fk_empleado) REFERENCES empleado(ci),
     CONSTRAINT fk_cliente_usuario FOREIGN KEY (fk_cliente) REFERENCES cliente(clave),
     CONSTRAINT fk_miembro_usuario FOREIGN KEY (fk_miembro) REFERENCES miembro(rif)
+    -- Restricción de Arco (Exclusión Mutua)
+    CONSTRAINT arco_usuario CHECK (
+        (CASE WHEN fk_empleado IS NOT NULL THEN 1 ELSE 0 END) +
+        (CASE WHEN fk_miembro IS NOT NULL THEN 1 ELSE 0 END) +
+        (CASE WHEN fk_cliente IS NOT NULL THEN 1 ELSE 0 END)
+        = 1
+    )
 );
+
+
+
+
+
