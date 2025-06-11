@@ -416,6 +416,14 @@ CREATE TYPE tipo_moneda AS ENUM (
     'VES'
 );
 
+CREATE TYPE tipo_metodo_pago AS ENUM (
+    'Efectivo',
+    'Cheque',
+    'Tarjeta de credito',
+    'Tarjeta de debito',
+    'Puntos'
+);
+
 CREATE TABLE metodo_de_pago (
     clave SERIAL,
     moneda tipo_moneda NOT NULL,
@@ -425,11 +433,44 @@ CREATE TABLE metodo_de_pago (
     numero_cheque INT,
     fecha_vencimiento DATE,
     banco VARCHAR(50),
-    tipo VARCHAR(50) NOT NULL,
+    tipo tipo_metodo_pago NOT NULL,
     CONSTRAINT pk_metodo_de_pago PRIMARY KEY (clave),
-    CONSTRAINT fk_usuario_metodo_de_pago FOREIGN KEY (fk_usuario) REFERENCES usuario(clave)
-    ---faltan checks
+    CONSTRAINT fk_usuario_metodo_de_pago FOREIGN KEY (fk_usuario) REFERENCES usuario(clave),
+    CONSTRAINT chk_metodo_preferido CHECK ((metodo_preferido = FALSE AND fk_usuario IS NULL) OR (metodo_preferido = TRUE AND fk_usuario IS NOT NULL AND tipo = 'Tarjeta de credito')),
+    
+    CONSTRAINT chk_tipo_metodo_de_pago CHECK (
+        (tipo = 'Efectivo' AND
+         valor IS NOT NULL AND
+         valor > 0 AND
+         numero_cheque IS NULL AND
+         numero_tarjeta IS NULL AND
+         fecha_vencimiento IS NULL AND
+         banco IS NULL)
+        OR
+        (tipo = 'Cheque' AND
+         numero_cheque IS NOT NULL AND
+         banco IS NOT NULL AND
+         valor IS NULL AND
+         numero_tarjeta IS NULL AND
+         fecha_vencimiento IS NULL)
+        OR
+        (tipo IN ('Tarjeta de credito', 'Tarjeta de debito') AND
+         numero_tarjeta IS NOT NULL AND
+         fecha_vencimiento IS NOT NULL AND
+         banco IS NOT NULL AND
+         valor IS NULL AND
+         numero_cheque IS NULL)
+        OR
+        -- Esta es la parte para 'Puntos' que asegura que todos los demás campos específicos son NULL
+        (tipo = 'Puntos' AND
+         valor IS NULL AND -- Asumo que 'valor' también debe ser NULL para puntos, si no, ajusta esta línea
+         numero_cheque IS NULL AND
+         numero_tarjeta IS NULL AND
+         fecha_vencimiento IS NULL AND
+         banco IS NULL)
+    )
 );
+ ---faltan checks
 
 
 
