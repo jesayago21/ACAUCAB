@@ -228,6 +228,16 @@ CREATE TABLE compra (
     CONSTRAINT fk_miembro_compra FOREIGN KEY (fk_miembro) REFERENCES miembro(rif)
 );
 
+CREATE TABLE asistencia (
+    clave SERIAL,
+    fecha_entrada TIMESTAMP NOT NULL,
+    fk_evento INT NOT NULL,
+    fk_cliente INT NOT NULL,
+    CONSTRAINT pk_asistencia PRIMARY KEY (clave, fk_evento, fk_cliente),
+    CONSTRAINT fk_evento_asistencia FOREIGN KEY (fk_evento) REFERENCES evento(clave),
+    CONSTRAINT fk_cliente_asistencia FOREIGN KEY (fk_cliente) REFERENCES cliente(clave)
+ );
+
 -- EMPLEADOS
 
 CREATE TABLE empleado (
@@ -387,7 +397,7 @@ CREATE TABLE inventario_evento (
     cantidad_unidades INT NOT NULL,
     CONSTRAINT pk_inventario_evento PRIMARY KEY (clave, fk_presentacion, fk_evento),
     CONSTRAINT fk_presentacion_inventario_evento FOREIGN KEY (fk_presentacion) REFERENCES presentacion(clave),
-    CONSTRAINT fk_evento_inventario_evento FOREIGN KEY (fk_evento) REFERENCES evento(clave)
+    CONSTRAINT fk_evento_inventario_evento FOREIGN KEY (fk_evento) REFERENCES evento(clave),
     CONSTRAINT chk_cantidad_unidades CHECK (cantidad_unidades >= 0);--permite que el stock se acabe
 );
 
@@ -396,7 +406,7 @@ CREATE TABLE almacen (
     cantidad_unidades INT NOT NULL,
     CONSTRAINT pk_almacen PRIMARY KEY (fk_presentacion),
     CONSTRAINT fk_presentacion_almacen FOREIGN KEY (fk_presentacion) REFERENCES presentacion(clave),
-    CONSTRAINT chk_cantidad_unidades CHECK (cantidad_unidades > 0);--creo que no podia llegar a 0 jamas
+    CONSTRAINT chk_cantidad_unidades CHECK (cantidad_unidades > 0)--creo que no podia llegar a 0 jamas
 );
 
 CREATE TABLE detalle_compra (
@@ -522,7 +532,6 @@ CREATE TABLE cliente (
     )
 
 );
-
 --FALTA POR CREAR ARRIBA CLIENTE OJO
 CREATE TABLE usuario (
     clave SERIAL,
@@ -536,7 +545,7 @@ CREATE TABLE usuario (
     CONSTRAINT fk_rol_usuario FOREIGN KEY (fk_rol) REFERENCES rol(clave),
     CONSTRAINT fk_empleado_usuario FOREIGN KEY (fk_empleado) REFERENCES empleado(ci),
     CONSTRAINT fk_cliente_usuario FOREIGN KEY (fk_cliente) REFERENCES cliente(clave),
-    CONSTRAINT fk_miembro_usuario FOREIGN KEY (fk_miembro) REFERENCES miembro(rif)
+    CONSTRAINT fk_miembro_usuario FOREIGN KEY (fk_miembro) REFERENCES miembro(rif),
     -- Restricción de Arco (Exclusión Mutua)
     CONSTRAINT arco_usuario CHECK (
         (CASE WHEN fk_empleado IS NOT NULL THEN 1 ELSE 0 END) +
@@ -558,6 +567,53 @@ CREATE TABLE inventario_tienda (
     CONSTRAINT fk_presentacion_inventario FOREIGN KEY (fk_presentacion) REFERENCES presentacion(clave),
     CONSTRAINT fk_tienda_fisica_inventario FOREIGN KEY (fk_tienda_fisica) REFERENCES tienda_fisica(clave)
 );
+--VENTAS
+CREATE TABLE venta_evento (
+    clave SERIAL,
+    fecha DATE NOT NULL,
+    monto_total INT NOT NULL,
+    fk_evento INT NOT NULL,
+    fk_cliente INT NOT NULL,
+    CONSTRAINT pk_venta_evento PRIMARY KEY (clave),
+    CONSTRAINT fk_evento_tienda_online FOREIGN KEY (fk_evento) REFERENCES evento(clave),
+    CONSTRAINT fk_cliente_tienda_online FOREIGN KEY (fk_cliente) REFERENCES cliente(clave)
+ );
+
+
+CREATE TABLE venta_entrada (
+    clave SERIAL,
+    fecha DATE NOT NULL,
+    monto_total INT NOT NULL,
+    fk_evento INT NOT NULL,
+    fk_cliente INT NOT NULL,
+    fk_usuario INT NOT NULL,
+    CONSTRAINT pk_venta_evento PRIMARY KEY (clave),
+    CONSTRAINT fk_evento_venta_entrada FOREIGN KEY (fk_evento) REFERENCES evento(clave),
+    CONSTRAINT fk_cliente_venta_entrada FOREIGN KEY (fk_cliente) REFERENCES cliente(clave),
+    CONSTRAINT fk_usuario_venta_entrada FOREIGN KEY (fk_usuario) REFERENCES usuario(clave),
+    -- Restricción de Arco (Exclusión Mutua)
+    CONSTRAINT arco_venta_entrada CHECK (
+        (CASE WHEN fk_usuario IS NOT NULL THEN 1 ELSE 0 END) +
+        (CASE WHEN fk_cliente IS NOT NULL THEN 1 ELSE 0 END)
+        = 1
+    )
+ );
+
+CREATE TABLE detalle_venta_evento (
+    clave SERIAL,
+    cantidad INT NOT NULL,
+    precio_unitario INT NOT NULL,
+    fk_venta_evento INT NOT NULL,
+    fk_inventario_evento INT NOT NULL,
+    fk_inventario_evento_2 INT NOT NULL,
+    fk_inventario_evento_3 INT NOT NULL,
+    CONSTRAINT pk_detalle_venta_evento PRIMARY KEY (clave, fk_venta_evento, fk_inventario_evento),
+    CONSTRAINT fk_inventario_evento_detalle_venta_evento FOREIGN KEY (fk_inventario_evento) REFERENCES inventario_evento(clave),
+    CONSTRAINT fk_inventario_evento_2_detalle_venta_evento FOREIGN KEY (fk_inventario_evento_2) REFERENCES inventario_evento(fk_evento),
+    CONSTRAINT fk_inventario_evento_3_detalle_venta_evento FOREIGN KEY (fk_inventario_evento_3) REFERENCES inventario_evento(fk_presentacion),
+    CONSTRAINT fk_venta_evento_detalle_venta_evento FOREIGN KEY (fk_venta_evento) REFERENCES venta_evento(clave)
+ );
+
 
 
 
