@@ -471,18 +471,14 @@ CREATE TABLE metodo_de_pago (
          banco IS NULL)
     )
 );
- ---faltan checks
-
-
-
-
-
-
-
-
-
-
-
+ 
+ CREATE TABLE tienda_online (
+    clave SERIAL,
+    nombre VARCHAR(50) NOT NULL,
+    url_web VARCHAR(100) NOT NULL,
+    CONSTRAINT pk_tienda_online PRIMARY KEY (clave),
+    CONSTRAINT chk_url_web CHECK (url_web LIKE 'http%://%')
+ );
 
 
 --FALTA POR CREAR ARRIBA CLIENTE OJO
