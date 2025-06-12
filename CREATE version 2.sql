@@ -480,6 +480,48 @@ CREATE TABLE metodo_de_pago (
     CONSTRAINT chk_url_web CHECK (url_web LIKE 'http%://%')
  );
 
+CREATE TYPE tipo_cliente AS ENUM ('Natural', 'Juridica');
+
+CREATE TABLE cliente (
+    clave SERIAL,
+    rif INT NOT NULL UNIQUE,
+    puntos_acumulados INT NOT NULL,
+    tipo tipo_cliente NOT NULL,
+    -- NATURAL
+    ci INT,
+    primer_nombre VARCHAR (50),
+    segundo_nombre VARCHAR (50),
+    primer_apellido VARCHAR (50),
+    segundo_apellido VARCHAR (50),
+    direccion_habitacion VARCHAR(255),
+    fk_direccion_habitacion INT,
+    -- JURIDICA
+    razon_social VARCHAR (50),
+    denominacion_comercial VARCHAR (50),
+    url_pagina_web VARCHAR (100),
+    capital_disponible INT,
+    direccion_fiscal VARCHAR (255),
+    direccion_fisica VARCHAR (255),
+    fk_direccion_fiscal INT,
+    fk_direccion_fisica INT,
+    -- CONSTRAINTS
+    CONSTRAINT pk_cliente PRIMARY KEY (clave),
+    CONSTRAINT fk_direccion_habitacion_cliente FOREIGN KEY (fk_direccion_habitacion) REFERENCES lugar(clave),
+    CONSTRAINT fk_direccion_fiscal_cliente FOREIGN KEY (fk_direccion_fiscal) REFERENCES lugar(clave),
+    CONSTRAINT fk_direccion_fisica_cliente FOREIGN KEY (fk_direccion_fisica) REFERENCES lugar(clave),
+    
+    CONSTRAINT chk_tipo_cliente_natural CHECK (
+        (tipo = 'Natural' AND ci IS NOT NULL AND primer_nombre IS NOT NULL AND primer_apellido IS NOT NULL AND direccion_habitacion IS NOT NULL AND fk_direccion_habitacion IS NOT NULL)
+        OR
+        (tipo <> 'Natural' AND ci IS NULL AND primer_nombre IS NULL AND primer_apellido IS NULL AND direccion_habitacion IS NULL AND fk_direccion_habitacion IS NULL)
+    ),
+    CONSTRAINT chk_tipo_cliente_juridico CHECK (
+        (tipo = 'Juridica' AND razon_social IS NOT NULL AND denominacion_comercial IS NOT NULL AND direccion_fiscal IS NOT NULL AND direccion_fisica IS NOT NULL AND fk_direccion_fiscal IS NOT NULL AND fk_direccion_fisica IS NOT NULL)
+        OR
+        (tipo <> 'Juridica' AND razon_social IS NULL AND denominacion_comercial IS NULL AND direccion_fiscal IS NULL AND direccion_fisica IS NULL AND fk_direccion_fiscal IS NULL AND fk_direccion_fisica IS NULL)
+    )
+
+);
 
 --FALTA POR CREAR ARRIBA CLIENTE OJO
 CREATE TABLE usuario (
@@ -504,7 +546,18 @@ CREATE TABLE usuario (
     )
 );
 
-
+CREATE TABLE inventario_tienda (
+    clave INT NOT NULL,
+    fk_lugar_tienda INT NOT NULL,
+    fk_presentacion INT NOT NULL,
+    fk_tienda_fisica INT NOT NULL,
+    cantidad INT NOT NULL,
+    CONSTRAINT pk_inventario_tienda PRIMARY KEY (clave),
+    CONSTRAINT unq_fk_presentacion_tienda_fisica UNIQUE (fk_presentacion, fk_tienda_fisica),
+    CONSTRAINT fk_lugar_tienda_inventario FOREIGN KEY (fk_lugar_tienda) REFERENCES lugar_tienda(clave),
+    CONSTRAINT fk_presentacion_inventario FOREIGN KEY (fk_presentacion) REFERENCES presentacion(clave),
+    CONSTRAINT fk_tienda_fisica_inventario FOREIGN KEY (fk_tienda_fisica) REFERENCES tienda_fisica(clave)
+);
 
 
 
