@@ -402,9 +402,10 @@ CREATE TABLE inventario_evento (
 );
 
 CREATE TABLE almacen (
+    clave SERIAL,
     fk_presentacion INT NOT NULL,
     cantidad_unidades INT NOT NULL,
-    CONSTRAINT pk_almacen PRIMARY KEY (fk_presentacion),
+    CONSTRAINT pk_almacen PRIMARY KEY (clave, fk_presentacion),
     CONSTRAINT fk_presentacion_almacen FOREIGN KEY (fk_presentacion) REFERENCES presentacion(clave),
     CONSTRAINT chk_cantidad_unidades CHECK (cantidad_unidades > 0)--creo que no podia llegar a 0 jamas
 );
@@ -480,6 +481,15 @@ CREATE TABLE metodo_de_pago (
          fecha_vencimiento IS NULL AND
          banco IS NULL)
     )
+);
+
+CREATE TABLE tasa_cambio (
+    clave SERIAL,
+    moneda tipo_moneda NOT NULL;
+    monto_equivalencia DECIMAL(10,2) NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE,
+    CONSTRAINT pk_tasa_cambio PRIMARY KEY (clave)
 );
  
  CREATE TABLE tienda_online (
@@ -627,7 +637,7 @@ CREATE TABLE detalle_venta_evento (
 CREATE TABLE venta_online (
     clave SERIAL,
     fecha DATE NOT NULL,
-    monto_total INT NOT NULL,--hay que hacer que permita decimales
+    monto_total DECIMAL(10,2) NOT NULL,
     direccion_envio VARCHAR(255) NOT NULL,
     fk_lugar INT NOT NULL,
     fk_tienda_online INT NOT NULL,
@@ -731,7 +741,7 @@ CREATE TABLE detalle_venta_online (
 CREATE TABLE venta_tienda_fisica (
     clave SERIAL,
     fecha DATE NOT NULL,
-    total_venta INT NOT NULL,--hay que hacer que permita decimales
+    total_venta DECIMAL(10,2) NOT NULL,
     fk_tienda_fisica INT NOT NULL,
     fk_cliente INT NOT NULL,
     CONSTRAINT pk_venta_tienda_fisica PRIMARY KEY (clave), 
@@ -740,9 +750,52 @@ CREATE TABLE venta_tienda_fisica (
     CONSTRAINT chk_total_venta CHECK (total_venta > 0)
 );
 
+CREATE TABLE detalle_venta_fisica (
+    clave SERIAL,
+    cantidad INT NOT NULL,
+    precio_unitario INT NOT NULL,
+    fk_venta_tienda_fisica INT NOT NULL,
+    fk_inventario_tienda1 INT NOT NULL,
+    fk_inventario_tienda2 INT NOT NULL,
+    CONSTRAINT pk_detalle_venta_online PRIMARY KEY (clave, fk_venta_online, fk_almacen),
+    CONSTRAINT fk_venta_tienda_fisica_detalle_venta_fisica FOREIGN KEY (fk_venta_tienda_fisica) REFERENCES venta_tienda_fisica(clave),
+    CONSTRAINT fk_inventario_tienda1_detalle_venta_fisica FOREIGN KEY (fk_inventario_tienda1) REFERENCES inventario_tienda(fk_presentacion),
+    CONSTRAINT fk_inventario_tienda2_detalle_venta_fisica FOREIGN KEY (fk_inventario_tienda2) REFERENCES inventario_tienda(fk_tienda_fisica),
+    CONSTRAINT chk_cantidad CHECK (cantidad > 0),
+    CONSTRAINT chk_precio_unitario CHECK (precio_unitario > 0)
+);
 
 
+CREATE TABLE pago (
+    clave SERIAL,
+    fecha_pago DATE NOT NULL,
+    monto_total DECIMAL(10,2) NOT NULL,
+    fk_tasa_cambio INT NOT NULL,
+    fk_metodo_de_pago INT NOT NULL,
 
+    fk_venta_tienda_fisica INT,
+    fk_venta_online INT,
+    fk_venta_evento INT,
+    fk_venta_entrada INT,
+    fk_cuota INT,
+    CONSTRAINT pk_pago PRIMARY KEY (clave),
+    CONSTRAINT fk_tasa_cambio_pago FOREIGN KEY (fk_tasa_cambio) REFERENCES tasa_cambio(clave),
+    CONSTRAINT fk_metodo_de_pago_pago FOREIGN KEY (fk_metodo_de_pago) REFERENCES metodo_de_pago(clave),
+    CONSTRAINT fk_venta_tienda_fisica_pago FOREIGN KEY (fk_venta_tienda_fisica) REFERENCES venta_tienda_fisica(clave),
+    CONSTRAINT fk_venta_online_pago FOREIGN KEY (fk_venta_online) REFERENCES venta_online(clave),
+    CONSTRAINT fk_venta_evento_pago FOREIGN KEY (fk_venta_evento) REFERENCES venta_evento(clave),
+    CONSTRAINT fk_venta_entrada_pago FOREIGN KEY (fk_venta_entrada) REFERENCES venta_entrada(clave),
+    CONSTRAINT fk_cuota_pago FOREIGN KEY (fk_cuota) REFERENCES cuota(clave),
+    --arco de pago
+    CONSTRAINT arco_pago CHECK (
+        (CASE WHEN fk_venta_tienda_fisica IS NOT NULL THEN 1 ELSE 0 END) +
+        (CASE WHEN fk_venta_online IS NOT NULL THEN 1 ELSE 0 END) +
+        (CASE WHEN fk_venta_evento IS NOT NULL THEN 1 ELSE 0 END) +
+        (CASE WHEN fk_venta_entrada IS NOT NULL THEN 1 ELSE 0 END) +
+        (CASE WHEN fk_cuota IS NOT NULL THEN 1 ELSE 0 END)
+        = 1
+    )
+);
 
 
 
