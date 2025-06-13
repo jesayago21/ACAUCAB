@@ -519,20 +519,30 @@ CREATE TABLE cliente (
     CONSTRAINT fk_direccion_habitacion_cliente FOREIGN KEY (fk_direccion_habitacion) REFERENCES lugar(clave),
     CONSTRAINT fk_direccion_fiscal_cliente FOREIGN KEY (fk_direccion_fiscal) REFERENCES lugar(clave),
     CONSTRAINT fk_direccion_fisica_cliente FOREIGN KEY (fk_direccion_fisica) REFERENCES lugar(clave),
-    
+    CONSTRAINT chk_rif CHECK (rif > 0 AND rif < 10000000000),
+    CONSTRAINT chk_puntos_acumulados CHECK (puntos_acumulados >= 0),
+    CONSTRAINT chk_capital_disponible CHECK (capital_disponible >= 0),
+    CONSTRAINT chk_url_pagina_web CHECK (url_pagina_web LIKE 'http%://%'),
+--ARCO DE TIPO DE CLIENTE
+    CONSTRAINT chk_tipo_cliente CHECK (
+        tipo IN ('Natural', 'Juridica')
+    ),
     CONSTRAINT chk_tipo_cliente_natural CHECK (
-        (tipo = 'Natural' AND ci IS NOT NULL AND primer_nombre IS NOT NULL AND primer_apellido IS NOT NULL AND direccion_habitacion IS NOT NULL AND fk_direccion_habitacion IS NOT NULL)
+        ((tipo = 'Natural' AND ci IS NOT NULL AND primer_nombre IS NOT NULL AND primer_apellido IS NOT NULL AND direccion_habitacion IS NOT NULL AND fk_direccion_habitacion IS NOT NULL)
+        AND (razon_social IS NULL AND denominacion_comercial IS NULL AND url_pagina_web IS NULL AND capital_disponible IS NULL AND direccion_fiscal IS NULL AND direccion_fisica IS NULL AND fk_direccion_fiscal IS NULL AND fk_direccion_fisica IS NULL))
         OR
-        (tipo <> 'Natural' AND ci IS NULL AND primer_nombre IS NULL AND primer_apellido IS NULL AND direccion_habitacion IS NULL AND fk_direccion_habitacion IS NULL)
+        (tipo <> 'Natural' AND ci IS NULL AND primer_nombre IS NULL AND primer_apellido IS NULL AND direccion_habitacion IS NULL AND fk_direccion_habitacion IS NULL)  
     ),
     CONSTRAINT chk_tipo_cliente_juridico CHECK (
-        (tipo = 'Juridica' AND razon_social IS NOT NULL AND denominacion_comercial IS NOT NULL AND direccion_fiscal IS NOT NULL AND direccion_fisica IS NOT NULL AND fk_direccion_fiscal IS NOT NULL AND fk_direccion_fisica IS NOT NULL)
+        ((tipo = 'Juridica' AND razon_social IS NOT NULL AND denominacion_comercial IS NOT NULL AND direccion_fiscal IS NOT NULL AND direccion_fisica IS NOT NULL AND fk_direccion_fiscal IS NOT NULL AND fk_direccion_fisica IS NOT NULL)
+        AND (ci IS NULL AND primer_nombre IS NULL AND primer_apellido IS NULL AND direccion_habitacion IS NULL AND fk_direccion_habitacion IS NULL))
         OR
         (tipo <> 'Juridica' AND razon_social IS NULL AND denominacion_comercial IS NULL AND direccion_fiscal IS NULL AND direccion_fisica IS NULL AND fk_direccion_fiscal IS NULL AND fk_direccion_fisica IS NULL)
     )
 
 );
---FALTA POR CREAR ARRIBA CLIENTE OJO
+
+
 CREATE TABLE usuario (
     clave SERIAL,
     username VARCHAR (50) NOT NULL,
@@ -613,6 +623,126 @@ CREATE TABLE detalle_venta_evento (
     CONSTRAINT fk_inventario_evento_3_detalle_venta_evento FOREIGN KEY (fk_inventario_evento_3) REFERENCES inventario_evento(fk_presentacion),
     CONSTRAINT fk_venta_evento_detalle_venta_evento FOREIGN KEY (fk_venta_evento) REFERENCES venta_evento(clave)
  );
+
+CREATE TABLE venta_online (
+    clave SERIAL,
+    fecha DATE NOT NULL,
+    monto_total INT NOT NULL,--hay que hacer que permita decimales
+    direccion_envio VARCHAR(255) NOT NULL,
+    fk_lugar INT NOT NULL,
+    fk_tienda_online INT NOT NULL,
+    fk_usuario INT NOT NULL,
+    CONSTRAINT pk_venta_online PRIMARY KEY (clave), 
+    CONSTRAINT fk_lugar_venta_online FOREIGN KEY (fk_lugar) REFERENCES lugar(clave),
+    CONSTRAINT fk_tienda_online_venta_online FOREIGN KEY (fk_tienda_online) REFERENCES tienda_online(clave),
+    CONSTRAINT fk_usuario_venta_online FOREIGN KEY (fk_usuario) REFERENCES usuario(clave)
+    CONSTRAINT chk_monto_total CHECK (monto_total > 0)
+);
+
+CREATE TABLE persona_contacto (
+    clave SERIAL,
+    primer_nombre VARCHAR(50) NOT NULL,
+    primer_apellido VARCHAR(50) NOT NULL,
+    fk_miembro INT NOT NULL,
+    fk_cliente_juridico INT NOT NULL,
+    CONSTRAINT pk_persona_contacto PRIMARY KEY (clave),
+    CONSTRAINT fk_miembro_persona_contacto FOREIGN KEY (fk_miembro) REFERENCES miembro(clave),
+    CONSTRAINT fk_cliente_juridico_persona_contacto FOREIGN KEY (fk_cliente_juridico) REFERENCES cliente(clave)--montar trigger de solo a tipo juridico
+    CONSTRAINT chk_primer_nombre CHECK (primer_nombre <> ''),
+    CONSTRAINT chk_primer_apellido CHECK (primer_apellido <> '')
+);
+
+CREATE TABLE telefono (
+    clave SERIAL,
+    codigo INT NOT NULL,
+    numero INT NOT NULL,
+    extension INT,
+    fk_empleado INT,
+    fk_cliente INT,
+    fk_miembro INT,
+    fk_persona_contacto INT,
+    CONSTRAINT pk_telefono PRIMARY KEY (clave),
+    CONSTRAINT fk_empleado_telefono FOREIGN KEY (fk_empleado) REFERENCES empleado(ci),
+    CONSTRAINT fk_cliente_telefono FOREIGN KEY (fk_cliente) REFERENCES cliente(clave),
+    CONSTRAINT fk_miembro_telefono FOREIGN KEY (fk_miembro) REFERENCES miembro(rif),
+    CONSTRAINT fk_persona_contacto_telefono FOREIGN KEY (fk_persona_contacto) REFERENCES persona_contacto(clave),
+    CONSTRAINT chk_codigo CHECK (codigo IN (0414,0416,0412,0424,0426)),
+    CONSTRAINT chk_numero CHECK (numero > 0 AND numero < 1000000),
+    CONSTRAINT chk_extension CHECK (extension > 0 AND extension =< 10)
+    --arco de telefono
+    CONSTRAINT arco_telefono CHECK (
+        (CASE WHEN fk_empleado IS NOT NULL THEN 1 ELSE 0 END) +
+        (CASE WHEN fk_cliente IS NOT NULL THEN 1 ELSE 0 END) +
+        (CASE WHEN fk_miembro IS NOT NULL THEN 1 ELSE 0 END) +
+        (CASE WHEN fk_persona_contacto IS NOT NULL THEN 1 ELSE 0 END)
+        = 1
+    )
+);
+
+CREATE TABLE correo_electronico (
+    clave SERIAL,
+    direccion_email VARCHAR(100) NOT NULL,
+    fk_cliente INT,
+    fk_miembro INT,
+    fk_persona_contacto INT,
+    CONSTRAINT pk_correo_electronico PRIMARY KEY (clave),
+    CONSTRAINT fk_cliente_correo_electronico FOREIGN KEY (fk_cliente) REFERENCES cliente(clave),
+    CONSTRAINT fk_miembro_correo_electronico FOREIGN KEY (fk_miembro) REFERENCES miembro(rif),
+    CONSTRAINT fk_persona_contacto_correo_electronico FOREIGN KEY (fk_persona_contacto) REFERENCES persona_contacto(clave),
+    CONSTRAINT chk_direccion_email CHECK (direccion_email LIKE '%@%')
+    --arco de correo electronico
+    CONSTRAINT arco_correo_electronico CHECK (
+        (CASE WHEN fk_cliente IS NOT NULL THEN 1 ELSE 0 END) +
+        (CASE WHEN fk_miembro IS NOT NULL THEN 1 ELSE 0 END) +
+        (CASE WHEN fk_persona_contacto IS NOT NULL THEN 1 ELSE 0 END)
+        = 1
+    )
+);
+
+CREATE TABLE reposicion (
+    clave SERIAL,
+    fk_almacen INT NOT NULL,
+    fk_inventario_tienda1 INT NOT NULL,
+    fk_inventario_tienda2 INT NOT NULL,
+    fk_usuario INT NOT NULL,
+    cantidad INT NOT NULL,
+    fecha DATE NOT NULL,
+    CONSTRAINT pk_reposicion PRIMARY KEY (clave, fk_almacen, fk_inventario_tienda1, fk_inventario_tienda2),
+    CONSTRAINT fk_almacen_reposicion FOREIGN KEY (fk_almacen) REFERENCES almacen(clave),
+    CONSTRAINT fk_inventario_tienda1_reposicion FOREIGN KEY (fk_inventario_tienda1) REFERENCES inventario_tienda(clave),
+    CONSTRAINT fk_inventario_tienda2_reposicion FOREIGN KEY (fk_inventario_tienda2) REFERENCES inventario_tienda(clave),
+    CONSTRAINT fk_usuario_reposicion FOREIGN KEY (fk_usuario) REFERENCES usuario(clave),
+    CONSTRAINT chk_cantidad CHECK (cantidad > 0)
+);
+
+CREATE TABLE detalle_venta_online (
+    clave SERIAL,
+    fk_venta_online INT NOT NULL,
+    fk_almacen INT NOT NULL,
+    cantidad INT NOT NULL,
+    precio_unitario INT NOT NULL,
+    CONSTRAINT pk_detalle_venta_online PRIMARY KEY (clave, fk_venta_online, fk_almacen),
+    CONSTRAINT fk_venta_online_detalle_venta_online FOREIGN KEY (fk_venta_online) REFERENCES venta_online(clave),
+    CONSTRAINT fk_almacen_detalle_venta_online FOREIGN KEY (fk_almacen) REFERENCES almacen(clave),
+    CONSTRAINT chk_cantidad CHECK (cantidad > 0),
+    CONSTRAINT chk_precio_unitario CHECK (precio_unitario > 0)
+);
+
+CREATE TABLE venta_tienda_fisica (
+    clave SERIAL,
+    fecha DATE NOT NULL,
+    total_venta INT NOT NULL,--hay que hacer que permita decimales
+    fk_tienda_fisica INT NOT NULL,
+    fk_cliente INT NOT NULL,
+    CONSTRAINT pk_venta_tienda_fisica PRIMARY KEY (clave), 
+    CONSTRAINT fk_tienda_fisica_venta_tienda_fisica FOREIGN KEY (fk_tienda_fisica) REFERENCES tienda_fisica(clave),
+    CONSTRAINT fk_cliente_venta_tienda_fisica FOREIGN KEY (fk_cliente) REFERENCES cliente(clave),
+    CONSTRAINT chk_total_venta CHECK (total_venta > 0)
+);
+
+
+
+
 
 
 
