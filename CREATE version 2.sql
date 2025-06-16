@@ -222,6 +222,7 @@ CREATE TABLE IF NOT EXISTS metodo_de_pago (
     numero_cheque INT,
     fecha_vencimiento DATE,
     banco VARCHAR(50),
+    numero_tarjeta BIGINT,
     tipo tipo_metodo_pago NOT NULL,
     CONSTRAINT pk_metodo_de_pago PRIMARY KEY (clave),
     CONSTRAINT fk_usuario_metodo_de_pago FOREIGN KEY (fk_usuario) REFERENCES usuario(clave),
@@ -320,7 +321,7 @@ CREATE TABLE IF NOT EXISTS departamento (
     fk_tienda_fisica INT NOT NULL,
     CONSTRAINT pk_departamento PRIMARY KEY (clave),
     CONSTRAINT fk_tienda_fisica_departamento FOREIGN KEY (fk_tienda_fisica) REFERENCES tienda_fisica(clave),
-    CONSTRAINT chk_nombre_departamento CHECK (tipo IN ('compras', 'ventas', 'entrega', 'despacho'))
+    CONSTRAINT chk_nombre_departamento CHECK (nombre IN ('compras', 'ventas', 'entrega', 'despacho'))
 );
 
 CREATE TABLE IF NOT EXISTS tienda_online (
@@ -374,7 +375,7 @@ CREATE TABLE IF NOT EXISTS persona_contacto (
     fk_miembro INT,
     fk_cliente INT,
     CONSTRAINT pk_persona_contacto PRIMARY KEY (clave),
-    CONSTRAINT fk_miembro_persona_contacto FOREIGN KEY (fk_miembro) REFERENCES miembro(clave),
+    CONSTRAINT fk_miembro_persona_contacto FOREIGN KEY (fk_miembro) REFERENCES miembro(rif),
     CONSTRAINT fk_cliente_persona_contacto FOREIGN KEY (fk_cliente) REFERENCES cliente(clave),--montar trigger de solo a tipo juridico
     CONSTRAINT chk_primer_nombre CHECK (primer_nombre <> ''),
     CONSTRAINT chk_primer_apellido CHECK (primer_apellido <> ''),
@@ -465,7 +466,7 @@ CREATE TABLE IF NOT EXISTS venta_entrada (
     fk_evento INT NOT NULL,
     fk_cliente INT,
     fk_usuario INT,
-    CONSTRAINT pk_venta_evento PRIMARY KEY (clave),
+    CONSTRAINT pk_venta_entrada PRIMARY KEY (clave),
     CONSTRAINT fk_evento_venta_entrada FOREIGN KEY (fk_evento) REFERENCES evento(clave),
     CONSTRAINT fk_cliente_venta_entrada FOREIGN KEY (fk_cliente) REFERENCES cliente(clave),
     CONSTRAINT fk_usuario_venta_entrada FOREIGN KEY (fk_usuario) REFERENCES usuario(clave),
@@ -497,11 +498,10 @@ CREATE TABLE IF NOT EXISTS oferta (
     fecha_inicio DATE NOT NULL,
     fecha_fin DATE NOT NULL, 
     fk_presentacion INT NOT NULL,
-    CONSTRAINT pk_oferta1 PRIMARY KEY (clave),
-    CONSTRAINT pk_oferta2 PRIMARY KEY (fk_presentacion),
+    CONSTRAINT pk_oferta PRIMARY KEY (clave, fk_presentacion),
     CONSTRAINT fk_presentacion_oferta FOREIGN KEY (fk_presentacion) REFERENCES presentacion(clave),
     CONSTRAINT chk_fecha_oferta CHECK (fecha_inicio < fecha_fin),
-    CONSTRAINT chk_porcentaje_oferta CHECK (porcentaje_descuento > 0 AND porcentaje_descuento < 100),
+    CONSTRAINT chk_porcentaje_oferta CHECK (porcentaje_descuento > 0 AND porcentaje_descuento < 100)
 );
 
 CREATE TABLE IF NOT EXISTS detalle_compra (
@@ -524,7 +524,7 @@ CREATE TABLE IF NOT EXISTS detalle_venta_fisica (
     precio_unitario INT NOT NULL,
     fk_venta_tienda_fisica INT NOT NULL,
     fk_inventario_tienda INT NOT NULL,
-    CONSTRAINT pk_detalle_venta_online PRIMARY KEY (clave),
+    CONSTRAINT pk_detalle_venta_fisica PRIMARY KEY (clave),
     CONSTRAINT fk_venta_tienda_fisica_detalle_venta_fisica FOREIGN KEY (fk_venta_tienda_fisica) REFERENCES venta_tienda_fisica(clave),
     CONSTRAINT fk_inventario_tienda_detalle_venta_fisica FOREIGN KEY (fk_inventario_tienda) REFERENCES inventario_tienda(clave),
     CONSTRAINT chk_cantidad CHECK (cantidad > 0),
@@ -555,13 +555,21 @@ CREATE TABLE IF NOT EXISTS detalle_venta_evento (
     CONSTRAINT fk_venta_evento_detalle_venta_evento FOREIGN KEY (fk_venta_evento) REFERENCES venta_evento(clave)
  );
 
+CREATE TABLE IF NOT EXISTS cuota (
+    clave SERIAL,
+    fecha DATE NOT NULL,
+    monto INT NOT NULL,
+    fk_miembro INT NOT NULL,
+    CONSTRAINT pk_cuota PRIMARY KEY (clave),
+    CONSTRAINT fk_miembro_cuota FOREIGN KEY (fk_miembro) REFERENCES miembro(rif)
+);
+
 CREATE TABLE IF NOT EXISTS pago (
     clave SERIAL,
     fecha_pago DATE NOT NULL,
     monto_total DECIMAL(10,2) NOT NULL,
     fk_tasa_cambio INT NOT NULL,
     fk_metodo_de_pago INT NOT NULL,
-
     fk_venta_tienda_fisica INT,
     fk_venta_online INT,
     fk_venta_evento INT,
@@ -614,14 +622,7 @@ CREATE TABLE IF NOT EXISTS vacacion (
     CONSTRAINT fk_contrato_vacacion FOREIGN KEY (fk_contrato) REFERENCES contrato(clave)
 );
 
-CREATE TABLE IF NOT EXISTS cuota (
-    clave SERIAL,
-    fecha DATE NOT NULL,
-    monto INT NOT NULL,
-    fk_miembro INT NOT NULL,
-    CONSTRAINT pk_cuota PRIMARY KEY (clave),
-    CONSTRAINT fk_miembro_cuota FOREIGN KEY (fk_miembro) REFERENCES miembro(rif)
-);
+
 
 CREATE TABLE IF NOT EXISTS reposicion (
     clave SERIAL,
@@ -740,7 +741,7 @@ CREATE TABLE IF NOT EXISTS car_cer (
 );
 
 CREATE TABLE IF NOT EXISTS historico (
-    clave SERIAL;
+    clave SERIAL,
     fecha_inicio DATE NOT NULL,
     fecha_fin DATE,
     comentario TEXT,
@@ -778,12 +779,12 @@ CREATE TABLE IF NOT EXISTS telefono ( --Los numeros deben ser unicos
     CONSTRAINT fk_empleado_telefono FOREIGN KEY (fk_empleado) REFERENCES empleado(ci),
     CONSTRAINT fk_cliente_telefono FOREIGN KEY (fk_cliente) REFERENCES cliente(clave),
     CONSTRAINT fk_miembro_telefono FOREIGN KEY (fk_miembro) REFERENCES miembro(rif),
-    CONSTRAINT unq_fk_persona_contacto UNIQUE (fk_persona_contacto),
+    CONSTRAINT unq_fk_persona_contacto_telefono UNIQUE (fk_persona_contacto),
     CONSTRAINT unq_codigo_numero UNIQUE (codigo,numero),
     CONSTRAINT fk_persona_contacto_telefono FOREIGN KEY (fk_persona_contacto) REFERENCES persona_contacto(clave),
     CONSTRAINT chk_codigo CHECK (codigo IN (0414,0416,0412,0424,0426)),
     CONSTRAINT chk_numero CHECK (numero > 0 AND numero < 1000000),
-    CONSTRAINT chk_extension CHECK (extension > 0 AND extension =< 10),
+    CONSTRAINT chk_extension CHECK (extension > 0 AND extension <= 10),
     --arco de telefono
     CONSTRAINT arco_telefono CHECK (
         (CASE WHEN fk_empleado IS NOT NULL THEN 1 ELSE 0 END) +
@@ -801,7 +802,7 @@ CREATE TABLE IF NOT EXISTS correo_electronico (
     fk_miembro INT,
     fk_persona_contacto INT,
     CONSTRAINT pk_correo_electronico PRIMARY KEY (clave),
-    CONSTRAINT unq_fk_persona_contacto UNIQUE (fk_persona_contacto),
+    CONSTRAINT unq_fk_persona_contacto_correo_electronico UNIQUE (fk_persona_contacto),
     CONSTRAINT unq_fk_cliente UNIQUE (fk_cliente),
     CONSTRAINT fk_cliente_correo_electronico FOREIGN KEY (fk_cliente) REFERENCES cliente(clave),
     CONSTRAINT fk_miembro_correo_electronico FOREIGN KEY (fk_miembro) REFERENCES miembro(rif),
