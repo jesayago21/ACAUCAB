@@ -27,9 +27,6 @@ Instrucciones:
 -- ========= INSERCIÓN DE TIPOS DE CERVEZA =========
 -- Nota: La clave 1 se usa como raíz para los tipos principales.
 
--- Nivel 0: Categoría Raíz
-INSERT INTO tipo_cerveza (clave, nombre, descripcion, historia, fk_tipo_cerveza, fk_receta) VALUES
-
 -- Nivel 1: Familias Principales (Lager y Ale)
 INSERT INTO tipo_cerveza (clave, nombre, descripcion, historia, fk_receta) VALUES
 (2, 'Lager', 'Cervezas de baja fermentación, con levaduras que actúan en la parte baja del fermentador a temperaturas bajas y por tiempos largos. Suelen ser de color claro y graduación moderada.', 'El término proviene del alemán "lagern" (almacenar), por el método de maduración en frío.', 1),
@@ -85,7 +82,7 @@ INSERT INTO tipo_cerveza (clave, nombre, descripcion, fk_tipo_cerveza, fk_receta
 INSERT INTO tipo_cerveza (clave, nombre, descripcion, fk_tipo_cerveza, fk_receta) VALUES
 (32, 'De Abadía', 'Estilo de cerveza belga fuerte, tradicionalmente elaborada en monasterios.', 16, 1),
 (33, 'Trapense', 'Cerveza elaborada en monasterios trapenses. Es una denominación de origen controlada.', 16, 1),
-(34, 'Ámbar Belga', 'Ale belga de color ámbar con notas frutales y especiadas.', 16, 1),
+(34, '�?mbar Belga', 'Ale belga de color ámbar con notas frutales y especiadas.', 16, 1),
 (35, 'Flamenca', 'Ale rojiza de Flandes, caracterizada por su acidez.', 16, 1),
 (36, 'Belgian Dubbel', 'Ale rojiza profunda, moderadamente fuerte, maltosa y compleja con notas a pasas y fruta seca.', 16, 1),
 (37, 'Belgian Golden Strong Ale', 'Ale dorada, compleja, efervescente y fuerte, con notas frutales y especiadas.', 16, 1),

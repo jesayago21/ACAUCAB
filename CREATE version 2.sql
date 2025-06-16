@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS receta (
     nombre VARCHAR (50) NOT NULL,
     descripcion TEXT NOT NULL,
     CONSTRAINT pk_receta PRIMARY KEY (clave)
+    
 );
 
 CREATE TABLE IF NOT EXISTS tipo_cerveza (
@@ -31,12 +32,12 @@ CREATE TABLE IF NOT EXISTS tipo_cerveza (
     nombre VARCHAR (50) NOT NULL,
     descripcion TEXT,
     historia TEXT,
-    fk_tipo_cerveza INT NOT NULL,
-    fk_receta INT NOT NULL,
+    fk_tipo_cerveza INT,
+    fk_receta INT,--opcional para las que estan as arriba en la relacion no necesiten una receta
     CONSTRAINT pk_tipo_cerveza PRIMARY KEY (clave),
     CONSTRAINT fk_tipo_cerveza_tipo_cerveza FOREIGN KEY (fk_tipo_cerveza) REFERENCES tipo_cerveza(clave),
-    CONSTRAINT fk_receta_tipo_cerveza FOREIGN KEY (fk_receta) REFERENCES receta(clave),
-    CONSTRAINT uq_tipo_cerveza UNIQUE (fk_receta)
+    CONSTRAINT fk_receta_tipo_cerveza FOREIGN KEY (fk_receta) REFERENCES receta(clave)
+   -- CONSTRAINT uq_tipo_cerveza UNIQUE (fk_receta)
 );
 
 CREATE TABLE IF NOT EXISTS caracteristica (
