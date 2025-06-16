@@ -18,6 +18,14 @@ CREATE TYPE tipo_metodo_pago AS ENUM (
 
 CREATE TYPE tipo_cliente AS ENUM ('natural', 'juridico');
 
+
+CREATE TABLE IF NOT EXISTS receta (
+    clave SERIAL,
+    nombre VARCHAR (50) NOT NULL,
+    descripcion TEXT NOT NULL,
+    CONSTRAINT pk_receta PRIMARY KEY (clave)
+);
+
 CREATE TABLE IF NOT EXISTS tipo_cerveza (
     clave SERIAL,
     nombre VARCHAR (50) NOT NULL,
@@ -61,7 +69,7 @@ CREATE TABLE IF NOT EXISTS cargo (
 CREATE TABLE IF NOT EXISTS rol (
     clave SERIAL,
     nombre VARCHAR (50) NOT NULL,
-    CONSTRAINT pk_nombre PRIMARY KEY (clave)
+    CONSTRAINT pk_rol PRIMARY KEY (clave)
 );
 
 CREATE TABLE IF NOT EXISTS privilegio (
@@ -69,16 +77,6 @@ CREATE TABLE IF NOT EXISTS privilegio (
     nombre VARCHAR (50) NOT NULL,
     descripcion TEXT,
     CONSTRAINT pk_nombre PRIMARY KEY (clave)
-);
-
-CREATE TABLE IF NOT EXISTS departamento (
-    clave SERIAL,
-    nombre VARCHAR(50) NOT NULL,
-    descripcion TEXT,
-    fk_tienda_fisica INT NOT NULL,
-    CONSTRAINT pk_departamento PRIMARY KEY (clave),
-    CONSTRAINT fk_tienda_fisica_departamento FOREIGN KEY (fk_tienda_fisica) REFERENCES tienda_fisica(clave),
-    CONSTRAINT chk_nombre_departamento CHECK (tipo IN ('compras', 'ventas', 'entrega', 'despacho'))
 );
 
 CREATE TABLE IF NOT EXISTS tipo_beneficio (
@@ -102,6 +100,117 @@ CREATE TABLE IF NOT EXISTS lugar (
     CONSTRAINT pk_lugar PRIMARY KEY (clave),
     CONSTRAINT fk_lugar_lugar FOREIGN KEY (fk_lugar) REFERENCES lugar(clave),
     CONSTRAINT chk_tipo_lugar CHECK (tipo IN ('estado', 'municipio', 'parroquia'))
+);
+
+CREATE TABLE IF NOT EXISTS estatus (   --REVISAR LOS ESTADOS DEL ESTATUS Y EL COÑAZO DE CHECKS
+    clave SERIAL,
+    estado VARCHAR(50) NOT NULL,
+    aplicable_a VARCHAR(50) NOT NULL,
+    CONSTRAINT pk_estatus PRIMARY KEY (clave),
+    CONSTRAINT chk_aplicable_a_estatus CHECK (aplicable_a IN ('compra', 'cuota', 'reposicion', 'venta online')) 
+);
+
+CREATE TABLE IF NOT EXISTS lugar_tienda (
+    clave SERIAL,
+    nombre VARCHAR(50) NOT NULL,
+    tipo VARCHAR(20) NOT NULL,
+    fk_lugar_tienda INT NOT NULL,
+    CONSTRAINT pk_lugar_tienda PRIMARY KEY (clave),
+    CONSTRAINT fk_lugar_tienda_lugar_tienda FOREIGN KEY (fk_lugar_tienda) REFERENCES lugar_tienda(clave),
+    CONSTRAINT chk_tipo_lugar_tienda CHECK (tipo IN ('zona', 'pasillo', 'anaquel'))
+);
+
+CREATE TABLE IF NOT EXISTS cliente (
+    clave SERIAL,
+    rif INT NOT NULL,
+    puntos_acumulados INT NOT NULL,
+    tipo tipo_cliente NOT NULL,
+    -- NATURAL
+    ci INT,
+    primer_nombre VARCHAR (50),
+    segundo_nombre VARCHAR (50),
+    primer_apellido VARCHAR (50),
+    segundo_apellido VARCHAR (50),
+    direccion_habitacion VARCHAR(255),
+    fk_direccion_habitacion INT,
+    -- JURIDICA
+    razon_social VARCHAR (50),
+    denominacion_comercial VARCHAR (50),
+    url_pagina_web VARCHAR (100),
+    capital_disponible INT,
+    direccion_fiscal VARCHAR (255),
+    direccion_fisica VARCHAR (255),
+    fk_direccion_fiscal INT,
+    fk_direccion_fisica INT,
+    -- CONSTRAINTS
+    CONSTRAINT pk_cliente PRIMARY KEY (clave),
+    CONSTRAINT fk_direccion_habitacion_cliente FOREIGN KEY (fk_direccion_habitacion) REFERENCES lugar(clave),
+    CONSTRAINT fk_direccion_fiscal_cliente FOREIGN KEY (fk_direccion_fiscal) REFERENCES lugar(clave),
+    CONSTRAINT fk_direccion_fisica_cliente FOREIGN KEY (fk_direccion_fisica) REFERENCES lugar(clave),
+    CONSTRAINT unq_rif_cliente UNIQUE (rif),
+    CONSTRAINT chk_rif CHECK (rif > 0 AND rif < 10000000000),
+    CONSTRAINT chk_puntos_acumulados CHECK (puntos_acumulados >= 0),
+    CONSTRAINT chk_capital_disponible CHECK (capital_disponible >= 0),
+    CONSTRAINT chk_url_pagina_web CHECK (url_pagina_web LIKE 'http%://%'),
+--ARCO DE TIPO DE CLIENT
+    CONSTRAINT chk_tipo_cliente CHECK (
+        tipo IN ('natural', 'juridico')
+    ),
+    CONSTRAINT chk_tipo_cliente_natural CHECK (
+        ((tipo = 'natural' AND ci IS NOT NULL AND primer_nombre IS NOT NULL AND primer_apellido IS NOT NULL AND direccion_habitacion IS NOT NULL AND fk_direccion_habitacion IS NOT NULL)
+        AND (razon_social IS NULL AND denominacion_comercial IS NULL AND url_pagina_web IS NULL AND capital_disponible IS NULL AND direccion_fiscal IS NULL AND direccion_fisica IS NULL AND fk_direccion_fiscal IS NULL AND fk_direccion_fisica IS NULL))  
+    ),
+    CONSTRAINT chk_tipo_cliente_juridico CHECK (
+        ((tipo = 'juridico' AND razon_social IS NOT NULL AND denominacion_comercial IS NOT NULL AND direccion_fiscal IS NOT NULL AND direccion_fisica IS NOT NULL AND fk_direccion_fiscal IS NOT NULL AND fk_direccion_fisica IS NOT NULL)
+        AND (ci IS NULL AND primer_nombre IS NULL AND primer_apellido IS NULL AND direccion_habitacion IS NULL AND fk_direccion_habitacion IS NULL))
+    )
+);
+
+CREATE TABLE IF NOT EXISTS empleado (
+    ci SERIAL,
+    primer_nombre VARCHAR (50) NOT NULL,
+    segundo_nombre VARCHAR (50),
+    primer_apellido VARCHAR (50) NOT NULL,
+    segundo_apellido VARCHAR (50),
+    fecha_nacimiento DATE NOT NULL,
+    descripcion TEXT,
+    CONSTRAINT pk_empleado PRIMARY KEY (ci)
+);
+
+CREATE TABLE IF NOT EXISTS miembro (
+    rif INT NOT NULL,
+    razon_social VARCHAR (50) NOT NULL,
+    denominacion_comercial VARCHAR (50),
+    direccion_fiscal VARCHAR (255) NOT NULL,
+    direccion_fisica VARCHAR (255) NOT NULL,
+    fecha_afiliacion DATE NOT NULL,
+    fk_lugar_1 INT NOT NULL,
+    fk_lugar_2 INT NOT NULL,
+    CONSTRAINT pk_miembro PRIMARY KEY (rif),
+    CONSTRAINT fk_lugar_miembro1 FOREIGN KEY (fk_lugar_1) REFERENCES lugar(clave),
+    CONSTRAINT fk_lugar_miembro2 FOREIGN KEY (fk_lugar_2) REFERENCES lugar(clave) 
+);
+
+CREATE TABLE IF NOT EXISTS usuario (
+    clave SERIAL,
+    username VARCHAR (50) NOT NULL,
+    contrasena VARCHAR (50) NOT NULL,
+    fk_rol INT NOT NULL,
+    fk_empleado INT,
+    fk_miembro INT,
+    fk_cliente INT,
+    CONSTRAINT pk_usuario PRIMARY KEY (clave),
+    CONSTRAINT fk_rol_usuario FOREIGN KEY (fk_rol) REFERENCES rol(clave),
+    CONSTRAINT fk_empleado_usuario FOREIGN KEY (fk_empleado) REFERENCES empleado(ci),
+    CONSTRAINT fk_cliente_usuario FOREIGN KEY (fk_cliente) REFERENCES cliente(clave),
+    CONSTRAINT fk_miembro_usuario FOREIGN KEY (fk_miembro) REFERENCES miembro(rif),
+    -- Restricción de Arco (Exclusión Mutua)
+    CONSTRAINT arco_usuario CHECK (
+        (CASE WHEN fk_empleado IS NOT NULL THEN 1 ELSE 0 END) +
+        (CASE WHEN fk_miembro IS NOT NULL THEN 1 ELSE 0 END) +
+        (CASE WHEN fk_cliente IS NOT NULL THEN 1 ELSE 0 END)
+        = 1
+    )
 );
 
 CREATE TABLE IF NOT EXISTS metodo_de_pago (
@@ -150,50 +259,9 @@ CREATE TABLE IF NOT EXISTS metodo_de_pago (
     )
 );
 
-CREATE TABLE IF NOT EXISTS estatus (   --REVISAR LOS ESTADOS DEL ESTATUS Y EL COÑAZO DE CHECKS
-    clave SERIAL,
-    estado VARCHAR(50) NOT NULL,
-    aplicable_a VARCHAR(50) NOT NULL,
-    fk_estatus INT NOT NULL,
-    CONSTRAINT pk_estatus PRIMARY KEY (clave),
-    CONSTRAINT chk_aplicable_a_estatus CHECK (aplicable_a IN ('compra', 'cuota', 'reposicion', 'venta online')) 
-);
-
-CREATE TABLE IF NOT EXISTS lugar_tienda (
-    clave SERIAL;
-    nombre VARCHAR(50) NOT NULL,
-    tipo VARCHAR(20) NOT NULL,
-    fk_lugar_tienda INT NOT,
-    CONSTRAINT pk_lugar_tienda PRIMARY KEY (clave),
-    CONSTRAINT fk_lugar_tienda_lugar_tienda FOREIGN KEY (fk_lugar_tienda) REFERENCES lugar_tienda(clave),
-    CONSTRAINT chk_tipo_lugar_tienda CHECK (tipo IN ('zona', 'pasillo', 'anaquel'))
-);
-
-CREATE TABLE IF NOT EXISTS usuario (
-    clave SERIAL,
-    username VARCHAR (50) NOT NULL,
-    contrasena VARCHAR (50) NOT NULL,
-    fk_rol INT NOT NULL,
-    fk_empleado INT,
-    fk_miembro INT,
-    fk_cliente INT,
-    CONSTRAINT pk_usuario PRIMARY KEY (clave),
-    CONSTRAINT fk_rol_usuario FOREIGN KEY (fk_rol) REFERENCES rol(clave),
-    CONSTRAINT fk_empleado_usuario FOREIGN KEY (fk_empleado) REFERENCES empleado(ci),
-    CONSTRAINT fk_cliente_usuario FOREIGN KEY (fk_cliente) REFERENCES cliente(clave),
-    CONSTRAINT fk_miembro_usuario FOREIGN KEY (fk_miembro) REFERENCES miembro(rif),
-    -- Restricción de Arco (Exclusión Mutua)
-    CONSTRAINT arco_usuario CHECK (
-        (CASE WHEN fk_empleado IS NOT NULL THEN 1 ELSE 0 END) +
-        (CASE WHEN fk_miembro IS NOT NULL THEN 1 ELSE 0 END) +
-        (CASE WHEN fk_cliente IS NOT NULL THEN 1 ELSE 0 END)
-        = 1
-    )
-);
-
 CREATE TABLE IF NOT EXISTS tasa_cambio (
     clave SERIAL,
-    moneda tipo_moneda NOT NULL;
+    moneda tipo_moneda NOT NULL,
     monto_equivalencia DECIMAL(10,2) NOT NULL,
     fecha_inicio DATE NOT NULL,
     fecha_fin DATE,
@@ -206,52 +274,6 @@ CREATE TABLE IF NOT EXISTS horario (
     fecha_hora_inicio TIMESTAMP NOT NULL,
     fecha_hora_fin TIMESTAMP NOT NULL,
     CONSTRAINT pk_horario PRIMARY KEY (clave)
-);
-
-CREATE TABLE IF NOT EXISTS cliente (
-    clave SERIAL,
-    rif INT NOT NULL,
-    puntos_acumulados INT NOT NULL,
-    tipo tipo_cliente NOT NULL,
-    -- NATURAL
-    ci INT,
-    primer_nombre VARCHAR (50),
-    segundo_nombre VARCHAR (50),
-    primer_apellido VARCHAR (50),
-    segundo_apellido VARCHAR (50),
-    direccion_habitacion VARCHAR(255),
-    fk_direccion_habitacion INT,
-    -- JURIDICA
-    razon_social VARCHAR (50),
-    denominacion_comercial VARCHAR (50),
-    url_pagina_web VARCHAR (100),
-    capital_disponible INT,
-    direccion_fiscal VARCHAR (255),
-    direccion_fisica VARCHAR (255),
-    fk_direccion_fiscal INT,
-    fk_direccion_fisica INT,
-    -- CONSTRAINTS
-    CONSTRAINT pk_cliente PRIMARY KEY (clave),
-    CONSTRAINT fk_direccion_habitacion_cliente FOREIGN KEY (fk_direccion_habitacion) REFERENCES lugar(clave),
-    CONSTRAINT fk_direccion_fiscal_cliente FOREIGN KEY (fk_direccion_fiscal) REFERENCES lugar(clave),
-    CONSTRAINT fk_direccion_fisica_cliente FOREIGN KEY (fk_direccion_fisica) REFERENCES lugar(clave),
-    CONSTRAINT unq_rif_cliente UNIQUE (rif),
-    CONSTRAINT chk_rif CHECK (rif > 0 AND rif < 10000000000),
-    CONSTRAINT chk_puntos_acumulados CHECK (puntos_acumulados >= 0),
-    CONSTRAINT chk_capital_disponible CHECK (capital_disponible >= 0),
-    CONSTRAINT chk_url_pagina_web CHECK (url_pagina_web LIKE 'http%://%'),
---ARCO DE TIPO DE CLIENT
-    CONSTRAINT chk_tipo_cliente CHECK (
-        tipo IN ('natural', 'juridico')
-    ),
-    CONSTRAINT chk_tipo_cliente_natural CHECK (
-        ((tipo = 'natural' AND ci IS NOT NULL AND primer_nombre IS NOT NULL AND primer_apellido IS NOT NULL AND direccion_habitacion IS NOT NULL AND fk_direccion_habitacion IS NOT NULL)
-        AND (razon_social IS NULL AND denominacion_comercial IS NULL AND url_pagina_web IS NULL AND capital_disponible IS NULL AND direccion_fiscal IS NULL AND direccion_fisica IS NULL AND fk_direccion_fiscal IS NULL AND fk_direccion_fisica IS NULL))  
-    ),
-    CONSTRAINT chk_tipo_cliente_juridico CHECK (
-        ((tipo = 'juridica' AND razon_social IS NOT NULL AND denominacion_comercial IS NOT NULL AND direccion_fiscal IS NOT NULL AND direccion_fisica IS NOT NULL AND fk_direccion_fiscal IS NOT NULL AND fk_direccion_fisica IS NOT NULL)
-        AND (ci IS NULL AND primer_nombre IS NULL AND primer_apellido IS NULL AND direccion_habitacion IS NULL AND fk_direccion_habitacion IS NULL))
-    )
 );
 
 CREATE TABLE IF NOT EXISTS cerveza (
@@ -268,16 +290,6 @@ CREATE TABLE IF NOT EXISTS cerveza (
     CONSTRAINT uq_cerveza UNIQUE (fk_receta)
 );
 
-CREATE TABLE IF NOT EXISTS empleado (
-    ci SERIAL,
-    primer_nombre VARCHAR (50) NOT NULL,
-    segundo_nombre VARCHAR (50),
-    primer_apellido VARCHAR (50) NOT NULL,
-    segundo_apellido VARCHAR (50),
-    fecha_nacimiento DATE NOT NULL,
-    descripcion TEXT,
-    CONSTRAINT pk_empleado PRIMARY KEY (ci)
-);
 
 CREATE TABLE IF NOT EXISTS presentacion (
     clave SERIAL,
@@ -299,6 +311,16 @@ CREATE TABLE IF NOT EXISTS tienda_fisica (
     fk_lugar INT NOT NULL,
     CONSTRAINT pk_tienda_fisica PRIMARY KEY (clave),
     CONSTRAINT fk_lugar_tienda_fisica FOREIGN KEY (fk_lugar) REFERENCES lugar(clave)
+);
+
+CREATE TABLE IF NOT EXISTS departamento (
+    clave SERIAL,
+    nombre VARCHAR(50) NOT NULL,
+    descripcion TEXT,
+    fk_tienda_fisica INT NOT NULL,
+    CONSTRAINT pk_departamento PRIMARY KEY (clave),
+    CONSTRAINT fk_tienda_fisica_departamento FOREIGN KEY (fk_tienda_fisica) REFERENCES tienda_fisica(clave),
+    CONSTRAINT chk_nombre_departamento CHECK (tipo IN ('compras', 'ventas', 'entrega', 'despacho'))
 );
 
 CREATE TABLE IF NOT EXISTS tienda_online (
@@ -335,13 +357,6 @@ CREATE TABLE IF NOT EXISTS invitado (
     CONSTRAINT fk_tipo_invitado_invitado FOREIGN KEY (fk_tipo_invitado) REFERENCES tipo_invitado(clave)
 );
 
-CREATE TABLE IF NOT EXISTS receta (
-    clave SERIAL,
-    nombre VARCHAR (50) NOT NULL,
-    descripcion TEXT NOT NULL,
-    CONSTRAINT pk_receta PRIMARY KEY (clave)
-);
-
 CREATE TABLE IF NOT EXISTS almacen (
     clave SERIAL,
     fk_presentacion INT NOT NULL,
@@ -371,20 +386,6 @@ CREATE TABLE IF NOT EXISTS persona_contacto (
     )
 );
 
-CREATE TABLE IF NOT EXISTS miembro (
-    rif INT NOT NULL,
-    razon_social VARCHAR (50) NOT NULL,
-    denominacion_comercial VARCHAR (50),
-    direccion_fiscal VARCHAR (255) NOT NULL,
-    direccion_fisica VARCHAR (255) NOT NULL,
-    fecha_afiliacion DATE NOT NULL,
-    fk_lugar_1 INT NOT NULL,
-    fk_lugar_2 INT NOT NULL,
-    CONSTRAINT pk_miembro PRIMARY KEY (rif),
-    CONSTRAINT fk_lugar_miembro1 FOREIGN KEY (fk_lugar_1) REFERENCES lugar(clave),
-    CONSTRAINT fk_lugar_miembro2 FOREIGN KEY (fk_lugar_2) REFERENCES lugar(clave) 
-);
-
 CREATE TABLE IF NOT EXISTS inventario_tienda (
     clave INT NOT NULL,
     fk_lugar_tienda INT NOT NULL,
@@ -403,10 +404,10 @@ CREATE TABLE IF NOT EXISTS inventario_evento (
     fk_presentacion INT NOT NULL,
     fk_evento INT NOT NULL,
     cantidad_unidades INT NOT NULL,
-    CONSTRAINT pk_inventario_evento PRIMARY KEY (clave, fk_presentacion, fk_evento),
+    CONSTRAINT pk_inventario_evento PRIMARY KEY (clave),
     CONSTRAINT fk_presentacion_inventario_evento FOREIGN KEY (fk_presentacion) REFERENCES presentacion(clave),
     CONSTRAINT fk_evento_inventario_evento FOREIGN KEY (fk_evento) REFERENCES evento(clave),
-    CONSTRAINT chk_cantidad_unidades CHECK (cantidad_unidades >= 0);--permite que el stock se acabe
+    CONSTRAINT chk_cantidad_unidades CHECK (cantidad_unidades >= 0)--permite que el stock se acabe
 );
 
 CREATE TABLE IF NOT EXISTS compra (
@@ -638,15 +639,6 @@ CREATE TABLE IF NOT EXISTS reposicion (
     CONSTRAINT chk_cantidad CHECK (cantidad > 0)
 );
 
-CREATE TABLE IF NOT EXISTS instruccion (
-    clave SERIAL,
-    numero_paso VARCHAR(50) NOT NULL,
-    descripcion TEXT NOT NULL,
-    fk_ing_cer INT NOT NULL,
-    CONSTRAINT pk_instruccion PRIMARY KEY (clave),
-    CONSTRAINT fk_ing_cer_instruccion FOREIGN KEY (fk_ing_cer) REFERENCES ing_cer(clave)
-);
-
 CREATE TABLE IF NOT EXISTS eve_mie (
     clave SERIAL,
     descripcion_participacion TEXT,
@@ -680,6 +672,15 @@ CREATE TABLE IF NOT EXISTS ing_cer(
     CONSTRAINT pk_ing_cer PRIMARY KEY (clave),
     CONSTRAINT fk_receta_ing_cer FOREIGN KEY (fk_receta) REFERENCES receta(clave),
     CONSTRAINT fk_ingrediente_ing_cer FOREIGN KEY (fk_ingrediente) REFERENCES ingrediente(clave)
+);
+
+CREATE TABLE IF NOT EXISTS instruccion (
+    clave SERIAL,
+    numero_paso VARCHAR(50) NOT NULL,
+    descripcion TEXT NOT NULL,
+    fk_ing_cer INT NOT NULL,
+    CONSTRAINT pk_instruccion PRIMARY KEY (clave),
+    CONSTRAINT fk_ing_cer_instruccion FOREIGN KEY (fk_ing_cer) REFERENCES ing_cer(clave)
 );
 
 CREATE TABLE IF NOT EXISTS rol_pri (
@@ -814,11 +815,3 @@ CREATE TABLE IF NOT EXISTS correo_electronico (
         = 1
     )
 );
-
-
-
-
-
-
-
-
