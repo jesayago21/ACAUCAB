@@ -664,25 +664,28 @@ CREATE TABLE IF NOT EXISTS car_tip (
     CONSTRAINT fk_tipo_cerveza_car_tip FOREIGN KEY (fk_tipo_cerveza) REFERENCES tipo_cerveza(clave)
 );
 
-CREATE TABLE IF NOT EXISTS ing_cer(
-    clave SERIAL,
-    cantidad DECIMAL(10,2) NOT NULL,
-    unidad_medida VARCHAR(20) NOT NULL,
-    fk_receta INT NOT NULL,
-    fk_ingrediente INT NOT NULL,
-    CONSTRAINT pk_ing_cer PRIMARY KEY (clave),
-    CONSTRAINT fk_receta_ing_cer FOREIGN KEY (fk_receta) REFERENCES receta(clave),
-    CONSTRAINT fk_ingrediente_ing_cer FOREIGN KEY (fk_ingrediente) REFERENCES ingrediente(clave)
-);
-
 CREATE TABLE IF NOT EXISTS instruccion (
     clave SERIAL,
-    numero_paso VARCHAR(50) NOT NULL,
     descripcion TEXT NOT NULL,
-    fk_ing_cer INT NOT NULL,
-    CONSTRAINT pk_instruccion PRIMARY KEY (clave),
-    CONSTRAINT fk_ing_cer_instruccion FOREIGN KEY (fk_ing_cer) REFERENCES ing_cer(clave)
+    CONSTRAINT pk_instruccion PRIMARY KEY (clave)
 );
+
+CREATE TABLE IF NOT EXISTS ing_rec(
+    clave SERIAL,
+    cantidad DECIMAL(10,2) NOT NULL,
+    unidad_medida VARCHAR(20) NOT NULL,--capaz crear type
+    fk_receta INT NOT NULL,
+    fk_ingrediente INT NOT NULL,
+    fk_instruccion INT NOT NULL,
+    numero_paso INT NOT NULL,
+    CONSTRAINT pk_ing_rec PRIMARY KEY (clave),
+    CONSTRAINT fk_receta_ing_rec FOREIGN KEY (fk_receta) REFERENCES receta(clave),
+    CONSTRAINT fk_ingrediente_ing_rec FOREIGN KEY (fk_ingrediente) REFERENCES ingrediente(clave),
+    CONSTRAINT fk_instruccion_ing_rec FOREIGN KEY (fk_instruccion) REFERENCES instruccion(clave)
+
+);
+
+
 
 CREATE TABLE IF NOT EXISTS rol_pri (
     clave SERIAL,
