@@ -386,3 +386,43 @@ INSERT INTO lugar_tienda (nombre, tipo, fk_lugar_tienda) VALUES
 
 -- Anaquel para el pasillo de Ofertas (fk_lugar_tienda = 10)
 ('Exhibidor Central de Ofertas', 'anaquel', 10);-- Clave: 15
+
+--Insertar presentacion (10 ejemplos)
+INSERT INTO presentacion (EAN_13, nombre, cantidad_unidades, fk_cerveza) VALUES
+(7501234567890, 'Botella 330ml', 24, 1),
+(7501234567891, 'Lata 355ml', 12, 2),
+(7501234567892, 'Pack 6 Botellas 330ml', 6, 3),
+(7501234567893, 'Botella 500ml', 20, 4),
+(7501234567894, 'Lata 473ml', 24, 5),
+(7501234567895, 'Pack 12 Latas 355ml', 12, 6),
+(7501234567896, 'Botella 1L', 8, 7),
+(7501234567897, 'Growler 2L', 4, 8),
+(7501234567898, 'Pack 4 Latas 473ml', 4, 9),
+(7501234567899, 'Botella 750ml', 10, 10);
+
+--Insertar almacen (10 ejemplos)
+INSERT INTO almacen (fk_presentacion, cantidad_unidades) VALUES
+(1, 15000),
+(2, 12000),
+(3, 30000),
+(4, 18000),
+(5, 19500),
+(6, 16000),
+(7, 24000),
+(8, 15000),
+(9, 20000),
+(10, 23500);
+
+--Insertar oferta (10 ejemplos)
+
+INSERT INTO oferta (porcentaje_descuento, fecha_inicio, fecha_fin, fk_presentacion) VALUES
+(10, '2025-07-01', '2025-08-01', 1),
+(15, '2025-07-05', '2025-08-01', 2),
+(20, '2025-07-10', '2025-08-02', 3),
+(5,  '2025-07-12', '2025-08-03', 4),
+(25, '2025-07-15', '2025-08-08', 5),
+(30, '2025-07-20', '2025-08-08', 6),
+(12, '2025-07-22', '2025-08-08', 7),
+(18, '2025-07-25', '2025-08-09', 8),
+(8,  '2025-07-28', '2025-08-09', 9),
+(22, '2025-08-01', '2025-08-10', 10);
