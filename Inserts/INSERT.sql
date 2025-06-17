@@ -1,5 +1,5 @@
 
--- ========= INSERCIÓN DE RECETAS =========
+-- ========= INSERCIÓN DE RECETAS, Tipos_cerveza, y recetas, instrucciones de un tipop_cerverza =========
 -- Se inserta una receta genérica para los tipos de cerveza que no tienen una receta explícita en el documento.
 INSERT INTO receta (clave, nombre, descripcion) VALUES
 (1, 'Receta no especificada', 'La receta para este tipo de cerveza no ha sido detallada en el documento de referencia. Generalmente incluye agua, malta de cebada, lúpulo y levadura.');
@@ -7,22 +7,7 @@ INSERT INTO receta (clave, nombre, descripcion) VALUES
 -- Se inserta la receta específica para la American Amber Ale, tal como se detalla en el documento.
 INSERT INTO receta (clave, nombre, descripcion) VALUES
 (2, 'Receta American Amber Ale (Todo Grano)',
-'Tipo: Todo Grano. Agua: 18-19 litros. Volumen alcohólico: 5,8%. IBUS: 16.
-Ingredientes:
-- Malta Best Malz Pale Ale: (5kg)
-- Malta Best Malz Aromatic: (0,5kg)
-- Malta Best Malz Caramel Light (0,4kg)
-- Lúpulo Columbus (7 gr) - Adición a los 60 min. restantes
-- Lúpulo Cascade (7 gr) - Adición a los 20 min. restantes
-- Lúpulo Columbus (10 gr) - Flameout (con el fuego apagado)
-- Lúpulo Cascade (30 gr) - Flameout (con el fuego apagado)
-- Levadura: Danstar Bry-97
-Instrucciones:
-1. Maceración de toda la malta durante 1 hora a 66 grados.
-2. Realizar el sparging a 76 grados.
-3. Ebullición de una hora, siguiendo los tiempos de adición del lúpulo indicados.
-4. Fermentar a 18-20 grados.
-5. Maduración en botella o en barril durante 4 semanas.');
+'Receta simplificada, se diferencia por su color característico de ambar y notas florales');
 
 -- ========= INSERCIÓN DE TIPOS DE CERVEZA =========
 -- Nota: La clave 1 se usa como raíz para los tipos principales.
@@ -162,7 +147,7 @@ INSERT INTO instruccion (descripcion) VALUES
 ('Fermentar a 18-20 grados.'),
 -- Clave: 8
 ('Maduración en botella o en barril durante 4 semanas.');
-
+--faltan 2
 
 -- =================================================================
 -- PASO 3: VINCULAR INGREDIENTES A LAS INSTRUCCIONES ESPECÍFICAS DE LA RECETA
