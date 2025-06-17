@@ -410,3 +410,29 @@ INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, 
 ('Tour Cervecero Caribeño', '2025-05-22', '2025-05-22', 'Cervecería Isla Bonita', 40, NULL, 24, 6),
 ('Expo Ingredientes Insulares', '2025-06-26', '2025-06-27', 'Centro de Eventos', 20, NULL, 24, 10),
 ('Concurso Homebrew Caribe', '2025-07-30', '2025-07-31', 'Playa Parguito', 20, NULL, 24, 3);
+
+--Tipo invitado
+INSERT INTO tipo_invitado (nombre) VALUES
+('Maestro Cervecero'),
+('Sommelier de Cerveza'),
+('Crítico Gastronómico'),
+('Representante de Prensa'),
+('Influencer'),
+('Proveedor'),
+('Cliente VIP'),
+('Ejecutivo de Cuentas'),
+('Personalidad Pública'),
+('Jurado de Competencia');
+
+-- Invitados 
+INSERT INTO invitado (rif, primer_nombre, primer_apellido, fk_tipo_invitado) VALUES
+(123456789, 'Carlos', 'Rodríguez', 1),   -- Maestro Cervecero
+(234567890, 'María', 'González', 2),     -- Sommelier
+(345678901, 'Luis', 'Pérez', 3),         -- Crítico Gastronómico
+(456789012, 'Ana', 'Martínez', 4),       -- Representante de Prensa
+(567890123, 'Pedro', 'López', 5),        -- Influencer
+(678901234, 'Laura', 'Hernández', 6),    -- Proveedor
+(789012345, 'Jorge', 'Díaz', 7),         -- Cliente VIP
+(890123456, 'Sofía', 'Torres', 8),       -- Ejecutivo de Cuentas
+(901234567, 'Diego', 'Ramírez', 9),      -- Personalidad Pública
+(112233445, 'Isabella', 'Fernández', 10);-- Jurado
