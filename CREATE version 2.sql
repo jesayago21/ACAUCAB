@@ -273,9 +273,13 @@ CREATE TABLE IF NOT EXISTS tasa_cambio (
 CREATE TABLE IF NOT EXISTS horario (
     clave SERIAL,
     dia VARCHAR(50) NOT NULL,
-    fecha_hora_inicio TIMESTAMP NOT NULL,
-    fecha_hora_fin TIMESTAMP NOT NULL,
-    CONSTRAINT pk_horario PRIMARY KEY (clave)
+    fecha_hora_inicio TIME NOT NULL,
+    fecha_hora_fin TIME NOT NULL,
+    CONSTRAINT pk_horario PRIMARY KEY (clave),
+    CONSTRAINT chk_dia CHECK (dia IN ('Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo')),
+    CONSTRAINT chk_fecha_hora_inicio CHECK (fecha_hora_inicio < fecha_hora_fin),
+    CONSTRAINT chk_fecha_hora_fin CHECK (fecha_hora_fin > fecha_hora_inicio)
+    --CONSTRAINT unq_horario_dia_horas UNIQUE (dia, fecha_hora_inicio, fecha_hora_fin)
 );
 
 CREATE TABLE IF NOT EXISTS cerveza (
@@ -787,7 +791,7 @@ CREATE TABLE IF NOT EXISTS telefono ( --Los numeros deben ser unicos
     CONSTRAINT unq_codigo_numero UNIQUE (codigo,numero),
     CONSTRAINT fk_persona_contacto_telefono FOREIGN KEY (fk_persona_contacto) REFERENCES persona_contacto(clave),
     CONSTRAINT chk_codigo CHECK (codigo IN (0414,0416,0412,0424,0426)),
-    CONSTRAINT chk_numero CHECK (numero > 0 AND numero < 1000000),
+    CONSTRAINT chk_numero CHECK (numero > 0 AND numero < 10000000),
     CONSTRAINT chk_extension CHECK (extension > 0 AND extension <= 10),
     --arco de telefono
     CONSTRAINT arco_telefono CHECK (
