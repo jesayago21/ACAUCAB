@@ -365,7 +365,7 @@ CREATE TABLE IF NOT EXISTS evento (
     fecha_fin DATE NOT NULL,
     direccion TEXT NOT NULL,
     precio_entrada INT,
-    fk_evento INT NOT NULL,
+    fk_evento INT,
     fk_lugar INT NOT NULL,
     fk_tipo_evento INT NOT NULL,
     CONSTRAINT pk_evento PRIMARY KEY (clave),
