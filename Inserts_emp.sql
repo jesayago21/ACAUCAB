@@ -100,16 +100,16 @@ INSERT INTO empleado (ci, primer_nombre, segundo_nombre, primer_apellido, segund
 -- Tabla tienda_fisica
 -- Se asume que existen lugares con clave del 1 al 10.
 INSERT INTO tienda_fisica (nombre, direccion, rif_empresa, fk_lugar) VALUES
-('ACAUCAB Sede Principal', 'Av. Principal, Edif. Cervecero, Piso 1, Caracas', 123456789, 1354),
-('ACAUCAB Valencia', 'C.C. Metrópolis, Nivel Sol, Local 10, Valencia', 123456789, 653),
-('ACAUCAB Maracay', 'Av. Las Delicias, al lado de la redoma, Maracay', 123456789, 479),
-('ACAUCAB Barquisimeto', 'C.C. Sambil, Feria de Comida, Barquisimeto', 123456789, 171),
-('ACAUCAB Lechería', 'Av. Américo Vespucio, Plaza Mayor, Lechería', 123456789, 444),
-('ACAUCAB Puerto Ordaz', 'C.C. Orinokia, Nivel Oro, Puerto Ordaz', 123456789, 592),
-('ACAUCAB Mérida', 'Av. Los Próceres, frente al McDonalds, Mérida', 123456789, 1412),
-('ACAUCAB San Cristóbal', 'Barrio Obrero, Carrera 21, San Cristóbal', 123456789, 1265),
-('ACAUCAB Maracaibo', 'Av. 5 de Julio, Edif. Zuliano, Maracaibo', 123456789, 879),
-('ACAUCAB Maturín', 'C.C. Monagas Plaza, Local 30, Maturín', 123456789, 1068);
+('ACAUCAB Sede Principal', 'Av. Principal, Edif. Cervecero, Piso 1', 123456789, 1354),
+('ACAUCAB Valencia', 'C.C. Metrópolis, Nivel Sol, Local 10', 123456789, 653),
+('ACAUCAB Maracay', 'Av. Las Delicias, al lado de la redoma', 123456789, 479),
+('ACAUCAB Barquisimeto', 'C.C. Sambil, Feria de Comida', 123456789, 171),
+('ACAUCAB Lechería', 'Av. Américo Vespucio, Plaza Mayor', 123456789, 444),
+('ACAUCAB Puerto Ordaz', 'C.C. Orinokia, Nivel Oro', 123456789, 592),
+('ACAUCAB Mérida', 'Av. Los Próceres, frente al McDonalds', 123456789, 1412),
+('ACAUCAB San Cristóbal', 'Barrio Obrero, Carrera 21', 123456789, 1265),
+('ACAUCAB Maracaibo', 'Av. 5 de Julio, Edif. Zuliano', 123456789, 879),
+('ACAUCAB Maturín', 'C.C. Monagas Plaza, Local 30', 123456789, 1068);
 
 -- =================================================================
 -- TABLAS CON DEPENDENCIAS DE PRIMER NIVEL
