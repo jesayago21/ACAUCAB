@@ -82,7 +82,7 @@ INSERT INTO tipo_cerveza (clave, nombre, descripcion, fk_tipo_cerveza, fk_receta
 INSERT INTO tipo_cerveza (clave, nombre, descripcion, fk_tipo_cerveza, fk_receta) VALUES
 (32, 'De Abadía', 'Estilo de cerveza belga fuerte, tradicionalmente elaborada en monasterios.', 16, 1),
 (33, 'Trapense', 'Cerveza elaborada en monasterios trapenses. Es una denominación de origen controlada.', 16, 1),
-(34, '�?mbar Belga', 'Ale belga de color ámbar con notas frutales y especiadas.', 16, 1),
+(34, 'Ámbar Belga', 'Ale belga de color ámbar con notas frutales y especiadas.', 16, 1),
 (35, 'Flamenca', 'Ale rojiza de Flandes, caracterizada por su acidez.', 16, 1),
 (36, 'Belgian Dubbel', 'Ale rojiza profunda, moderadamente fuerte, maltosa y compleja con notas a pasas y fruta seca.', 16, 1),
 (37, 'Belgian Golden Strong Ale', 'Ale dorada, compleja, efervescente y fuerte, con notas frutales y especiadas.', 16, 1),
@@ -200,5 +200,3 @@ INSERT INTO ing_rec (cantidad, unidad_medida, fk_receta, fk_ingrediente, fk_inst
 -- Este es un paso de proceso que no consume un ingrediente nuevo, se registra para completar la receta.
 INSERT INTO ing_rec (cantidad, unidad_medida, fk_receta, fk_ingrediente, fk_instruccion, numero_paso) VALUES
 (0.00 , 'N/A', 2, NULL, 8, 6); -- No hay un ingrediente asociado, pero sí una duración. fk_ingrediente puede ser NULL.
-
-

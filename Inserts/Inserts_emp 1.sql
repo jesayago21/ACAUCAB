@@ -1,5 +1,5 @@
 -- =================================================================
--- TABLAS SIN DEPENDENCIAS EXTERNAS (O CON DEPENDENCIAS ASUMIDAS)
+-- TABLAS de EMPLEADOS, HORARIOS, CARGO, BENEFICIOS, NAN, departamento, tienda fisica
 -- =================================================================
 
 -- Tabla horario
@@ -262,3 +262,4 @@ INSERT INTO control_entrada (fecha_hora_entrada, fecha_hora_salida, fk_contrato)
 -- Registro 10: Valeria (Contrato 6) - Un día estándar.
 -- Su horario es de 09:00 a 18:00.
 ('2024-05-27 09:02:50', '2024-05-27 18:00:15', 6);
+
