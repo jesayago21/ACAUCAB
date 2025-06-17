@@ -487,3 +487,41 @@ INSERT INTO car_cer (descripcion, valor, fk_caracteristica, fk_cerveza) VALUES
 ('Claridad turbia', 5, 8, 12),
 ('Retención de espuma media', 6, 9, 13),
 ('Fermentación baja', 4, 10, 14);
+
+--Eve_mie
+INSERT INTO eve_mie (clave, descripcion_participacion, fk_miembro, fk_evento) VALUES
+(1, 'Participación como expositor en el evento', 123456789, 1),
+(2, 'Asistencia como invitado especial', 234567890, 2),
+(3, 'Organización y logística del evento', 345678901, 3),
+(4, 'Colaboración en la promoción y difusión', 456789012, 4),
+(5, 'Participación en mesa redonda', 567890123, 5),
+(6, 'Facilitación de talleres educativos',678901234, 6),
+(7, 'Coordinación de recursos y materiales', 789012345, 7),
+(8, 'Presentación de informe y resultados', 890123456, 8),
+(9, 'Moderador en discusión grupal', 901234567, 9),
+(10, 'Participación en la planificación estra', 112233445,10);
+
+-- Asistencia
+INSERT INTO asistencia (clave, fecha_entrada, fk_evento, fk_cliente) VALUES
+(1, '2025-06-17 10:00:00', 1, 1),
+(2, '2025-06-17 11:00:00', 2, 2),
+(3, '2025-06-17 12:00:00', 3, 3),
+(4, '2025-06-17 13:00:00', 4, 4),
+(5, '2025-06-17 14:00:00', 5, 5),
+(6, '2025-06-17 15:00:00', 6, 6),
+(7, '2025-06-17 16:00:00', 7, 7),
+(8, '2025-06-17 17:00:00', 8, 8),
+(9, '2025-06-17 18:00:00', 9, 9),
+(10, '2025-06-17 19:00:00', 10, 10);
+
+INSERT INTO cuota (clave, fecha, monto, fk_miembro) VALUES
+(1, '2025-06-01', 500, 123456789),
+(2, '2025-06-02', 750, 234567890),
+(3, '2025-06-03', 600, 345678901),
+(4, '2025-06-04', 850, 456789012),
+(5, '2025-06-05', 900, 567890123),
+(6, '2025-06-06', 700, 678901234),
+(7, '2025-06-07', 650, 789012345),
+(8, '2025-06-08', 800, 890123456),
+(9, '2025-06-09', 550, 901234567),
+(10, '2025-06-10', 950, 112233445);
