@@ -33,9 +33,8 @@ INSERT INTO privilegio (nombre, descripcion) VALUES
 --16
 ('Gestionar clientes', 'Permite añadir o modificar información de clientes'),
 --17
-('Gestionar pedidos', 'Permite gestionar pedidos de cervezas'),
---18
-('Consultar catalogo', 'Permite ver el catalogo de cervezas')
+('Gestionar pedidos', 'Permite ges('Consultar catalogo', 'Permite ver el catalogo de cervezas'),
+ermite ver el catalogo de cervezas')
 --19
 ('Ver inventario', 'Permite ver el inventario actual de cervezas'),
 --20
