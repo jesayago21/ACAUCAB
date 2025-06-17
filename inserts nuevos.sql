@@ -436,3 +436,54 @@ INSERT INTO invitado (rif, primer_nombre, primer_apellido, fk_tipo_invitado) VAL
 (890123456, 'Sofía', 'Torres', 8),       -- Ejecutivo de Cuentas
 (901234567, 'Diego', 'Ramírez', 9),      -- Personalidad Pública
 (112233445, 'Isabella', 'Fernández', 10);-- Jurado
+
+--Invitado_Evento
+INSERT INTO inv_eve (fecha_hora_entrada, fecha_hora_salida, fk_invitado, fk_evento) VALUES
+('2025-06-16 18:00:00', '2025-06-16 22:30:00', 1, 1),
+('2025-06-16 19:15:00', '2025-06-16 23:00:00', 2, 2),
+('2025-06-16 20:00:00', '2025-06-16 23:45:00', 3, 3),
+('2025-06-16 17:45:00', '2025-06-16 21:15:00', 4, 4),
+('2025-06-16 18:30:00', '2025-06-16 22:00:00', 5, 5),
+('2025-06-16 19:00:00', '2025-06-16 22:45:00', 6, 6),
+('2025-06-16 20:30:00', '2025-06-16 23:30:00', 7, 7),
+('2025-06-16 17:30:00', '2025-06-16 21:00:00', 8, 8),
+('2025-06-16 18:45:00', '2025-06-16 22:15:00', 9, 9),
+('2025-06-16 19:30:00', '2025-06-16 23:15:00', 10, 10);
+
+--Caracteristica
+INSERT INTO caracteristica (nombre) VALUES
+('Color'),
+('Amargor (IBU)'),
+('Alcohol (% ABV)'),
+('Cuerpo'),
+('Aroma'),
+('Sabor'),
+('Carbonatación'),
+('Claridad'),
+('Retención de espuma'),
+('Fermentación');
+
+INSERT INTO car_tip (descripcion, valor, rango_menor, rango_mayor, fk_caracteristica, fk_tipo_cerveza) VALUES
+('Color claro', 5, 2, 10, 1, 2),
+('Amargor medio', 20, 15, 30, 2, 2),
+('Alcohol moderado', 5, 4, 6, 3, 3),
+('Cuerpo ligero', 3, 1, 5, 4, 4),
+('Aroma cítrico', 8, 5, 10, 5, 5),
+('Sabor maltoso', 7, 5, 9, 6, 6),
+('Carbonatación alta', 9, 7, 10, 7, 7),
+('Claridad cristalina', 10, 8, 10, 8, 8),
+('Retención de espuma óptima', 9, 7, 10, 9, 9),
+('Fermentación alta', 8, 6, 10, 10, 10);
+
+
+INSERT INTO car_cer (descripcion, valor, fk_caracteristica, fk_cerveza) VALUES
+('Color dorado', 8, 1, 5),
+('Amargor suave', 15, 2, 6),
+('Alcohol bajo', 4, 3, 7),
+('Cuerpo cremoso', 6, 4, 8),
+('Aroma herbal', 7, 5, 9),
+('Sabor afrutado', 9, 6, 10),
+('Carbonatación moderada', 7, 7, 11),
+('Claridad turbia', 5, 8, 12),
+('Retención de espuma media', 6, 9, 13),
+('Fermentación baja', 4, 10, 14);

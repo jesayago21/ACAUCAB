@@ -131,7 +131,10 @@ INSERT INTO ingrediente (clave, nombre, descripcion) VALUES
 (4, 'Lúpulo Columbus', 'Lúpulo de doble propósito, aporta amargor y aromas terrosos y cítricos.'),
 (5, 'Lúpulo Cascade', 'Lúpulo americano clásico, conocido por sus notas florales, especiadas y cítricas.'),
 (6, 'Levadura Danstar Bry-97', 'Levadura Ale americana que produce cervezas limpias y de perfil neutro.'),
-(7, 'Agua', 'Agua tratada para la elaboración de cerveza, con un perfil de minerales específico.');
+(7, 'Agua', 'Agua tratada para la elaboración de cerveza, con un perfil de minerales específico.'),
+(8, 'Malta Best Malz Munich', 'Malta que aporta un color más oscuro y un sabor robusto a la cerveza.'),
+(9, 'Lúpulo Saaz', 'Lúpulo noble checo, utilizado en cervezas tipo Lager por su aroma suave y especiado.'),
+(10, 'Levadura Safale S-04', 'Levadura de fermentación alta, usada en cervezas inglesas por su perfil frutal.');
 
 -- ========= INSERCIÓN DE INSTRUCCIONES GENÉRICAS REUTILIZABLES =========
 -- Esta tabla funciona como un catálogo central de pasos de elaboración de cerveza.
@@ -142,7 +145,10 @@ INSERT INTO instruccion (clave, descripcion) VALUES
 (4, 'Adicionar lúpulo de sabor: Añadir lúpulo hacia la mitad o final del hervor (aprox. 15-20 min) para aportar sabor.'),
 (5, 'Adicionar lúpulo de aroma (Flameout): Añadir lúpulo justo al apagar el fuego para capturar los aceites aromáticos volátiles.'),
 (6, 'Fermentar: Inocular la levadura en el mosto enfriado para que convierta los azúcares en alcohol y CO2.'),
-(7, 'Madurar: Dejar la cerveza en reposo a bajas temperaturas para que los sabores se refinen y la cerveza se aclare.');
+(7, 'Madurar: Dejar la cerveza en reposo a bajas temperaturas para que los sabores se refinen y la cerveza se aclare.'),
+(8, 'Filtrar: Retirar impurezas y partículas no deseadas para obtener una cerveza más limpia.'),
+(9, 'Carbonatar: Añadir azúcar o CO2 para generar el gas que aporta burbujas y textura a la cerveza.'),
+(10, 'Embotellar: Transferir la cerveza a botellas o barriles para su almacenamiento y consumo.');
 
 -- ========= INSERCIÓN DE INGREDIENTES Y PASOS PARA LA RECETA "AMERICAN AMBER ALE" (fk_receta = 2) =========
 -- Se renombró la tabla a ing_rec y se añadió la fk_instruccion para vincular cada ingrediente/paso a una instrucción genérica.
