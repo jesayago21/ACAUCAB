@@ -215,3 +215,50 @@ INSERT INTO vacacion (fecha_inicio, fecha_fin, fk_contrato) VALUES
 ('2023-04-03', '2023-04-17', 7), -- Camila (Contrato 7) tomó vacaciones en abril
 ('2024-01-02', '2024-01-16', 6), -- Valeria (Contrato 6) tomó vacaciones en enero
 ('2023-12-18', '2023-12-26', 8); -- Sofía (Contrato 8) tomó vacaciones en diciembre
+
+-- =================================================================
+-- INSERCIÓN DE DATOS EN LA TABLA 'control_entrada'
+-- Se simulan 10 fichajes de entrada y salida basados en los contratos
+-- y horarios previamente definidos.
+-- =================================================================
+
+INSERT INTO control_entrada (fecha_hora_entrada, fecha_hora_salida, fk_contrato) VALUES
+-- Registro 1: Laura (Contrato 1) - Llega un poco antes y se va a su hora en un día laboral normal.
+-- Su horario es de 08:00 a 17:00.
+('2024-05-20 07:57:10', '2024-05-20 17:02:30', 1),
+
+-- Registro 2: Ana (Contrato 4) - Llega un poco tarde y se va 30 minutos después de su hora.
+-- Su horario es de 08:00 a 17:00.
+('2024-05-20 08:10:05', '2024-05-20 17:31:00', 4),
+
+-- Registro 3: Luis (Contrato 3) - Un día normal. Llega puntual y se va puntual.
+-- Su horario es de 09:00 a 18:00.
+('2024-05-21 08:59:15', '2024-05-21 18:01:00', 3),
+
+-- Registro 4: Sofía (Contrato 8) - Trabaja un fin de semana (su horario es de 10:00 a 19:00).
+-- Es importante que el fichaje sea en Sábado o Domingo para ser coherente.
+('2024-05-25 09:55:00', '2024-05-25 19:05:45', 8),
+
+-- Registro 5: Carlos (Contrato 10) - Fichaje de su turno nocturno.
+-- Entra a las 22:00 de un día y sale a las 06:00 del día siguiente.
+-- Su horario es de 22:00 a 06:00.
+('2024-05-22 21:58:30', '2024-05-23 06:03:10', 10),
+
+-- Registro 6: Laura (Contrato 1) - Otro día, pero se retira más temprano por una cita médica.
+('2024-05-23 08:01:20', '2024-05-23 14:30:00', 1),
+
+-- Registro 7: Ricardo (Contrato 9) - Un registro histórico de antes que su contrato finalizara.
+-- Su contrato terminó el 2022-11-04. Este fichaje es de Octubre 2022.
+('2022-10-17 07:58:00', '2022-10-17 17:05:00', 9),
+
+-- Registro 8: Javier (Contrato 5) - Olvidó marcar su salida.
+-- El campo fecha_hora_salida quedará como NULL.
+('2024-05-24 08:28:00', NULL, 5),
+
+-- Registro 9: Camila (Contrato 7) - Se queda haciendo horas extras un viernes.
+-- Su horario es hasta las 16:30.
+('2024-05-24 08:35:10', '2024-05-24 19:15:22', 7),
+
+-- Registro 10: Valeria (Contrato 6) - Un día estándar.
+-- Su horario es de 09:00 a 18:00.
+('2024-05-27 09:02:50', '2024-05-27 18:00:15', 6);
