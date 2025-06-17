@@ -133,44 +133,69 @@ INSERT INTO ingrediente (clave, nombre, descripcion) VALUES
 (6, 'Levadura Danstar Bry-97', 'Levadura Ale americana que produce cervezas limpias y de perfil neutro.'),
 (7, 'Agua', 'Agua tratada para la elaboración de cerveza, con un perfil de minerales específico.');
 
--- ========= INSERCIÓN DE INSTRUCCIONES GENÉRICAS REUTILIZABLES =========
--- Esta tabla funciona como un catálogo central de pasos de elaboración de cerveza.
-INSERT INTO instruccion (clave, descripcion) VALUES
-(1, 'Macerar granos: Mezclar las maltas molidas con agua caliente para convertir los almidones en azúcares fermentables.'),
-(2, 'Lavar granos (Sparging): Enjuagar los granos con agua caliente para extraer los azúcares restantes.'),
-(3, 'Adicionar lúpulo de amargor: Añadir lúpulo al inicio del hervor (aprox. 60 min) para extraer sus alfa-ácidos.'),
-(4, 'Adicionar lúpulo de sabor: Añadir lúpulo hacia la mitad o final del hervor (aprox. 15-20 min) para aportar sabor.'),
-(5, 'Adicionar lúpulo de aroma (Flameout): Añadir lúpulo justo al apagar el fuego para capturar los aceites aromáticos volátiles.'),
-(6, 'Fermentar: Inocular la levadura en el mosto enfriado para que convierta los azúcares en alcohol y CO2.'),
-(7, 'Madurar: Dejar la cerveza en reposo a bajas temperaturas para que los sabores se refinen y la cerveza se aclare.');
+-- =================================================================
+-- PASO 2: INSERCIÓN DE INSTRUCCIONES ESPECÍFICAS DE LA RECETA
+-- ¡AQUÍ ESTÁ EL CAMBIO PRINCIPAL!
+-- Estas son las instrucciones literales de TU receta. Cada una es un paso único.
+-- =================================================================
 
--- ========= INSERCIÓN DE INGREDIENTES Y PASOS PARA LA RECETA "AMERICAN AMBER ALE" (fk_receta = 2) =========
--- Se renombró la tabla a ing_rec y se añadió la fk_instruccion para vincular cada ingrediente/paso a una instrucción genérica.
--- Paso 1: Maceración
-INSERT INTO ing_rec(clave, cantidad, unidad_medida, fk_receta, fk_ingrediente, fk_instruccion, numero_paso) VALUES
-(1, 5.00, 'kg', 2, 1, 1, 1), -- Malta Pale Ale -> Macerar
-(2, 0.50, 'kg', 2, 2, 1, 1), -- Malta Aromatic -> Macerar
-(3, 0.40, 'kg', 2, 3, 1, 1); -- Malta Caramel -> Macerar
+-- Primero, limpiamos las instrucciones genéricas anteriores.
+TRUNCATE TABLE instruccion RESTART IDENTITY CASCADE;
 
--- Paso 2: Lavado de granos (Sparging). Se usa el ingrediente 'Agua' de forma genérica para este paso.
-INSERT INTO ing_rec(clave, cantidad, unidad_medida, fk_receta, fk_ingrediente, fk_instruccion, numero_paso) VALUES
-(9, 10.00, 'litros', 2, 7, 2, 2);
+INSERT INTO instruccion (descripcion) VALUES
+-- Clave: 1
+('Maceración de toda la malta durante 1 hora a 66 grados.'),
+-- Clave: 2
+('Realizar el sparging a 76 grados.'),
+-- Clave: 3
+('Ebullición de una hora, siguiendo los tiempos de adición del lúpulo indicados.'),
+-- Clave: 4
+('Adición a los 60 min. restantes'),
+-- Clave: 5
+('Adición a los 20 min. restantes'),
+-- Clave: 6
+('Adición Flameout (con el fuego apagado)'),
+-- Clave: 7
+('Fermentar a 18-20 grados.'),
+-- Clave: 8
+('Maduración en botella o en barril durante 4 semanas.');
 
--- Paso 3: Ebullición y adición de lúpulos
-INSERT INTO ing_rec(clave, cantidad, unidad_medida, fk_receta, fk_ingrediente, fk_instruccion, numero_paso) VALUES
-(4, 7.00, 'gr', 2, 4, 3, 3),  -- Columbus -> Amargor (60 min)
-(5, 7.00, 'gr', 2, 5, 4, 3),  -- Cascade -> Sabor (20 min)
-(6, 10.00, 'gr', 2, 4, 5, 3), -- Columbus -> Aroma (Flameout)
-(7, 30.00, 'gr', 2, 5, 5, 3); -- Cascade -> Aroma (Flameout)
 
--- Paso 4: Fermentación
-INSERT INTO ing_rec(clave, cantidad, unidad_medida, fk_receta, fk_ingrediente, fk_instruccion, numero_paso) VALUES
-(8, 1.00, 'sobre', 2, 6, 6, 4); -- Levadura -> Fermentar
+-- =================================================================
+-- PASO 3: VINCULAR INGREDIENTES A LAS INSTRUCCIONES ESPECÍFICAS DE LA RECETA
+-- Tabla 'ing_rec': aquí se une todo para la receta "American Amber Ale" (fk_receta = 2).
+-- =================================================================
 
--- Paso 5: Maduración. Es un paso del proceso que no requiere un ingrediente específico.
-INSERT INTO ing_rec(clave, cantidad, unidad_medida, fk_receta, fk_ingrediente, fk_instruccion, numero_paso) VALUES
-(10, 0, 'N/A', 2, 7, 7, 5);
+-- Paso 1 de la receta: Maceración. Usa la instrucción con clave=1.
+-- Todos estos ingredientes se usan en el mismo paso.
+INSERT INTO ing_rec (cantidad, unidad_medida, fk_receta, fk_ingrediente, fk_instruccion, numero_paso) VALUES
+(18.5, 'litros', 2, 7, 1, 1), -- Agua para la maceración (18-19 litros)
+(5.00, 'kg', 2, 1, 1, 1),     -- Malta Pale Ale
+(0.50, 'kg', 2, 2, 1, 1),     -- Malta Aromatic
+(0.40, 'kg', 2, 3, 1, 1);     -- Malta Caramel Light
 
--- OJO METER TIEMPO EN ING CER, ARREGLAR ESO
+-- Paso 2 de la receta: Sparging. Usa la instrucción con clave=2.
+-- Este es un paso de proceso que principalmente usa agua.
+INSERT INTO ing_rec (cantidad, unidad_medida, fk_receta, fk_ingrediente, fk_instruccion, numero_paso) VALUES
+(0.00, 'N/A', 2, 7, 2, 2); -- El agua para el sparging ya se considera en el total. Se registra el paso.
+
+-- Paso 3 de la receta: Ebullición. Usa la instrucción con clave=3.
+-- Todos los lúpulos se añaden durante este único paso, aunque en momentos diferentes.
+-- La instrucción general (clave 3) describe el proceso completo.
+INSERT INTO ing_rec (cantidad, unidad_medida, fk_receta, fk_ingrediente, fk_instruccion, numero_paso) VALUES
+(0.00, 'N/A', 2, NULL, 3, 3),
+(7.00, 'gr', 2, 4, 4, 3.1),  -- Lúpulo Columbus (Adición a los 60 min. restantes)
+(7.00, 'gr', 2, 5, 5, 3.2),  -- Lúpulo Cascade (Adición a los 20 min. restantes)
+(10.00, 'gr', 2, 4, 6, 4.1), -- Lúpulo Columbus (Flameout)
+(30.00, 'gr', 2, 5, 6, 4.2); -- Lúpulo Cascade (Flameout)
+
+-- Paso 4 de la receta: Fermentación. Usa la instrucción con clave=4.
+INSERT INTO ing_rec (cantidad, unidad_medida, fk_receta, fk_ingrediente, fk_instruccion, numero_paso) VALUES
+(1.00, 'sobre', 2, 6, 7, 5); -- Levadura Danstar Bry-97
+
+-- Paso 5 de la receta: Maduración. Usa la instrucción con clave=5.
+-- Este es un paso de proceso que no consume un ingrediente nuevo, se registra para completar la receta.
+INSERT INTO ing_rec (cantidad, unidad_medida, fk_receta, fk_ingrediente, fk_instruccion, numero_paso) VALUES
+(0.00 , 'N/A', 2, NULL, 8, 6); -- No hay un ingrediente asociado, pero sí una duración. fk_ingrediente puede ser NULL.
 
 

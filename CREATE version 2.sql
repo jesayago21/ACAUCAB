@@ -706,7 +706,7 @@ CREATE TABLE IF NOT EXISTS ing_rec(
     cantidad DECIMAL(10,2) NOT NULL,
     unidad_medida VARCHAR(20) NOT NULL,--capaz crear type
     fk_receta INT NOT NULL,
-    fk_ingrediente INT NOT NULL,
+    fk_ingrediente INT,--PERMITE INSTRUCCIONES SIN INGREDIENTES
     fk_instruccion INT NOT NULL,
     numero_paso INT NOT NULL,
     CONSTRAINT pk_ing_rec PRIMARY KEY (clave),
