@@ -150,13 +150,52 @@ INSERT INTO rol_pri (fecha, fk_rol, fk_privilegio) VALUES
 
 -- Insertar usuario (10 ejemplos)
 INSERT INTO usuario (username, contrasena, fk_rol, fk_empleado, fk_miembro, fk_cliente) VALUES
-('admin','admin123',1,1,NULL,NULL),  -- Administrador
-('supervisor','supervisor123',2,2,NULL,NULL),  -- Supervisor
-('soporte','soporte123',3,3,NULL,NULL),  -- Soporte Técnico
-('gerente','gerente123',4,4,NULL,NULL),  -- Gerente
-('analista','analista123',5,5,NULL,NULL),  -- Analista
+('admin','admin123',4,678901234,NULL,NULL),  -- Administrador
+('supervisor','supervisor123',2,234567890,NULL,NULL),  -- Supervisor
+('soporte','soporte123',10,567890123,NULL,NULL),  -- Soporte Técnico
+('gerente','gerente123',4,345678901,NULL,NULL),  -- Gerente
+('analista','analista123',5,901234567,NULL,NULL),  -- Analista
 ('cliente1','cliente123',6,NULL,NULL,1),  -- Cliente
 ('miembro1','miembro123',7,NULL,1,NULL),  -- Miembro
-('empleado1','empleado123',8,6,NULL,NULL),  -- Empleado
-('repartidor1','repartidor123',9,7,NULL,NULL),  -- Repartidor
-('vendedor1','vendedor123',10,8,NULL,NULL);  -- Vendedor
+('empleado1','empleado123',8,123456789,NULL,NULL),  -- Empleado
+('repartidor1','repartidor123',9,456789012,NULL,NULL),  -- Repartidor
+('vendedor1','vendedor123',10,789012345,NULL,NULL);  -- Vendedor
+
+-- Insertar telefono (10 ejemplos)
+INSERT INTO telefono (codigo, numero, extension, fk_empleado, fk_cliente, fk_miembro, fk_persona_contacto) VALUES
+('0414','7069811',NULL,NULL,1,NULL,NULL), -- Telefono del cliente 1
+('0416','1234567',NULL,NULL,1,NULL,NULL), -- Telefono del cliente 1
+('0416','2345678',NULL,NULL,3,NULL,NULL), -- Telefono del cliente 2
+('0424','4567890',NULL,NULL,5,NULL,NULL), -- Telefono del cliente 5
+('0414','5678901',NULL,NULL,NULL,1,NULL), -- Telefono del miembro 1
+('0416','6789012',NULL,NULL,NULL,2,NULL), -- Telefono del miembro 2
+('0416','6789122',NULL,NULL,NULL,2,NULL), -- Telefono del miembro 2
+('0424','7890123',NULL,123456789,NULL,NULL), -- Telefono del empleado 123456789
+('0424','8901234',NULL,987654321,NULL,NULL); -- Telefono del empleado 987654321
+('0414','9012345',NULL,NULL,NULL,NULL,1); --Telefono del contacto 1
+
+-- Insertar correo (10 ejemplos)
+INSERT INTO correo_electronico (direccion_email, fk_cliente,fk_miembro,fk_persona_contacto) VALUES
+('cliente1@gmail.com',1,NULL,NULL), -- Correo del cliente 1
+('cliente2@hotmail.com',2,NULL,NULL), -- Correo del cliente 2
+('cliente3@gmail.com',3,NULL,NULL), -- Correo del cliente 3
+('miembro1@gmail.com',NULL,1,NULL), -- Correo del miembro 1
+('miembro1@hotmail.com',NULL,1,NULL), -- Correo del miembro 1
+('miembro2@gmail.com',NULL,2,NULL), -- Correo del miembro 2
+('miembro3@gmail.com',NULL,3,NULL), -- Correo del miembro 3
+('personacontacto1@gmail.com',NULL,NULL,1), -- Correo de la persona de contacto 1
+('personacontacto2@gmail.com',NULL,NULL,2), -- Correo de la persona de contacto 2
+('personacontacto3@gmail.com',NULL,NULL,3); -- Correo de la persona de contacto 3
+
+-- Insertar persona_contacto (10 ejemplos)
+INSERT INTO persona_contacto (primer_nombre, primer_apellido, fk_miembro, fk_cliente) VALUES
+('Juan','Pérez',1,NULL), -- Persona de contacto del miembro 1
+('Ana','Gómez',1,NULL), -- Persona de contacto del miembro 1
+('Luis','Martínez'2,NULL), -- Persona de contacto del miembro 2
+('María','López',2,NULL), -- Persona de contacto del miembro 2
+('Carlos','Hernández',3,NULL), -- Persona de contacto del miembro 3
+('Laura','Ramírez',NULL,21), -- Persona de contacto del cliente 21
+('Pedro','Torres',NULL,22), -- Persona de contacto del cliente 22
+('Sofía','Vásquez',NULL,22), -- Persona de contacto del cliente 22
+('Andrés','Morales',NULL,23), -- Persona de contacto del cliente 23
+('Isabel','Reyes',NULL,23); -- Persona de contacto del cliente 23

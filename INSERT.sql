@@ -131,7 +131,10 @@ INSERT INTO ingrediente (clave, nombre, descripcion) VALUES
 (4, 'Lúpulo Columbus', 'Lúpulo de doble propósito, aporta amargor y aromas terrosos y cítricos.'),
 (5, 'Lúpulo Cascade', 'Lúpulo americano clásico, conocido por sus notas florales, especiadas y cítricas.'),
 (6, 'Levadura Danstar Bry-97', 'Levadura Ale americana que produce cervezas limpias y de perfil neutro.'),
-(7, 'Agua', 'Agua tratada para la elaboración de cerveza, con un perfil de minerales específico.');
+(7, 'Agua', 'Agua tratada para la elaboración de cerveza, con un perfil de minerales específico.'),
+(8, 'Malta Best Malz Munich', 'Malta que aporta un color más oscuro y un sabor robusto a la cerveza.'),
+(9, 'Lúpulo Saaz', 'Lúpulo noble checo, utilizado en cervezas tipo Lager por su aroma suave y especiado.'),
+(10, 'Levadura Safale S-04', 'Levadura de fermentación alta, usada en cervezas inglesas por su perfil frutal.');
 
 -- =================================================================
 -- PASO 2: INSERCIÓN DE INSTRUCCIONES ESPECÍFICAS DE LA RECETA
