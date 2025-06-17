@@ -115,7 +115,7 @@ CREATE TABLE IF NOT EXISTS lugar_tienda (
     clave SERIAL,
     nombre VARCHAR(50) NOT NULL,
     tipo VARCHAR(20) NOT NULL,
-    fk_lugar_tienda INT NOT NULL,
+    fk_lugar_tienda INT,
     CONSTRAINT pk_lugar_tienda PRIMARY KEY (clave),
     CONSTRAINT fk_lugar_tienda_lugar_tienda FOREIGN KEY (fk_lugar_tienda) REFERENCES lugar_tienda(clave),
     CONSTRAINT chk_tipo_lugar_tienda CHECK (tipo IN ('zona', 'pasillo', 'anaquel'))
@@ -194,14 +194,15 @@ CREATE TABLE IF NOT EXISTS cliente (
 );
 
 CREATE TABLE IF NOT EXISTS empleado (
-    ci SERIAL,
+    ci INT NOT NULL,
     primer_nombre VARCHAR (50) NOT NULL,
     segundo_nombre VARCHAR (50),
     primer_apellido VARCHAR (50) NOT NULL,
     segundo_apellido VARCHAR (50),
     fecha_nacimiento DATE NOT NULL,
     descripcion TEXT,
-    CONSTRAINT pk_empleado PRIMARY KEY (ci)
+    CONSTRAINT pk_empleado PRIMARY KEY (ci),
+    CONSTRAINT chk_ci CHECK (ci > 0 AND ci < 1000000000)
 );
 
 CREATE TABLE IF NOT EXISTS miembro (

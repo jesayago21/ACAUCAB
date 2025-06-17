@@ -85,17 +85,17 @@ INSERT INTO tipo_beneficio (nombre, descripcion) VALUES
 
 -- Tabla empleado
 -- Creamos 10 empleados con datos variados.
-INSERT INTO empleado (primer_nombre, segundo_nombre, primer_apellido, segundo_apellido, fecha_nacimiento, descripcion) VALUES
-('Carlos', 'Alberto', 'González', 'Pérez', '1985-05-15', 'Empleado con amplia experiencia en ventas.'),
-('Ana', 'María', 'Rodríguez', 'López', '1990-11-20', 'Especialista en logística y despacho.'),
-('Luis', 'Miguel', 'Martínez', 'Sánchez', '1988-02-10', 'Encargado del departamento de compras.'),
-('Laura', 'Valentina', 'García', 'Ramírez', '1995-07-30', 'Gerente de la sucursal principal.'),
-('Javier', 'José', 'Hernández', 'Díaz', '1992-09-05', 'Conductor y repartidor principal.'),
-('Sofía', 'Isabel', 'Torres', 'Moreno', '1998-04-12', 'Cajera con excelente atención al cliente.'),
-('Diego', 'Andrés', 'Silva', 'Mendoza', '1983-12-01', 'Gerente de promociones y marketing.'),
-('Camila', 'Fernanda', 'Rojas', 'Castillo', '1996-06-25', 'Vendedora de tienda y catadora experta.'),
-('Ricardo', 'Antonio', 'Ortega', 'Vargas', '1980-03-18', 'Jefe de operaciones de almacén.'),
-('Valeria', 'Alejandra', 'Jiménez', 'Reyes', '1993-10-08', 'Analista de inventario y sistemas.');
+INSERT INTO empleado (ci, primer_nombre, segundo_nombre, primer_apellido, segundo_apellido, fecha_nacimiento, descripcion) VALUES
+(123456789, 'Carlos', 'Alberto', 'González', 'Pérez', '1985-05-15', 'Empleado con amplia experiencia en ventas.'),
+(987654321, 'Ana', 'María', 'Rodríguez', 'López', '1990-11-20', 'Especialista en logística y despacho.'),
+(234567890, 'Luis', 'Miguel', 'Martínez', 'Sánchez', '1988-02-10', 'Encargado del departamento de compras.'),
+(345678901, 'Laura', 'Valentina', 'García', 'Ramírez', '1995-07-30', 'Gerente de la sucursal principal.'),
+(456789012, 'Javier', 'José', 'Hernández', 'Díaz', '1992-09-05', 'Conductor y repartidor principal.'),
+(567890123, 'Sofía', 'Isabel', 'Torres', 'Moreno', '1998-04-12', 'Cajera con excelente atención al cliente.'),
+(678901234, 'Diego', 'Andrés', 'Silva', 'Mendoza', '1983-12-01', 'Gerente de promociones y marketing.'),
+(789012345, 'Camila', 'Fernanda', 'Rojas', 'Castillo', '1996-06-25', 'Vendedora de tienda y catadora experta.'),
+(890123456, 'Ricardo', 'Antonio', 'Ortega', 'Vargas', '1980-03-18', 'Jefe de operaciones de almacén.'),
+(901234567, 'Valeria', 'Alejandra', 'Jiménez', 'Reyes', '1993-10-08', 'Analista de inventario y sistemas.');
 
 -- Tabla tienda_fisica
 -- Se asume que existen lugares con clave del 1 al 10.
