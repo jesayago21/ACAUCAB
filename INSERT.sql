@@ -82,7 +82,7 @@ INSERT INTO tipo_cerveza (clave, nombre, descripcion, fk_tipo_cerveza, fk_receta
 INSERT INTO tipo_cerveza (clave, nombre, descripcion, fk_tipo_cerveza, fk_receta) VALUES
 (32, 'De Abadía', 'Estilo de cerveza belga fuerte, tradicionalmente elaborada en monasterios.', 16, 1),
 (33, 'Trapense', 'Cerveza elaborada en monasterios trapenses. Es una denominación de origen controlada.', 16, 1),
-(34, '�?mbar Belga', 'Ale belga de color ámbar con notas frutales y especiadas.', 16, 1),
+(34, '�?mbar Belga', 'Ale belga de color ámbar con notas frutales y especiadas.', 16, 1),
 (35, 'Flamenca', 'Ale rojiza de Flandes, caracterizada por su acidez.', 16, 1),
 (36, 'Belgian Dubbel', 'Ale rojiza profunda, moderadamente fuerte, maltosa y compleja con notas a pasas y fruta seca.', 16, 1),
 (37, 'Belgian Golden Strong Ale', 'Ale dorada, compleja, efervescente y fuerte, con notas frutales y especiadas.', 16, 1),
@@ -172,3 +172,5 @@ INSERT INTO ing_rec(clave, cantidad, unidad_medida, fk_receta, fk_ingrediente, f
 (10, 0, 'N/A', 2, 7, 7, 5);
 
 -- OJO METER TIEMPO EN ING CER, ARREGLAR ESO
+
+

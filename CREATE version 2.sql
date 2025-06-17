@@ -121,49 +121,75 @@ CREATE TABLE IF NOT EXISTS lugar_tienda (
     CONSTRAINT chk_tipo_lugar_tienda CHECK (tipo IN ('zona', 'pasillo', 'anaquel'))
 );
 
+
 CREATE TABLE IF NOT EXISTS cliente (
     clave SERIAL,
     rif INT NOT NULL,
-    puntos_acumulados INT NOT NULL,
+    puntos_acumulados INT NOT NULL DEFAULT 0,
     tipo tipo_cliente NOT NULL,
     -- NATURAL
     ci INT,
-    primer_nombre VARCHAR (50),
-    segundo_nombre VARCHAR (50),
-    primer_apellido VARCHAR (50),
-    segundo_apellido VARCHAR (50),
+    primer_nombre VARCHAR(50),
+    segundo_nombre VARCHAR(50),
+    primer_apellido VARCHAR(50),
+    segundo_apellido VARCHAR(50),
     direccion_habitacion VARCHAR(255),
     fk_direccion_habitacion INT,
     -- JURIDICA
-    razon_social VARCHAR (50),
-    denominacion_comercial VARCHAR (50),
-    url_pagina_web VARCHAR (100),
+    razon_social VARCHAR(50),
+    denominacion_comercial VARCHAR(50),
+    url_pagina_web VARCHAR(100),
     capital_disponible INT,
-    direccion_fiscal VARCHAR (255),
-    direccion_fisica VARCHAR (255),
+    direccion_fiscal VARCHAR(255),
+    direccion_fisica VARCHAR(255),
     fk_direccion_fiscal INT,
     fk_direccion_fisica INT,
-    -- CONSTRAINTS
+
     CONSTRAINT pk_cliente PRIMARY KEY (clave),
     CONSTRAINT fk_direccion_habitacion_cliente FOREIGN KEY (fk_direccion_habitacion) REFERENCES lugar(clave),
     CONSTRAINT fk_direccion_fiscal_cliente FOREIGN KEY (fk_direccion_fiscal) REFERENCES lugar(clave),
     CONSTRAINT fk_direccion_fisica_cliente FOREIGN KEY (fk_direccion_fisica) REFERENCES lugar(clave),
     CONSTRAINT unq_rif_cliente UNIQUE (rif),
-    CONSTRAINT chk_rif CHECK (rif > 0 AND rif < 10000000000),
+    CONSTRAINT chk_rif CHECK (rif BETWEEN 1000000 AND 999999999), -- RIF venezolano válido
     CONSTRAINT chk_puntos_acumulados CHECK (puntos_acumulados >= 0),
-    CONSTRAINT chk_capital_disponible CHECK (capital_disponible >= 0),
-    CONSTRAINT chk_url_pagina_web CHECK (url_pagina_web LIKE 'http%://%'),
---ARCO DE TIPO DE CLIENT
+    CONSTRAINT chk_capital_disponible CHECK (capital_disponible IS NULL OR capital_disponible >= 0),
+    CONSTRAINT chk_url_pagina_web CHECK (
+        (tipo = 'juridico' AND url_pagina_web LIKE 'http%://%') OR 
+        (tipo = 'natural' AND url_pagina_web IS NULL)
+    ),
+    
+    -- Validación mejorada por tipo
     CONSTRAINT chk_tipo_cliente CHECK (
-        tipo IN ('natural', 'juridico')
-    ),
-    CONSTRAINT chk_tipo_cliente_natural CHECK (
-        ((tipo = 'natural' AND ci IS NOT NULL AND primer_nombre IS NOT NULL AND primer_apellido IS NOT NULL AND direccion_habitacion IS NOT NULL AND fk_direccion_habitacion IS NOT NULL)
-        AND (razon_social IS NULL AND denominacion_comercial IS NULL AND url_pagina_web IS NULL AND capital_disponible IS NULL AND direccion_fiscal IS NULL AND direccion_fisica IS NULL AND fk_direccion_fiscal IS NULL AND fk_direccion_fisica IS NULL))  
-    ),
-    CONSTRAINT chk_tipo_cliente_juridico CHECK (
-        ((tipo = 'juridico' AND razon_social IS NOT NULL AND denominacion_comercial IS NOT NULL AND direccion_fiscal IS NOT NULL AND direccion_fisica IS NOT NULL AND fk_direccion_fiscal IS NOT NULL AND fk_direccion_fisica IS NOT NULL)
-        AND (ci IS NULL AND primer_nombre IS NULL AND primer_apellido IS NULL AND direccion_habitacion IS NULL AND fk_direccion_habitacion IS NULL))
+        (tipo = 'natural' AND 
+         ci IS NOT NULL AND 
+         primer_nombre IS NOT NULL AND 
+         primer_apellido IS NOT NULL AND 
+         direccion_habitacion IS NOT NULL AND 
+         fk_direccion_habitacion IS NOT NULL AND
+         razon_social IS NULL AND 
+         denominacion_comercial IS NULL AND 
+         capital_disponible IS NULL AND 
+         direccion_fiscal IS NULL AND 
+         direccion_fisica IS NULL AND 
+         fk_direccion_fiscal IS NULL AND 
+         fk_direccion_fisica IS NULL)
+        OR
+        (tipo = 'juridico' AND 
+         razon_social IS NOT NULL AND 
+         denominacion_comercial IS NOT NULL AND 
+         url_pagina_web IS NOT NULL AND 
+         capital_disponible IS NOT NULL AND 
+         direccion_fiscal IS NOT NULL AND 
+         direccion_fisica IS NOT NULL AND 
+         fk_direccion_fiscal IS NOT NULL AND 
+         fk_direccion_fisica IS NOT NULL AND
+         ci IS NULL AND 
+         primer_nombre IS NULL AND 
+         segundo_nombre IS NULL AND 
+         primer_apellido IS NULL AND 
+         segundo_apellido IS NULL AND 
+         direccion_habitacion IS NULL AND 
+         fk_direccion_habitacion IS NULL)
     )
 );
 
@@ -288,8 +314,7 @@ CREATE TABLE IF NOT EXISTS cerveza (
     CONSTRAINT pk_cerveza PRIMARY KEY (clave),
     CONSTRAINT fk_tipo_cerveza_cerveza FOREIGN KEY (fk_tipo_cerveza) REFERENCES tipo_cerveza(clave),
     CONSTRAINT fk_receta_cerveza FOREIGN KEY (fk_receta) REFERENCES receta(clave),
-    CONSTRAINT fk_miembro_cerveza FOREIGN KEY (fk_miembro) REFERENCES miembro(rif),
-    CONSTRAINT uq_cerveza UNIQUE (fk_receta)
+    CONSTRAINT fk_miembro_cerveza FOREIGN KEY (fk_miembro) REFERENCES miembro(rif)
 );
 
 
