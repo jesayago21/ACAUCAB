@@ -1,14 +1,16 @@
-
--- ========= INSERCIÓN DE RECETAS, Tipos_cerveza, y recetas, instrucciones de un tipop_cerverza =========
--- Se inserta una receta genérica para los tipos de cerveza que no tienen una receta explícita en el documento.
 INSERT INTO receta (clave, nombre, descripcion) VALUES
-(1, 'Receta no especificada', 'La receta para este tipo de cerveza no ha sido detallada en el documento de referencia. Generalmente incluye agua, malta de cebada, lúpulo y levadura.');
-
--- Se inserta la receta específica para la American Amber Ale, tal como se detalla en el documento.
-INSERT INTO receta (clave, nombre, descripcion) VALUES
+(1, 'Receta no especificada', 'La receta para este tipo de cerveza no ha sido detallada en el documento de referencia. Generalmente incluye agua, malta de cebada, lúpulo y levadura.'),
 (2, 'Receta American Amber Ale (Todo Grano)',
-'Receta simplificada, se diferencia por su color característico de ambar y notas florales');
-
+'Receta simplificada, se diferencia por su color característico de ambar y notas florales'),
+(3, 'Receta India Pale Ale (IPA)', 'Una receta lupulada y amarga, con aromas cítricos y resinosos. Utiliza maltas pálidas para resaltar el lúpulo.'),
+(4, 'Receta Stout Irlandesa', 'Cerveza oscura, seca y con notas tostadas a café y chocolate amargo. Ligeramente cremosa.'),
+(5, 'Receta Hefeweizen (Trigo Bávara)', 'Cerveza de trigo de alta fermentación, con distintivos aromas a plátano y clavo. Sin filtrar.'),
+(6, 'Receta Pilsner Checa', 'Lager pálida, limpia y refrescante, con un balance entre la dulzura de la malta y el amargor del lúpulo Saaz.'),
+(7, 'Receta Brown Ale Inglesa', 'Cerveza con cuerpo medio, notas a caramelo, toffee y frutos secos. Baja en amargor y con un final suave.'),
+(8, 'Receta Belgian Dubbel', 'Cerveza trapense de color ámbar oscuro, con complejidad de ésteres frutales, especias y malta caramelizada.'),
+(9, 'Receta Porter (Londres)', 'Cerveza oscura con un perfil de sabor a malta tostada, chocolate y café, pero más ligera y menos amarga que una Stout.'),
+(10, 'Receta Gose Ale', 'Cerveza agria de trigo con un toque de sal y cilantro. Refrescante y ligeramente ácida.');
+-- ========= INSERCIÓN DE TIPOS DE CERVEZA =========
 -- ========= INSERCIÓN DE TIPOS DE CERVEZA =========
 -- Nota: La clave 1 se usa como raíz para los tipos principales.
 

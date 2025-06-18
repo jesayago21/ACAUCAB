@@ -254,7 +254,8 @@ CREATE TABLE IF NOT EXISTS metodo_de_pago (
     tipo tipo_metodo_pago NOT NULL,
     CONSTRAINT pk_metodo_de_pago PRIMARY KEY (clave),
     CONSTRAINT fk_usuario_metodo_de_pago FOREIGN KEY (fk_usuario) REFERENCES usuario(clave),
-    CONSTRAINT chk_metodo_preferido CHECK ((metodo_preferido = FALSE AND fk_usuario IS NULL) OR (metodo_preferido = TRUE AND fk_usuario IS NOT NULL AND tipo = 'Tarjeta de credito')),
+    CONSTRAINT chk_metodo_preferido CHECK ((metodo_preferido = FALSE AND fk_usuario IS NULL)
+     OR (metodo_preferido = TRUE AND fk_usuario IS NOT NULL AND tipo = 'Tarjeta de credito')),
     
     CONSTRAINT chk_tipo_metodo_de_pago CHECK (
         (tipo = 'Efectivo' AND

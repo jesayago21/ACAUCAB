@@ -340,52 +340,43 @@ INSERT INTO control_entrada (fecha_hora_entrada, fecha_hora_salida, fk_contrato)
 -- Su horario es de 09:00 a 18:00.
 ('2024-05-27 09:02:50', '2024-05-27 18:00:15', 6);
 
- --TAMBIEN LuGAR TIENDA AQUI
--- =================================================================
--- INSERCIÓN DE DATOS EN LA TABLA 'lugar_tienda'
--- Se crea una jerarquía: Zona -> Pasillo -> Anaquel.
--- NOTA: Se usa la estrategia del "nodo raíz" para cumplir con la restricción NOT NULL.
--- =================================================================
-
--- Paso 1: Crear el nodo raíz ficticio que se contiene a sí mismo.
--- Este registro representará a toda la tienda física.
-INSERT INTO lugar_tienda (nombre, tipo) VALUES
-('Tienda ACAUCAB Sede Principal', 'zona'); -- Clave: 1 (asumida, se autoapunta)
+INSERT INTO lugar_tienda (clave, nombre, tipo, fk_lugar_tienda) VALUES
+(1, 'Tienda ACAUCAB Sede Principal', 'zona', 1); -- Clave: 1 (se autoapunta para la jerarquía)
 
 -- Paso 2: Crear las Zonas principales, que están contenidas en la "Tienda".
 -- (fk_lugar_tienda = 1)
-INSERT INTO lugar_tienda (nombre, tipo, fk_lugar_tienda) VALUES
-('Almacén Principal', 'zona', 1),             -- Clave: 2
-('Piso de Ventas', 'zona', 1);                 -- Clave: 3
+INSERT INTO lugar_tienda (clave, nombre, tipo, fk_lugar_tienda) VALUES
+(2, 'Almacén Principal', 'zona', 1),             -- Clave: 2
+(3, 'Piso de Ventas', 'zona', 1);               -- Clave: 3
 
 -- Paso 3: Crear los Pasillos dentro del Almacén Principal.
 -- (fk_lugar_tienda = 2)
-INSERT INTO lugar_tienda (nombre, tipo, fk_lugar_tienda) VALUES
-('Pasillo de Recepción de Mercancía', 'pasillo', 2), -- Clave: 4
-('Pasillo de Cajas Nacionales (Stock)', 'pasillo', 2),  -- Clave: 5
-('Pasillo de Barriles (Stock)', 'pasillo', 2);         -- Clave: 6
+INSERT INTO lugar_tienda (clave, nombre, tipo, fk_lugar_tienda) VALUES
+(4, 'Pasillo de Recepción de Mercancía', 'pasillo', 2), -- Clave: 4
+(5, 'Pasillo de Cajas Nacionales (Stock)', 'pasillo', 2),  -- Clave: 5
+(6, 'Pasillo de Barriles (Stock)', 'pasillo', 2);         -- Clave: 6
 
 -- Paso 4: Crear los Pasillos en el Piso de Ventas.
 -- (fk_lugar_tienda = 3)
-INSERT INTO lugar_tienda (nombre, tipo, fk_lugar_tienda) VALUES
-('Pasillo de Cervezas Claras (Lager/Pilsner)', 'pasillo', 3), -- Clave: 7
-('Pasillo de Cervezas Oscuras (Stout/Porter)', 'pasillo', 3), -- Clave: 8
-('Pasillo de Cervezas Especiales (IPA/APA)', 'pasillo', 3),   -- Clave: 9
-('Pasillo de Ofertas - DiarioDeUnaCerveza', 'pasillo', 3);     -- Clave: 10
+INSERT INTO lugar_tienda (clave, nombre, tipo, fk_lugar_tienda) VALUES
+(7, 'Pasillo de Cervezas Claras (Lager/Pilsner)', 'pasillo', 3), -- Clave: 7
+(8, 'Pasillo de Cervezas Oscuras (Stout/Porter)', 'pasillo', 3), -- Clave: 8
+(9, 'Pasillo de Cervezas Especiales (IPA/APA)', 'pasillo', 3),   -- Clave: 9
+(10, 'Pasillo de Ofertas - DiarioDeUnaCerveza', 'pasillo', 3);    -- Clave: 10
 
 -- Paso 5: Crear los Anaqueles dentro de los pasillos del Piso de Ventas.
 -- Estos son los lugares específicos donde se realiza la reposición.
-INSERT INTO lugar_tienda (nombre, tipo, fk_lugar_tienda) VALUES
+INSERT INTO lugar_tienda (clave, nombre, tipo, fk_lugar_tienda) VALUES
 -- Anaqueles para el pasillo de Cervezas Claras (fk_lugar_tienda = 7)
-('Anaquel Superior - Pilsner', 'anaquel', 7),   -- Clave: 11
-('Anaquel Inferior - Lager', 'anaquel', 7),     -- Clave: 12
+(11, 'Anaquel Superior - Pilsner', 'anaquel', 7),   -- Clave: 11
+(12, 'Anaquel Inferior - Lager', 'anaquel', 7),     -- Clave: 12
 
 -- Anaqueles para el pasillo de Cervezas Oscuras (fk_lugar_tienda = 8)
-('Anaquel Izquierdo - Stouts', 'anaquel', 8),   -- Clave: 13
-('Anaquel Derecho - Porters', 'anaquel', 8),    -- Clave: 14
+(13, 'Anaquel Izquierdo - Stouts', 'anaquel', 8),   -- Clave: 13
+(14, 'Anaquel Derecho - Porters', 'anaquel', 8),    -- Clave: 14
 
 -- Anaquel para el pasillo de Ofertas (fk_lugar_tienda = 10)
-('Exhibidor Central de Ofertas', 'anaquel', 10);-- Clave: 15
+(15, 'Exhibidor Central de Ofertas', 'anaquel', 10); -- Clave: 15
 
 --Insertar presentacion (10 ejemplos)
 INSERT INTO presentacion (EAN_13, nombre, cantidad_unidades, fk_cerveza) VALUES
@@ -474,3 +465,16 @@ INSERT INTO compra (fecha, monto_total, fk_miembro) VALUES
 ('2023-08-22', 120000, 890123456),
 ('2023-09-30', 400000, 901234567),
 ('2023-10-14', 180000, 112233445);
+
+
+INSERT INTO detalle_compra (fk_almacen, fk_compra, cantidad, precio_unitario) VALUES
+(1, 1, 50, 1500),
+(2, 2, 30, 2500),
+(3, 3, 100, 800),
+(4, 4, 20, 10000),
+(5, 5, 45, 3000),
+(6, 6, 70, 1200),
+(7, 7, 25, 8000),
+(8, 8, 60, 2000),
+(9, 9, 15, 25000),
+(10, 10, 80, 1000);
