@@ -9,3 +9,24 @@ INSERT INTO usuario (clave, username, contrasena, fk_rol, fk_empleado, fk_miembr
 (8, 'empleado1', 'empleado123', 8, 123456789, NULL, NULL),
 (9, 'repartidor1', 'repartidor123', 9, 456789012, NULL, NULL),
 (10, 'vendedor1', 'vendedor123', 10, 789012345, NULL, NULL);
+
+-- Inserts para la tabla tasa_cambio con montos reales
+
+INSERT INTO tasa_cambio (moneda, monto_equivalencia, fecha_inicio, fecha_fin) VALUES
+('VES', 1.00, '2025-06-01', '2025-06-03'),
+('USD', 101.90, '2025-06-01', '2025-06-03'),
+('EUR', 116.99, '2025-06-01', '2025-06-03'),
+
+('VES', 1.00, '2025-06-04', '2025-06-06'),
+('USD', 101.95, '2025-06-04', '2025-06-06'),
+('EUR', 117.05, '2025-06-04', '2025-06-06'),
+
+('VES', 1.00, '2025-06-07', '2025-06-09'),
+('USD', 101.87, '2025-06-07', '2025-06-09'),
+('EUR', 116.92, '2025-06-07', '2025-06-09'),
+
+('USD', 102.01, '2025-06-10', NULL);
+
+--Insert tienda online 
+INSERT INTO tienda_online (nombre, url_web) VALUES
+('ACAUCAB Tienda Online', 'https://tienda.acaucab.com');
