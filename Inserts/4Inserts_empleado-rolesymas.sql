@@ -380,16 +380,16 @@ INSERT INTO lugar_tienda (clave, nombre, tipo, fk_lugar_tienda) VALUES
 
 --Insertar presentacion (10 ejemplos)
 INSERT INTO presentacion (EAN_13, nombre, cantidad_unidades, fk_cerveza) VALUES
-(7501234567890, 'Botella 330ml', 24, 1),
-(7501234567891, 'Lata 355ml', 12, 2),
+(7501234567890, 'Botella 330ml', 1, 1),
+(7501234567891, 'Lata 355ml', 1, 2),
 (7501234567892, 'Pack 6 Botellas 330ml', 6, 3),
-(7501234567893, 'Botella 500ml', 20, 4),
-(7501234567894, 'Lata 473ml', 24, 5),
+(7501234567893, 'Botella 500ml', 1, 4),
+(7501234567894, 'Lata 473ml', 1, 5),
 (7501234567895, 'Pack 12 Latas 355ml', 12, 6),
-(7501234567896, 'Botella 1L', 8, 7),
-(7501234567897, 'Growler 2L', 4, 8),
+(7501234567896, 'Botella 1L', 1, 7),
+(7501234567897, 'Growler 2L', 1, 8),
 (7501234567898, 'Pack 4 Latas 473ml', 4, 9),
-(7501234567899, 'Botella 750ml', 10, 10);
+(7501234567899, 'Botella 750ml', 1, 10);
 
 --Insertar almacen (10 ejemplos)
 INSERT INTO almacen (fk_presentacion, cantidad_unidades) VALUES
