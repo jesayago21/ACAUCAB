@@ -426,3 +426,51 @@ INSERT INTO oferta (porcentaje_descuento, fecha_inicio, fecha_fin, fk_presentaci
 (18, '2025-07-25', '2025-08-09', 8),
 (8,  '2025-07-28', '2025-08-09', 9),
 (22, '2025-08-01', '2025-08-10', 10);
+
+INSERT INTO inventario_evento (clave, fk_presentacion, fk_evento, cantidad_unidades) VALUES
+(1, 1, 1, 24),  -- Evento 1 con Botella 330ml
+(2, 2, 2, 12),  -- Evento 2 con Lata 355ml
+(3, 3, 3, 6),   -- Evento 3 con Pack 6 Botellas 330ml
+(4, 4, 4, 20),  -- Evento 4 con Botella 500ml
+(5, 5, 5, 24),  -- Evento 5 con Lata 473ml
+(6, 6, 6, 12),  -- Evento 6 con Pack 12 Latas 355ml
+(7, 7, 7, 8),   -- Evento 7 con Botella 1L
+(8, 8, 8, 4),   -- Evento 8 con Growler 2L
+(9, 9, 9, 4),   -- Evento 9 con Pack 4 Latas 473ml
+(10, 10, 10, 10); -- Evento 10 con Botella 750ml
+
+INSERT INTO venta_evento (clave, fecha, monto_total, fk_evento, fk_cliente) VALUES
+(1, '2025-06-01', 150.75, 1, 1),
+(2, '2025-06-02', 200.50, 2, 2),
+(3, '2025-06-03', 175.30, 3, 3),
+(4, '2025-06-04', 220.90, 4, 4),
+(5, '2025-06-05', 189.45, 5, 5),
+(6, '2025-06-06', 250.80, 6, 6),
+(7, '2025-06-07', 130.60, 7, 7),
+(8, '2025-06-08', 275.20, 8, 8),
+(9, '2025-06-09', 165.90, 9, 9),
+(10, '2025-06-10', 300.00, 10, 10);
+
+INSERT INTO detalle_venta_evento (cantidad, precio_unitario, fk_venta_evento, fk_inventario_evento) VALUES
+(2, 25000, 1, 1),
+(1, 50000, 2, 2),
+(3, 10000, 3, 3),
+(1, 15000, 4, 4),
+(5, 5000, 5, 5),
+(2, 20000, 6, 6),
+(1, 30000, 7, 7),
+(4, 7500, 8, 8),
+(2, 40000, 9, 9),
+(3, 12000, 10, 10);
+
+INSERT INTO compra (fecha, monto_total, fk_miembro) VALUES
+('2023-01-10', 150000, 123456789),
+('2023-02-15', 220000, 234567890),
+('2023-03-20', 85000, 345678901),
+('2023-04-05', 300000, 456789012),
+('2023-05-12', 175000, 567890123),
+('2023-06-01', 95000, 678901234),
+('2023-07-08', 250000, 789012345),
+('2023-08-22', 120000, 890123456),
+('2023-09-30', 400000, 901234567),
+('2023-10-14', 180000, 112233445);
