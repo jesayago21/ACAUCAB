@@ -44,6 +44,7 @@ CREATE TRIGGER tr_validar_usuario_venta_online
 BEFORE INSERT ON venta_online
 FOR EACH ROW
 EXECUTE FUNCTION validar_usuario_venta_online();
+
 /*DEBERIA SER A PARTIR DE QUE LOS PAGOS SUMEN EL TOTAL DE LA VENTA
 -- Trigger para actualizar puntos del cliente después de una venta física
 CREATE OR REPLACE FUNCTION actualizar_puntos_cliente()
@@ -65,6 +66,8 @@ AFTER INSERT ON detalle_venta_fisica
 FOR EACH ROW
 EXECUTE FUNCTION actualizar_puntos_cliente();
 */
+
+
 -- Trigger para validar el tiempo entre estados de procesamiento
 CREATE OR REPLACE FUNCTION validar_tiempo_procesamiento()
 RETURNS TRIGGER AS $$
@@ -166,46 +169,8 @@ BEFORE INSERT OR UPDATE ON historico
 FOR EACH ROW
 EXECUTE FUNCTION validar_cambio_estatus_compra();
 
--- Trigger para validar el pago de orden de compra
-CREATE OR REPLACE FUNCTION validar_pago_compra()
-RETURNS TRIGGER AS $$
-DECLARE
-    fecha_entregado DATE;
-BEGIN
-    -- Obtener la fecha cuando se marcó como entregado
-    SELECT h.fecha_inicio INTO fecha_entregado
-    FROM historico h
-    JOIN estatus e ON e.clave = h.fk_estatus
-    WHERE h.fk_compra = NEW.fk_compra
-    AND e.estado = 'entregado'
-    AND e.aplicable_a = 'compra'
-    ORDER BY h.fecha_inicio DESC
-    LIMIT 1;
 
-    -- Verificar que hayan pasado 15 días desde la entrega
-    IF fecha_entregado IS NOT NULL AND 
-       NEW.fecha_pago < (fecha_entregado + INTERVAL '15 days') THEN
-        RAISE EXCEPTION 'El pago debe realizarse 15 días después de la entrega';
-    END IF;
 
-    -- Verificar que el método de pago sea en efectivo
-    IF NOT EXISTS (
-        SELECT 1 FROM metodo_de_pago
-        WHERE clave = NEW.fk_metodo_de_pago
-        AND tipo = 'Efectivo'
-    ) THEN
-        RAISE EXCEPTION 'El pago de una orden de compra debe ser en efectivo';
-    END IF;
-    
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER tr_validar_pago_compra
-BEFORE INSERT ON pago
-FOR EACH ROW
-WHEN (NEW.fk_compra IS NOT NULL)
-EXECUTE FUNCTION validar_pago_compra();
 
 -- Trigger para generar órdenes de reposición automáticas
 CREATE OR REPLACE FUNCTION generar_orden_reposicion()
@@ -251,6 +216,8 @@ CREATE TRIGGER tr_generar_orden_reposicion
 AFTER UPDATE ON inventario_tienda
 FOR EACH ROW
 EXECUTE FUNCTION generar_orden_reposicion();
+
+
 
 -- Trigger para validar que los estatus correspondan con el tipo de entidad
 CREATE OR REPLACE FUNCTION validar_estatus_entidad()
@@ -321,6 +288,8 @@ BEFORE INSERT ON pago
 FOR EACH ROW
 EXECUTE FUNCTION validar_metodo_pago_online();
 
+
+
 -- Trigger para validar jerarquía de eventos
 CREATE OR REPLACE FUNCTION validar_jerarquia_eventos()
 RETURNS TRIGGER AS $$
@@ -366,3 +335,49 @@ CREATE TRIGGER tr_validar_jerarquia_eventos
 BEFORE INSERT OR UPDATE ON evento
 FOR EACH ROW
 EXECUTE FUNCTION validar_jerarquia_eventos(); 
+
+
+
+
+/*
+-- Trigger para validar el pago de orden de compra
+CREATE OR REPLACE FUNCTION validar_pago_compra()
+RETURNS TRIGGER AS $$
+DECLARE
+    fecha_entregado DATE;
+BEGIN
+    -- Obtener la fecha cuando se marcó como entregado
+    SELECT h.fecha_inicio INTO fecha_entregado
+    FROM historico h
+    JOIN estatus e ON e.clave = h.fk_estatus
+    WHERE h.fk_compra = NEW.fk_compra
+    AND e.estado = 'entregado'
+    AND e.aplicable_a = 'compra'
+    ORDER BY h.fecha_inicio DESC
+    LIMIT 1;
+
+    -- Verificar que hayan pasado 15 días desde la entrega
+    IF fecha_entregado IS NOT NULL AND 
+       NEW.fecha_pago < (fecha_entregado + INTERVAL '15 days') THEN
+        RAISE EXCEPTION 'El pago debe realizarse 15 días después de la entrega';
+    END IF;
+
+    -- Verificar que el método de pago sea en efectivo
+    IF NOT EXISTS (
+        SELECT 1 FROM metodo_de_pago
+        WHERE clave = NEW.fk_metodo_de_pago
+        AND tipo = 'Efectivo'
+    ) THEN
+        RAISE EXCEPTION 'El pago de una orden de compra debe ser en efectivo';
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tr_validar_pago_compra
+BEFORE INSERT ON pago
+FOR EACH ROW
+WHEN (NEW.fk_compra IS NOT NULL)
+EXECUTE FUNCTION validar_pago_compra();
+*/
