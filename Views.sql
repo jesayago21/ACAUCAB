@@ -180,5 +180,24 @@ FROM pago p
 JOIN metodo_de_pago mp ON mp.clave = p.fk_metodo_de_pago
 JOIN tasa_cambio tc ON tc.clave = p.fk_tasa_cambio;
 
-
-
+CREATE VIEW v_historial_pagos AS
+SELECT
+    h.clave AS "ID Historial",
+    h.fecha AS "Fecha del Evento",
+    e.estado AS "Estado Asignado",
+    -- Usamos CASE para identificar a qué entidad pertenece el registro del historial.
+    CASE
+        WHEN h.fk_compra IS NOT NULL THEN 'Orden de Compra'
+        WHEN h.fk_reposicion IS NOT NULL THEN 'Orden de Reposición'
+        WHEN h.fk_cuota IS NOT NULL THEN 'Cuota de Afiliación'
+        WHEN h.fk_venta_online IS NOT NULL THEN 'Venta Online'
+        ELSE 'Desconocido'
+    END AS "Tipo de Entidad",
+    -- Usamos COALESCE para mostrar el ID de la entidad afectada.
+    COALESCE(h.fk_compra, h.fk_reposicion, h.fk_cuota, h.fk_venta_online) AS "ID de la Entidad"
+FROM
+    historico AS h
+JOIN
+    estatus AS e ON h.fk_estatus = e.clave
+ORDER BY
+    "Tipo de Entidad", "ID de la Entidad", h.fecha;

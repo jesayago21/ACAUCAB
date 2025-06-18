@@ -270,6 +270,6 @@ INSERT INTO detalle_venta_fisica (cantidad, precio_unitario, fk_venta_tienda_fis
 (5, 10, 49, 3),
 (5, 6, 49, 4),
 --Orden 40
-(10, 5, 50, 2),
+(10, 5, 50, 2);
 
 
