@@ -206,14 +206,14 @@ INSERT INTO cliente (rif, puntos_acumulados, tipo, razon_social, denominacion_co
 
 --Tipo evento
 INSERT INTO tipo_evento (nombre, descripcion) VALUES
-('Festival Cervecero', 'Evento masivo con múltiples cervecerías artesanales, catas y música en vivo.'),
-('Taller de Cata', 'Sesión educativa para aprender a degustar y apreciar diferentes estilos de cerveza.'),
-('Concurso Homebrew', 'Competencia de cerveceros caseros con jurados profesionales.'),
+('Festival', 'Evento masivo con múltiples cervecerías artesanales, catas y música en vivo.'),--maayor posible
+('Taller', 'Sesión educativa para aprender a degustar y apreciar diferentes estilos de cerveza.'),
+('Concurso', 'Competencia de cerveceros caseros con jurados profesionales.'),
 ('Lanzamiento de Producto', 'Evento exclusivo para presentación de nuevas cervezas al mercado.'),
 ('Cena Maridaje', 'Experiencia gastronómica con platos diseñados para combinar con cervezas específicas.'),
-('Tour Cervecero', 'Recorrido guiado por instalaciones de producción con degustación incluida.'),
+('Tour', 'Recorrido guiado por instalaciones de producción con degustación incluida.'),
 ('Meet the Brewer', 'Encuentro íntimo con maestros cerveceros para conocer sus procesos creativos.'),
-('Oktoberfest Local', 'Celebración tradicional alemana adaptada con cervezas artesanales locales.'),
+('Ponencia', 'Celebración tradicional alemana adaptada con cervezas artesanales locales.'),
 ('Curso de Elaboración', 'Taller práctico para aprender a elaborar cerveza artesanal en casa.'),
 ('Expo Ingredientes', 'Exhibición de materias primas para elaboración de cerveza con proveedores especializados.');
 
