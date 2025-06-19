@@ -1,73 +1,45 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import "../../assets/scss/astro-ecommerce.scss";
+// El SCSS global se mantiene, es bueno tenerlo.
+import "../../assets/scss/astro-ecommerce.scss"; 
 import AutopagoFlow from "../components/autopago/AutopagoFlow";
 ---
 
 <Layout title="Autopago - ACAUCAB">
-  <main class="autopago-main">
-    <!-- Componente principal del flujo de autopago -->
+  <div class="autopago-container">
     <AutopagoFlow client:load />
-  </main>
+  </div>
 </Layout>
 
 <style is:global>
-  /* Solo variables CSS esenciales y overrides mínimos para Tailwind */
+  /*
+    Hemos movido tus variables a la configuración de Tailwind.
+    Si necesitas usarlas en CSS plano, lo ideal es que estén en un archivo CSS/SCSS global,
+    no en un componente de página.
+  */
   :root {
-    --green-bottle: #1e3a1a;
-    --green-dark: #2d5530;
-    --green-medium: #4a7c59;
-    --green-light: #68a077;
-    --green-pale: #e8f5e8;
-  }
-
-  /* Fondo principal */
-  .autopago-main {
-    min-height: 100vh;
-    background: linear-gradient(
-      135deg,
-      var(--green-bottle) 0%,
-      var(--green-dark) 50%,
-      var(--green-medium) 100%
-    );
+    /* Mantenemos la fuente global aquí, es un buen lugar. */
     font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   }
 
-  /* Overrides específicos para colores personalizados que Tailwind no tiene */
-  .bg-green-custom {
-    background-color: var(--green-medium) !important;
-  }
+  /* NUEVO DISEÑO: Limpio, enfocado y profesional.
+  */
+  .autopago-container {
+    /* Usamos un color pálido de tu propia paleta para el fondo */
+    background-color: #e8f5e8; /* O simplemente 'white' o '#f9fafb' (gris de Tailwind) */
+    
+    /* O un gradiente muy sutil si quieres mantener ese efecto */
+    /* background: linear-gradient(180deg, #FFFFFF 0%, #E8F5E8 100%); */
+    
+    min-height: 100vh;
+    width: 100%;
 
-  .bg-green-custom-dark {
-    background-color: var(--green-dark) !important;
-  }
+    /* Centramos el contenido vertical y horizontalmente */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
-  .text-green-custom {
-    color: var(--green-medium) !important;
-  }
-
-  .text-green-custom-dark {
-    color: var(--green-dark) !important;
-  }
-
-  .border-green-custom {
-    border-color: var(--green-medium) !important;
-  }
-
-  /* Gradientes personalizados */
-  .bg-gradient-custom {
-    background: linear-gradient(
-      90deg,
-      var(--green-medium) 0%,
-      var(--green-dark) 100%
-    ) !important;
-  }
-
-  .bg-gradient-custom:hover {
-    background: linear-gradient(
-      90deg,
-      var(--green-dark) 0%,
-      var(--green-bottle) 100%
-    ) !important;
+    /* Damos un poco de espacio por si el contenido es grande */
+    padding: 2rem; 
   }
 </style>

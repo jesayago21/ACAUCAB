@@ -1,145 +1,139 @@
+// PantallaInicio.tsx
+
 import React from 'react';
 
-/** Propiedades del componente PantallaInicio */
+// --- SUB-COMPONENTES REUTILIZABLES ---
+
+// Componente para cada característica (Rápido, Seguro, 24/7)
+const FeatureCard = ({ icon, title, children }: { icon: string; title: string; children: React.ReactNode }) => (
+  <div className="text-center p-6 border border-custom-green-pale rounded-xl transition-all duration-300 hover:shadow-lg hover:border-custom-green-medium hover:-translate-y-1">
+    <div className="inline-flex items-center justify-center w-16 h-16 bg-custom-green-pale rounded-full mb-5">
+      <i className={`fas ${icon} text-custom-green-dark text-2xl`}></i>
+    </div>
+    <h3 className="text-lg font-bold text-custom-green-dark mb-2">{title}</h3>
+    <p className="text-gray-600 leading-relaxed">
+      {children}
+    </p>
+  </div>
+);
+
+// Componente para cada paso del proceso de compra
+const ProcessStep = ({ number, text }: { number: number; text: string }) => (
+  <div className="flex items-center space-x-3">
+    <div className="flex-shrink-0 w-8 h-8 bg-custom-green-dark text-white rounded-full flex items-center justify-center font-bold">
+      {number}
+    </div>
+    <span className="text-custom-green-dark font-medium">{text}</span>
+  </div>
+);
+
+// --- COMPONENTE PRINCIPAL ---
+
 interface PantallaInicioProps {
   onIniciarCompra: () => void;
 }
 
-/** Pantalla inicial del sistema de autopago */
 const PantallaInicio: React.FC<PantallaInicioProps> = ({ onIniciarCompra }) => {
+  // Datos para los componentes, haciendo el JSX más limpio
+  const features = [
+    { icon: 'fa-bolt', title: 'Rápido y Fácil', description: 'Identifícate, selecciona productos y paga en pocos pasos.' },
+    { icon: 'fa-shield-alt', title: 'Seguro', description: 'Transacciones protegidas con múltiples métodos de pago.' },
+    { icon: 'fa-clock', title: 'Disponible 24/7', description: 'Compra cuando quieras, el sistema siempre está activo.' },
+  ];
+
+  const steps = [
+    { number: 1, text: 'Identifícate' },
+    { number: 2, text: 'Agrega productos' },
+    { number: 3, text: 'Revisa tu carrito' },
+    { number: 4, text: 'Realiza el pago' },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-700 to-green-600 flex items-center justify-center p-4">
-      <div className="max-w-4xl mx-auto w-full">
-        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
-          <div className="p-8 lg:p-12 text-center">
-            {/* Logo y título principal */}
-            <div className="mb-10">
-              <div className="mb-6">
-                <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-green-500 to-green-700 rounded-full mb-4">
-                  <i className="fas fa-store text-white text-3xl"></i>
-                </div>
+    // El fondo se controla desde la página de Astro, como acordamos.
+    // Este div asegura que el contenido no exceda un ancho máximo y esté centrado.
+    <div className="w-full max-w-5xl mx-auto px-4 py-8">
+      <div className="bg-white rounded-3xl shadow-xl overflow-hidden animate-fade-in">
+        <div className="p-8 sm:p-12 md:p-16">
+          
+          {/* Encabezado */}
+          <header className="text-center mb-12">
+            <div className="inline-block bg-gradient-to-br from-custom-green-medium to-custom-green-dark p-2 rounded-full mb-6">
+              <div className="bg-white p-4 rounded-full">
+                <i className="fas fa-store text-custom-green-dark text-4xl"></i>
               </div>
-              <h1 className="text-4xl lg:text-5xl font-bold text-gray-800 mb-4">
-                AUTOPAGO 
-                <span className="text-green-600">ACAUCAB</span>
-              </h1>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Sistema de compra autoguiada para tienda física
-              </p>
             </div>
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-800 tracking-tight">
+              Autopago <span className="text-custom-green-dark">ACAUCAB</span>
+            </h1>
+            <p className="text-lg text-gray-500 mt-4 max-w-2xl mx-auto">
+              Bienvenido al sistema de compra autoguiada para nuestra tienda.
+            </p>
+          </header>
 
-            {/* Características del sistema */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                  <i className="fas fa-bolt text-green-600 text-2xl"></i>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">Rápido y Fácil</h3>
-                <p className="text-gray-600">
-                  Identifícate, selecciona productos y paga en pocos pasos
-                </p>
-              </div>
+          {/* Sección de Características */}
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            {features.map((feature) => (
+              <FeatureCard key={feature.title} icon={feature.icon} title={feature.title}>
+                {feature.description}
+              </FeatureCard>
+            ))}
+          </section>
+
+          {/* Botón Principal (Call to Action) */}
+          <section className="text-center mb-16">
+            <button
+              onClick={onIniciarCompra}
+              className="px-16 py-4 bg-gradient-to-r from-custom-green-medium to-custom-green-dark text-white text-xl font-bold rounded-full shadow-lg transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-custom-green-light"
+            >
+              <i className="fas fa-shopping-cart mr-3"></i>
+              Comenzar Compra
+            </button>
+          </section>
+
+          {/* Guía del Proceso y Métodos de Pago */}
+          <section className="bg-custom-green-pale rounded-2xl p-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                  <i className="fas fa-shield-alt text-green-600 text-2xl"></i>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">Seguro</h3>
-                <p className="text-gray-600">
-                  Transacciones protegidas con múltiples métodos de pago
-                </p>
-              </div>
-              
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                  <i className="fas fa-clock text-green-600 text-2xl"></i>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">Disponible 24/7</h3>
-                <p className="text-gray-600">
-                  Compra cuando quieras, el sistema siempre está activo
-                </p>
-              </div>
-            </div>
-
-            {/* Botón de inicio */}
-            <div className="mb-8">
-              <button
-                onClick={onIniciarCompra}
-                className="inline-flex items-center px-12 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white text-xl font-semibold rounded-full shadow-lg hover:from-green-700 hover:to-green-800 transform hover:scale-105 transition-all duration-200"
-              >
-                <i className="fas fa-shopping-cart mr-3"></i>
-                EMPEZAR COMPRA
-              </button>
-            </div>
-
-            {/* Instrucciones del proceso */}
-            <div className="bg-green-50 rounded-2xl p-6 mb-8">
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <i className="fas fa-info-circle text-green-600 text-xl mt-1"></i>
-                </div>
-                <div className="ml-4 text-left">
-                  <h4 className="text-lg font-semibold text-green-800 mb-3">Proceso de compra:</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">1</div>
-                      <span className="text-green-700 font-medium">Identifícate</span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">2</div>
-                      <span className="text-green-700 font-medium">Agrega productos</span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">3</div>
-                      <span className="text-green-700 font-medium">Revisa tu carrito</span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">4</div>
-                      <span className="text-green-700 font-medium">Realiza el pago</span>
-                    </div>
-                  </div>
+              {/* Columna Izquierda: Proceso */}
+              <div>
+                <h4 className="text-xl font-bold text-custom-green-dark mb-6 flex items-center">
+                  <i className="fas fa-shoe-prints mr-3 transform -rotate-45"></i>
+                  Sigue estos 4 sencillos pasos
+                </h4>
+                <div className="space-y-4">
+                  {steps.map(step => <ProcessStep key={step.number} {...step} />)}
                 </div>
               </div>
-            </div>
 
-            {/* Métodos de pago disponibles */}
-            <div className="bg-gray-50 rounded-2xl p-6 mb-8">
-              <h4 className="text-lg font-semibold text-gray-800 mb-4">
-                <i className="fas fa-credit-card mr-2 text-green-600"></i>
-                Métodos de Pago Disponibles
-              </h4>
-              <div className="flex flex-wrap justify-center gap-6">
-                <div className="flex items-center text-gray-600">
-                  <i className="fas fa-money-bill-wave text-green-500 mr-2"></i>
-                  <span>Efectivo</span>
-                </div>
-                <div className="flex items-center text-gray-600">
-                  <i className="fas fa-credit-card text-blue-500 mr-2"></i>
-                  <span>Tarjeta</span>
-                </div>
-                <div className="flex items-center text-gray-600">
-                  <i className="fas fa-money-check text-purple-500 mr-2"></i>
-                  <span>Cheque</span>
-                </div>
-                <div className="flex items-center text-gray-600">
-                  <i className="fas fa-star text-yellow-500 mr-2"></i>
-                  <span>Puntos</span>
+              {/* Columna Derecha: Métodos de Pago */}
+              <div>
+                 <h4 className="text-xl font-bold text-custom-green-dark mb-6 flex items-center">
+                  <i className="fas fa-credit-card mr-3"></i>
+                  Aceptamos
+                </h4>
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-gray-700">
+                    <span className="font-medium">Efectivo</span>
+                    <span className="font-medium">Tarjeta de Débito/Crédito</span>
+                    <span className="font-medium">Pago Móvil</span>
+                    <span className="font-medium">Puntos Acumulados</span>
                 </div>
               </div>
-            </div>
 
-            {/* Footer */}
-            <div className="border-t border-gray-200 pt-6">
-              <p className="text-gray-500 flex items-center justify-center">
-                <i className="fas fa-headset mr-2"></i>
-                ¿Necesitas ayuda? Solicita asistencia a nuestro personal
-              </p>
             </div>
-          </div>
+          </section>
+
         </div>
+        
+        {/* Footer */}
+        <footer className="bg-gray-50 text-center p-6 border-t border-gray-200">
+          <p className="text-gray-600">
+            <i className="fas fa-headset mr-2 text-custom-green-medium"></i>
+            ¿Necesitas ayuda? Solicita asistencia a nuestro personal.
+          </p>
+        </footer>
       </div>
     </div>
   );
 };
 
-export default PantallaInicio; 
+export default PantallaInicio;

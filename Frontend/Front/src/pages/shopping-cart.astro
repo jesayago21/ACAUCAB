@@ -2,43 +2,97 @@
 import Layout from '../layouts/Layout.astro';
 import data from '../../public/data.json';
 import '../../assets/scss/astro-ecommerce.scss';
+
+// Component Imports
 import Navbar from '../components/navbar';
-import UpperNavbar from '../components/store/upperNavbar';
+// Assuming UpperNavbar is used somewhere, otherwise remove if not needed on this page
+// import UpperNavbar from '../components/store/upperNavbar';
 import CardProduct from '../components/products/cardProduct';
-import ShoppingCart from '../components/cart/shoppingCart';
+import ShoppingCartComponent from '../components/cart/shoppingCart';
 import StoreDoubleColumn from '../components/store/storeDoubleColumn';
 
-let cartItems = [];
-data.shoppingCart.map(id => 
-  data.products.filter(x => x.id == id).map(x => cartItems.push(x))
-)
+// --- Data Preparation ---
+
+// CONCEPTUAL: Define TypeScript interfaces for your data for better type safety
+// interface Product {
+//   id: string;
+//   thumb_src: string;
+//   thumb_alt: string;
+//   title: string;
+//   price: number;
+//   color?: string;
+//   // ... other product properties
+// }
+
+// interface Data {
+//   shoppingCart: string[]; // Assuming this is an array of product IDs
+//   products: Product[];
+//   // ... other data properties
+// }
+
+// OPTION 1: More concise way to get cart items using map and find
+// This assumes 'data.shoppingCart' contains an array of product IDs.
+const cartItemsRaw = data.shoppingCart
+  .map(id => data.products.find(product => product.id === id))
+  .filter(Boolean); // Filters out any undefined items if an ID doesn't match
+
+// Map to the shape expected by ShoppingCartComponent
+const cartItems = cartItemsRaw.map(product => ({
+  thumb_src: product!.thumb_src,
+  thumb_alt: product!.thumb_alt,
+  color: product!.color,
+  title: product!.title,
+  price: product!.price,
+  size: product!.size ?? "M", // Default size if not present
+  stock: product!.stock,
+  subtotal: product!.price, // Or calculate as needed
+  shipping: 0, // Set default or calculate
+  tax: 0, // Set default or calculate
+}));
+
+// OPTION 2: Alternative using filter for cart items (slightly less efficient if products array is very large)
+// const cartItems = data.products.filter(product => data.shoppingCart.includes(product.id));
+
+// Handle cases where data might be unexpectedly empty
+if (!data || !data.products || data.products.length === 0) {
+  console.warn("Product data is missing or empty.");
+  // You might want to redirect or show a user-friendly message here
+}
+
 ---
 
-<Layout title="Shopping Cart">
-	<main>
+<Layout title="Your Shopping Cart">
+  <main>
     <Navbar />
 
-    <ShoppingCart products = {cartItems}/>
-    
+    {/* Render the ShoppingCart component with the prepared cart items */}
+    <ShoppingCartComponent products={cartItems} />
+
     <div class="container mt-5">
       <div class="row">
         <h5 class="mb-4">You may also like...</h5>
-        {data.products.map(product => 
+        {/* Iterate over all products to display "You may also like..." items */}
+        {data.products.map(product => (
+          // IMPORTANT: Add a unique 'key' prop for each item in a list for performance and stability
           <div class="col-md-6 col-lg-3">
-            <CardProduct 
-              thumb_src = {product.thumb_src}
-              thumb_alt = {product.thumb_alt}
-              color = {product.color}
-              title = {product.title}
-              price = {product.price}
-              position = "left"
+            <CardProduct
+              thumb_src={product.thumb_src}
+              thumb_alt={product.thumb_alt}
+              color={product.color}
+              title={product.title}
+              price={product.price}
+              position="start"
+              // description={product.description}
+              // colors={product.colors}
             />
           </div>
-        )}        
+        ))}
       </div>
+
       <hr class="dark horizontal my-5" />
+
+      {/* Render the StoreDoubleColumn component */}
       <StoreDoubleColumn />
     </div>
   </main>
-
 </Layout>

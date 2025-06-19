@@ -1,56 +1,82 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import data from '../../public/data.json';
-import '../../assets/scss/astro-ecommerce.scss';
-import Navbar from '../components/navbar';
-import CardProduct from '../components/products/cardProduct';
-import ProductOverviewGrid from '../components/products/productOverviewGrid';
-import StoreDoubleColumn from '../components/store/storeDoubleColumn';
-import ReviewSummaryChart from '../components/reviews/reviewSummaryChart';
+import '../../assets/scss/astro-ecommerce.scss'; // Keep your global styles
+import Navbar from '../components/navbar'; // Assuming this is a React component
+import CardProduct from '../components/products/cardProduct'; // Assuming this is a React component
+import ProductOverviewGrid from '../components/products/productOverviewGrid'; // Assuming this is a React component
+import ReviewSummaryChart from '../components/reviews/reviewSummaryChart'; // Assuming this is a React component
+import StoreDoubleColumn from '../components/store/storeDoubleColumn'; // Assuming this is a React component
 
-// filter reviews with ID 01
-let productReviews = data.reviews.filter(x => x.productID == "01");
+// Filter reviews specifically for the product with ID 1 and ensure productID is a number
+const productReviews = data.reviews
+  .filter(review => Number(review.productID) === 1)
+  .map(review => ({ ...review, productID: Number(review.productID) }));
+
+// Get the first product's data for the main overview
+const mainProduct = data.products[0];
+
+// Filter out the main product from the "Customers also purchased" list
+const otherProducts = data.products.filter(product => product.id !== mainProduct.id);
 ---
 
-<Layout title="Product Page">
-	<main>
-    <Navbar />
-    <div class="container mt-5">
-      <ProductOverviewGrid  
-        colors={data.products[0].colors}
-        images={data.products[0].images}
-        title={data.products[0].title}
-        full_description={data.products[0].full_description}
-        price={data.products[0].price}
-        highlights={data.products[0].highlights}
-        details={data.products[0].details}
-        rating={data.products[0].rating}
-        reviews={data.products[0].reviews}
-        sizes={data.products[0].sizes}
-      />    
+<Layout title={`${mainProduct.title} - Product Page`}>
+  <header>
+    <Navbar client:load /> {/* Use client:load if Navbar needs client-side JS */}
+  </header>
 
-      <div class="my-5">
-        <ReviewSummaryChart reviews = {productReviews}/>
-      </div>
+  <main class="min-h-screen bg-gray-50 pb-16"> {/* Add base background and padding */}
+    <div class="container mx-auto px-4 py-8"> {/* Tailwind container for consistent spacing */}
+      {/* Main Product Overview Section */}
+      <section class="mb-12"> {/* Added margin bottom for spacing */}
+        <ProductOverviewGrid
+          colors={mainProduct.colors ?? []}
+          images={mainProduct.images ?? []}
+          title={mainProduct.title ?? ''}
+          full_description={mainProduct.full_description ?? ''}
+          price={mainProduct.price ?? 0}
+          highlights={mainProduct.highlights ?? []}
+          details={mainProduct.details ?? ''}
+          rating={mainProduct.rating ?? 0}
+          reviews={mainProduct.reviews ?? 0}
+          sizes={new Map(Object.entries(mainProduct.sizes ?? {}))}
+          client:load
+        />
+      </section>
 
-      <div class="row">
-        <h5 class="mb-4">Customers also purchased</h5>
-        {data.products.map(product => 
-          <div class="col-md-6 col-lg-3">
-            <CardProduct 
-              thumb_src = {product.thumb_src}
-              thumb_alt = {product.thumb_alt}
-              color = {product.color}
-              title = {product.title}
-              price = {product.price}
-              position = "left"
-            />
-          </div>
-        )}        
-      </div>
-      <hr class="dark horizontal my-5" />
-      <StoreDoubleColumn />
+      {/* Review Summary Chart Section */}
+      <section class="bg-white p-6 rounded-lg shadow-md mb-12"> {/* Added styling to the chart container */}
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Resumen de Opiniones</h2>
+        <ReviewSummaryChart reviews={productReviews} client:load /> {/* client:load if it needs JS */}
+      </section>
+
+      {/* "Customers also purchased" Section */}
+      <section class="mt-12"> {/* More spacing above this section */}
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Clientes también compraron</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"> {/* Responsive grid for products */}
+          {otherProducts.map(product => (
+            <div> {/* Container for CardProduct */}
+              <CardProduct
+                thumb_src={product.thumb_src}
+                thumb_alt={product.thumb_alt}
+                color={product.color}
+                title={product.title}
+                price={product.price}
+                position="start"
+                client:load
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Separator */}
+      <hr class="border-t border-gray-200 my-10" /> {/* Cleaner horizontal rule */}
+
+      {/* Store Double Column Section */}
+      <section>
+        <StoreDoubleColumn client:load /> {/* client:load if StoreDoubleColumn needs JS */}
+      </section>
     </div>
   </main>
-
 </Layout>

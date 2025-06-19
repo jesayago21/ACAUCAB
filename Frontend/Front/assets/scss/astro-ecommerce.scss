@@ -28,3 +28,31 @@
 
 // Custom Variables
 @import "astro-ecommerce/custom/styles";
+
+/* En tu archivo CSS principal, por ejemplo: src/assets/scss/astro-ecommerce.scss */
+
+/* Para navegadores basados en Webkit (Chrome, Safari, Edge) */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px; /* Ancho de la barra de desplazamiento */
+  height: 8px; /* Altura de la barra de desplazamiento horizontal */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f0f0f0; /* Color del fondo del track */
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e0; /* Color del "pulgar" de la barra de desplazamiento */
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0; /* Color al pasar el ratón */
+}
+
+/* Para Firefox */
+.custom-scrollbar {
+  scrollbar-width: thin; /* "auto" o "none" */
+  scrollbar-color: #cbd5e0 #f0f0f0; /* thumb color track color */
+}
