@@ -6,6 +6,58 @@ const clientController = require('../controllers/clientController');
  * @swagger
  * components:
  *   schemas:
+ *     Telefono:
+ *       type: object
+ *       required:
+ *         - codigo
+ *         - numero
+ *       properties:
+ *         codigo:
+ *           type: integer
+ *           enum: [414, 416, 412, 424, 426]
+ *           description: Código del operador (sin 0)
+ *           example: 414
+ *         numero:
+ *           type: integer
+ *           description: Número de teléfono (7 dígitos)
+ *           example: 1234567
+ *         extension:
+ *           type: integer
+ *           description: Extensión (opcional)
+ *           example: 123
+ *     
+ *     CorreoElectronico:
+ *       type: object
+ *       required:
+ *         - direccion_email
+ *       properties:
+ *         direccion_email:
+ *           type: string
+ *           format: email
+ *           description: Dirección de correo electrónico
+ *           example: "cliente@ejemplo.com"
+ *     
+ *     PersonaContacto:
+ *       type: object
+ *       required:
+ *         - primer_nombre
+ *         - primer_apellido
+ *         - correo
+ *         - telefono
+ *       properties:
+ *         primer_nombre:
+ *           type: string
+ *           description: Primer nombre de la persona de contacto
+ *           example: "María"
+ *         primer_apellido:
+ *           type: string
+ *           description: Primer apellido de la persona de contacto
+ *           example: "González"
+ *         correo:
+ *           $ref: '#/components/schemas/CorreoElectronico'
+ *         telefono:
+ *           $ref: '#/components/schemas/Telefono'
+ *
  *     ClienteNatural:
  *       type: object
  *       required:
@@ -14,6 +66,8 @@ const clientController = require('../controllers/clientController');
  *         - primer_nombre
  *         - primer_apellido
  *         - direccion_habitacion
+ *         - correo
+ *         - telefonos
  *       properties:
  *         ci:
  *           type: integer
@@ -45,8 +99,15 @@ const clientController = require('../controllers/clientController');
  *           example: "Av. Libertador, Caracas"
  *         fk_direccion_habitacion:
  *           type: integer
- *           description: ID del lugar de la dirección
+ *           description: ID de la parroquia de la dirección
  *           example: 1
+ *         correo:
+ *           $ref: '#/components/schemas/CorreoElectronico'
+ *         telefonos:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Telefono'
+ *           minItems: 1
  *     
  *     ClienteJuridico:
  *       type: object
@@ -58,6 +119,8 @@ const clientController = require('../controllers/clientController');
  *         - capital_disponible
  *         - direccion_fiscal
  *         - direccion_fisica
+ *         - correo
+ *         - telefonos
  *       properties:
  *         rif:
  *           type: integer
@@ -89,12 +152,41 @@ const clientController = require('../controllers/clientController');
  *           example: "Centro Comercial ABC, Local 123"
  *         fk_direccion_fiscal:
  *           type: integer
- *           description: ID del lugar fiscal
+ *           description: ID de la parroquia fiscal
  *           example: 1
  *         fk_direccion_fisica:
  *           type: integer
- *           description: ID del lugar físico
+ *           description: ID de la parroquia física
  *           example: 2
+ *         correo:
+ *           $ref: '#/components/schemas/CorreoElectronico'
+ *         telefonos:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Telefono'
+ *           minItems: 1
+ *         personas_contacto:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/PersonaContacto'
+ *           description: Personas de contacto (opcional para clientes jurídicos)
+ *     
+ *     Lugar:
+ *       type: object
+ *       properties:
+ *         clave:
+ *           type: integer
+ *           description: ID único del lugar
+ *         nombre:
+ *           type: string
+ *           description: Nombre del lugar
+ *         tipo:
+ *           type: string
+ *           enum: [estado, municipio, parroquia]
+ *           description: Tipo de lugar
+ *         fk_lugar:
+ *           type: integer
+ *           description: ID del lugar padre
  */
 
 /**
@@ -102,7 +194,7 @@ const clientController = require('../controllers/clientController');
  * /api/clientes/identificar:
  *   post:
  *     summary: Identificar cliente por documento
- *     description: Busca un cliente existente por su cédula (cliente natural) o RIF (cliente jurídico)
+ *     description: Busca un cliente existente por su cédula (cliente natural) o RIF (cliente jurídico). Incluye información de contacto y personas de contacto.
  *     tags: [Clientes]
  *     requestBody:
  *       required: true
@@ -133,7 +225,7 @@ const clientController = require('../controllers/clientController');
  *                   example: true
  *                 cliente:
  *                   type: object
- *                   description: Datos del cliente encontrado
+ *                   description: Datos completos del cliente con información de contacto
  *       404:
  *         description: Cliente no encontrado
  *         content:
@@ -162,7 +254,7 @@ router.post('/identificar', clientController.identificarCliente);
  * /api/clientes/crear:
  *   post:
  *     summary: Crear nuevo cliente
- *     description: Crea un nuevo cliente natural o jurídico según el tipo especificado
+ *     description: Crea un nuevo cliente natural o jurídico con sus datos de contacto y personas de contacto (si aplica)
  *     tags: [Clientes]
  *     requestBody:
  *       required: true
@@ -199,9 +291,9 @@ router.post('/identificar', clientController.identificarCliente);
  *                   example: "Cliente creado exitosamente"
  *                 cliente:
  *                   type: object
- *                   description: Datos del cliente creado
+ *                   description: Datos del cliente creado con información de contacto
  *       400:
- *         description: Datos de entrada inválidos
+ *         description: Datos de entrada inválidos o faltantes
  *       409:
  *         description: Cliente ya existe
  *       500:
@@ -213,34 +305,121 @@ router.post('/crear', clientController.crearCliente);
  * @swagger
  * /api/clientes/lugares:
  *   get:
- *     summary: Obtener lugares disponibles
- *     description: Retorna la lista de lugares disponibles para usar en direcciones de clientes
- *     tags: [Clientes]
+ *     summary: Obtener lugares con estructura jerárquica
+ *     description: Retorna la estructura jerárquica completa de estados, municipios y parroquias
+ *     tags: [Lugares]
  *     responses:
  *       200:
- *         description: Lista de lugares disponibles
+ *         description: Estructura jerárquica de lugares
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Lugares obtenidos exitosamente"
+ *                 lugares:
+ *                   type: object
+ *                   properties:
+ *                     estados:
+ *                       type: array
+ *                       items:
+ *                         allOf:
+ *                           - $ref: '#/components/schemas/Lugar'
+ *                           - type: object
+ *                             properties:
+ *                               municipios:
+ *                                 type: array
+ *                                 items:
+ *                                   allOf:
+ *                                     - $ref: '#/components/schemas/Lugar'
+ *                                     - type: object
+ *                                       properties:
+ *                                         parroquias:
+ *                                           type: array
+ *                                           items:
+ *                                             $ref: '#/components/schemas/Lugar'
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get('/lugares', clientController.getLugares);
+
+/**
+ * @swagger
+ * /api/clientes/lugares/planos:
+ *   get:
+ *     summary: Obtener lugares en lista plana
+ *     description: Retorna todos los lugares en una lista plana (para compatibilidad)
+ *     tags: [Lugares]
+ *     responses:
+ *       200:
+ *         description: Lista plana de lugares
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 type: object
- *                 properties:
- *                   clave:
- *                     type: integer
- *                     description: ID único del lugar
- *                   nombre:
- *                     type: string
- *                     description: Nombre del lugar
- *                   tipo:
- *                     type: string
- *                     description: Tipo de lugar (estado, municipio, parroquia)
- *                   fk_lugar:
- *                     type: integer
- *                     description: ID del lugar padre
+ *                 $ref: '#/components/schemas/Lugar'
  *       500:
  *         description: Error interno del servidor
  */
-router.get('/lugares', clientController.getLugares);
+router.get('/lugares/planos', clientController.getLugaresPlanos);
+
+/**
+ * @swagger
+ * /api/clientes/municipios/{estadoId}:
+ *   get:
+ *     summary: Obtener municipios por estado
+ *     description: Retorna los municipios que pertenecen a un estado específico
+ *     tags: [Lugares]
+ *     parameters:
+ *       - in: path
+ *         name: estadoId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del estado
+ *     responses:
+ *       200:
+ *         description: Lista de municipios del estado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Lugar'
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get('/municipios/:estadoId', clientController.getMunicipiosPorEstado);
+
+/**
+ * @swagger
+ * /api/clientes/parroquias/{municipioId}:
+ *   get:
+ *     summary: Obtener parroquias por municipio
+ *     description: Retorna las parroquias que pertenecen a un municipio específico
+ *     tags: [Lugares]
+ *     parameters:
+ *       - in: path
+ *         name: municipioId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del municipio
+ *     responses:
+ *       200:
+ *         description: Lista de parroquias del municipio
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Lugar'
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get('/parroquias/:municipioId', clientController.getParroquiasPorMunicipio);
 
 module.exports = router; 

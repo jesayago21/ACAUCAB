@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { DatosPago } from '../../types/autopago';
 import type { Cliente, ClienteNatural, ClienteJuridico } from '../../types/client';
+import { obtenerProductosDisponibles, type ProductoAdaptado } from '../../services/productService';
 import PantallaInicio from './PantallaInicio';
 import IdentificacionCliente from './IdentificacionCliente';
+import SeleccionTipoCliente from './SeleccionTipoCliente';
 import RegistroCliente from './RegistroCliente';
 import MetodosPago from './MetodosPago';
 import BeerProduct from '../products/BeerProduct';
@@ -11,7 +13,7 @@ import { useStore } from '@nanostores/react';
 import { cartStore } from '../../store/cartStore';
 import type { Beer } from '../../types/beer';
 
-export type EstadoAutopago = 'inicio' | 'identificacion' | 'registro' | 'compra' | 'carrito' | 'pago' | 'confirmacion';
+export type EstadoAutopago = 'inicio' | 'identificacion' | 'seleccion-tipo' | 'registro' | 'compra' | 'carrito' | 'pago' | 'confirmacion';
 
 /** Componente principal que maneja el flujo completo del autopago */
 const AutopagoFlow: React.FC = () => {
@@ -21,6 +23,12 @@ const AutopagoFlow: React.FC = () => {
   const [mensaje, setMensaje] = useState<string>('');
   const [tipoMensaje, setTipoMensaje] = useState<'success' | 'error' | 'info'>('info');
   const [datosPagoFinal, setDatosPagoFinal] = useState<DatosPago | null>(null);
+  const [productos, setProductos] = useState<ProductoAdaptado[]>([]);
+  const [cargandoProductos, setCargandoProductos] = useState(false);
+  const [filtros, setFiltros] = useState({
+    busqueda: '',
+    soloOfertas: false
+  });
 
   /** Helper para obtener el nombre del cliente según su tipo */
   const obtenerNombreCliente = (cliente: Cliente): string => {
@@ -41,8 +49,31 @@ const AutopagoFlow: React.FC = () => {
   // Estado del carrito
   const cartState = useStore(cartStore) as { items: any[]; total: number };
 
+  /** Cargar productos del backend */
+  useEffect(() => {
+    const cargarProductos = async () => {
+      setCargandoProductos(true);
+      try {
+        const productosObtenidos = await obtenerProductosDisponibles();
+        setProductos(productosObtenidos);
+      } catch (error) {
+        console.error('Error al cargar productos:', error);
+        setMensaje('Error al cargar productos. Usando datos por defecto.');
+        setTipoMensaje('error');
+        // Fallback a productos por defecto si falla la conexión
+        setProductos([]);
+      } finally {
+        setCargandoProductos(false);
+      }
+    };
+
+    if (estadoActual === 'compra') {
+      cargarProductos();
+    }
+  }, [estadoActual]);
+
   /** Datos simulados de productos disponibles */
-  const productos: Beer[] = [
+  const productosSimulados: Beer[] = [
     {
       id: "cerveza-1",
       thumb_src: "/images/products/beer-1.jpg",
@@ -104,12 +135,12 @@ const AutopagoFlow: React.FC = () => {
     cambiarEstado('compra');
   };
 
-  /** Manejo de cliente no encontrado - ir a registro */
+  /** Manejo de cliente no encontrado - ir a selección de tipo */
   const handleClienteNoEncontrado = (cedula: string) => {
     setCedulaParaRegistro(cedula);
-    setMensaje('Cliente no encontrado. Por favor complete el registro.');
+    setMensaje('Cliente no encontrado. Seleccione el tipo de cliente para registrarse.');
     setTipoMensaje('info');
-    cambiarEstado('registro');
+    cambiarEstado('seleccion-tipo');
   };
 
   /** Manejo de cliente registrado exitosamente */
@@ -132,6 +163,12 @@ const AutopagoFlow: React.FC = () => {
   const handleError = (error: string) => {
     setMensaje(error);
     setTipoMensaje('error');
+  };
+
+  /** Manejo de selección de tipo de cliente */
+  const handleTipoClienteSeleccionado = (tipo: 'natural' | 'juridico') => {
+    // Aquí podrías guardar el tipo si es necesario
+    cambiarEstado('registro');
   };
 
   /** Renderizar mensaje de estado */
@@ -170,17 +207,18 @@ const AutopagoFlow: React.FC = () => {
 
   /** Renderizar barra de progreso */
   const renderProgreso = () => {
-    const estados = ['inicio', 'identificacion', 'registro', 'compra', 'carrito', 'pago', 'confirmacion'];
+    const estados = ['inicio', 'identificacion', 'seleccion-tipo', 'registro', 'compra', 'carrito', 'pago', 'confirmacion'];
     const indiceActual = estados.indexOf(estadoActual);
     let progreso = 0;
     
-    // Calcular progreso saltando el registro si no es necesario
+    // Calcular progreso incluyendo la selección de tipo
     if (estadoActual === 'inicio') progreso = 0;
-    else if (estadoActual === 'identificacion') progreso = 20;
-    else if (estadoActual === 'registro') progreso = 30;
-    else if (estadoActual === 'compra') progreso = 50;
-    else if (estadoActual === 'carrito') progreso = 70;
-    else if (estadoActual === 'pago') progreso = 85;
+    else if (estadoActual === 'identificacion') progreso = 15;
+    else if (estadoActual === 'seleccion-tipo') progreso = 25;
+    else if (estadoActual === 'registro') progreso = 35;
+    else if (estadoActual === 'compra') progreso = 55;
+    else if (estadoActual === 'carrito') progreso = 75;
+    else if (estadoActual === 'pago') progreso = 90;
     else if (estadoActual === 'confirmacion') progreso = 100;
 
     if (estadoActual === 'inicio') return null;
@@ -258,12 +296,21 @@ const AutopagoFlow: React.FC = () => {
           />
         );
 
+      case 'seleccion-tipo':
+        return (
+          <SeleccionTipoCliente
+            cedulaRif={cedulaParaRegistro}
+            onTipoSeleccionado={handleTipoClienteSeleccionado}
+            onVolver={() => cambiarEstado('identificacion')}
+          />
+        );
+
       case 'registro':
         return (
           <RegistroCliente
             cedulaRif={cedulaParaRegistro}
             onClienteRegistrado={handleClienteRegistrado}
-            onVolver={() => cambiarEstado('identificacion')}
+            onVolver={() => cambiarEstado('seleccion-tipo')}
             onError={handleError}
           />
         );
@@ -292,49 +339,143 @@ const AutopagoFlow: React.FC = () => {
                           <input
                             type="text"
                             placeholder="Buscar productos..."
+                            value={filtros.busqueda}
+                            onChange={(e) => setFiltros(prev => ({ ...prev, busqueda: e.target.value }))}
                             className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300 shadow-sm hover:shadow-md bg-white"
                           />
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i className="fas fa-search text-gray-400"></i>
                           </div>
+                          {filtros.busqueda && (
+                            <button
+                              onClick={() => setFiltros(prev => ({ ...prev, busqueda: '' }))}
+                              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                            >
+                              <i className="fas fa-times"></i>
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
 
                     {/* Filtros */}
                     <div className="mt-4 flex flex-wrap gap-3">
-                      <button className="px-4 py-2 bg-green-100 text-green-800 rounded-lg hover:bg-green-200 transition-all duration-300 shadow-sm hover:shadow-md">
+                      <button 
+                        onClick={() => setFiltros({ busqueda: '', soloOfertas: false })}
+                        className={`px-4 py-2 rounded-lg transition-all duration-300 shadow-sm hover:shadow-md ${
+                          !filtros.soloOfertas ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
                         <i className="fas fa-beer mr-2 text-green-600"></i>
-                        Todas las Cervezas
+                        Todos los Productos
                       </button>
-                      <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-300 shadow-sm hover:shadow-md">
-                        <i className="fas fa-cookie-bite mr-2 text-orange-500"></i>
-                        Snacks
+                      <button 
+                        onClick={() => setFiltros(prev => ({ ...prev, soloOfertas: !prev.soloOfertas }))}
+                        className={`px-4 py-2 rounded-lg transition-all duration-300 shadow-sm hover:shadow-md ${
+                          filtros.soloOfertas ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        <i className="fas fa-percent mr-2 text-red-500"></i>
+                        Solo Ofertas
                       </button>
-                      <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-300 shadow-sm hover:shadow-md">
-                        <i className="fas fa-glass-whiskey mr-2 text-blue-500"></i>
-                        Bebidas
-                      </button>
-                      <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-300 shadow-sm hover:shadow-md">
-                        <i className="fas fa-dollar-sign mr-2 text-yellow-500"></i>
-                        Ofertas
-                      </button>
+                      {productos.length > 0 && (
+                        <div className="flex items-center text-sm text-gray-600 ml-auto">
+                          <i className="fas fa-info-circle mr-2"></i>
+                          {productos.filter(p => {
+                            // Aplicar filtro de búsqueda
+                            if (filtros.busqueda && filtros.busqueda.trim() !== '') {
+                              const busquedaLower = filtros.busqueda.toLowerCase();
+                              const coincideBusqueda = 
+                                p.title.toLowerCase().includes(busquedaLower) ||
+                                p.description.toLowerCase().includes(busquedaLower) ||
+                                (p.tipo_cerveza && p.tipo_cerveza.toLowerCase().includes(busquedaLower)) ||
+                                (p.miembro && p.miembro.toLowerCase().includes(busquedaLower));
+                              
+                              if (!coincideBusqueda) {
+                                return false;
+                              }
+                            }
+                            
+                            // Aplicar filtro de ofertas
+                            if (filtros.soloOfertas && !p.tiene_oferta) {
+                              return false;
+                            }
+                            
+                            return true;
+                          }).length} productos encontrados
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Grid de productos - 3 columnas fijas */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {productos.map((producto) => (
-                      <BeerProduct 
-                        key={producto.id}
-                        {...producto} 
-                        onAddToCart={() => {
-                          setMensaje(`${producto.title} agregado al carrito`);
-                          setTipoMensaje('success');
-                          setTimeout(() => setMensaje(''), 3000);
-                        }}
-                      />
-                    ))}
+                    {cargandoProductos ? (
+                      // Skeleton loading
+                      Array.from({ length: 6 }).map((_, index) => (
+                        <div key={index} className="bg-white rounded-xl shadow-md p-4 animate-pulse">
+                          <div className="bg-gray-300 h-32 rounded-lg mb-4"></div>
+                          <div className="bg-gray-300 h-4 rounded mb-2"></div>
+                          <div className="bg-gray-300 h-3 rounded mb-4"></div>
+                          <div className="bg-gray-300 h-6 rounded mb-4"></div>
+                          <div className="bg-gray-300 h-10 rounded"></div>
+                        </div>
+                      ))
+                    ) : productos.length > 0 ? (
+                      productos
+                        .filter(producto => {
+                          // Debug: Log del producto y filtros
+                          console.log('Producto:', producto.title, 'Tiene oferta:', producto.tiene_oferta, 'Filtros:', filtros);
+                          
+                          // Aplicar filtro de búsqueda
+                          if (filtros.busqueda && filtros.busqueda.trim() !== '') {
+                            const busquedaLower = filtros.busqueda.toLowerCase();
+                            const coincideBusqueda = 
+                              producto.title.toLowerCase().includes(busquedaLower) ||
+                              producto.description.toLowerCase().includes(busquedaLower) ||
+                              (producto.tipo_cerveza && producto.tipo_cerveza.toLowerCase().includes(busquedaLower)) ||
+                              (producto.miembro && producto.miembro.toLowerCase().includes(busquedaLower));
+                            
+                            if (!coincideBusqueda) {
+                              return false;
+                            }
+                          }
+                          
+                          // Aplicar filtro de ofertas
+                          if (filtros.soloOfertas && !producto.tiene_oferta) {
+                            return false;
+                          }
+                          
+                          return true;
+                        })
+                        .map((producto) => (
+                          <BeerProduct 
+                            key={producto.id}
+                            {...producto}
+                            original_price={producto.original_price}
+                            tiene_oferta={producto.tiene_oferta}
+                            porcentaje_descuento={producto.porcentaje_descuento}
+                            onAddToCart={() => {
+                              setMensaje(`${producto.title} agregado al carrito`);
+                              setTipoMensaje('success');
+                              setTimeout(() => setMensaje(''), 3000);
+                            }}
+                          />
+                        ))
+                    ) : (
+                      // Fallback a productos simulados si no hay conexión
+                      productosSimulados.map((producto) => (
+                        <BeerProduct 
+                          key={producto.id}
+                          {...producto} 
+                          onAddToCart={() => {
+                            setMensaje(`${producto.title} agregado al carrito`);
+                            setTipoMensaje('success');
+                            setTimeout(() => setMensaje(''), 3000);
+                          }}
+                        />
+                      ))
+                    )}
                   </div>
                 </div>
 
@@ -409,6 +550,7 @@ const AutopagoFlow: React.FC = () => {
         return (
           <MetodosPago
             total={cartState.total}
+            cliente={cliente || undefined}
             onPagoCompletado={handlePagoCompletado}
             onVolver={() => cambiarEstado('carrito')}
           />

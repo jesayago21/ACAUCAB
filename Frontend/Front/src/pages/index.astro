@@ -1,0 +1,45 @@
+---
+import Layout from "../layouts/Layout.astro";
+// El SCSS global se mantiene, es bueno tenerlo.
+import "../styles/global.css";
+import AutopagoFlow from "../components/autopago/AutopagoFlow";
+---
+
+<Layout title="Autopago - ACAUCAB">
+  <div class="autopago-container">
+    <AutopagoFlow client:load />
+  </div>
+</Layout>
+
+<style is:global>
+  /*
+    Hemos movido tus variables a la configuración de Tailwind.
+    Si necesitas usarlas en CSS plano, lo ideal es que estén en un archivo CSS/SCSS global,
+    no en un componente de página.
+  */
+  :root {
+    /* Mantenemos la fuente global aquí, es un buen lugar. */
+    font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  /* NUEVO DISEÑO: Limpio, enfocado y profesional.
+  */
+  .autopago-container {
+    /* Usamos un color pálido de tu propia paleta para el fondo */
+    background-color: #e8f5e8; /* O simplemente 'white' o '#f9fafb' (gris de Tailwind) */
+
+    /* O un gradiente muy sutil si quieres mantener ese efecto */
+    /* background: linear-gradient(180deg, #FFFFFF 0%, #E8F5E8 100%); */
+
+    min-height: 100vh;
+    width: 100%;
+
+    /* Centramos el contenido vertical y horizontalmente */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    /* Damos un poco de espacio por si el contenido es grande */
+    padding: 2rem;
+  }
+</style>

@@ -44,7 +44,12 @@ const getAvailableProducts = async (req, res) => {
     
     const queryParams = tienda_id ? [tienda_id] : [];
     const { rows } = await db.query(queryText, queryParams);
-    res.status(200).json(rows);
+    
+    res.status(200).json({
+      success: true,
+      message: 'Productos obtenidos exitosamente',
+      productos: rows
+    });
   } catch (error) {
     console.error('Error fetching products:', error);
     res.status(500).json({ message: 'Error interno del servidor' });
@@ -182,10 +187,86 @@ const getTiendasFisicas = async (req, res) => {
   }
 };
 
+/** Obtener la tasa de cambio actual del USD */
+const getTasaCambioActual = async (req, res) => {
+  try {
+    const queryText = `
+      SELECT clave, moneda, monto_equivalencia, fecha_inicio, fecha_fin
+      FROM tasa_cambio
+      WHERE moneda = 'USD'
+        AND (fecha_fin IS NULL OR fecha_fin >= CURRENT_DATE)
+        AND fecha_inicio <= CURRENT_DATE
+      ORDER BY fecha_inicio DESC
+      LIMIT 1;
+    `;
+    
+    const { rows } = await db.query(queryText);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No se encontró una tasa de cambio USD vigente'
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: 'Tasa de cambio obtenida exitosamente',
+      tasa: rows[0]
+    });
+    
+  } catch (error) {
+    console.error('Error fetching exchange rate:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error interno del servidor' 
+    });
+  }
+};
+
+/** Obtener la tasa de cambio actual de PUNTOS */
+const getTasaCambioPuntos = async (req, res) => {
+  try {
+    const queryText = `
+      SELECT clave, moneda, monto_equivalencia, fecha_inicio, fecha_fin
+      FROM tasa_cambio
+      WHERE moneda = 'PUNTOS'
+        AND (fecha_fin IS NULL OR fecha_fin >= CURRENT_DATE)
+        AND fecha_inicio <= CURRENT_DATE
+      ORDER BY fecha_inicio DESC
+      LIMIT 1;
+    `;
+    
+    const { rows } = await db.query(queryText);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No se encontró una tasa de cambio de PUNTOS vigente'
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: 'Tasa de cambio de puntos obtenida exitosamente',
+      tasa: rows[0]
+    });
+    
+  } catch (error) {
+    console.error('Error fetching points exchange rate:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error interno del servidor' 
+    });
+  }
+};
+
 module.exports = {
   getAvailableProducts,
   getUserPaymentMethods,
   createOnlineOrder,
   getProductsWithOffers,
   getTiendasFisicas,
+  getTasaCambioActual,
+  getTasaCambioPuntos,
 };

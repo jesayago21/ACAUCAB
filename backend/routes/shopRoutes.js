@@ -173,4 +173,89 @@ router.get('/payment-methods/:userId', shopController.getUserPaymentMethods);
  */
 router.post('/order', shopController.createOnlineOrder);
 
+/**
+ * @swagger
+ * /api/shop/tasa-cambio-puntos:
+ *   get:
+ *     summary: Obtener la tasa de cambio actual de PUNTOS
+ *     description: Retorna la tasa de cambio de puntos vigente (conversión directa puntos → Bs)
+ *     tags: [Tasas de Cambio]
+ *     responses:
+ *       200:
+ *         description: Tasa de cambio de puntos actual
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 tasa:
+ *                   type: object
+ *                   properties:
+ *                     clave:
+ *                       type: integer
+ *                     moneda:
+ *                       type: string
+ *                       enum: [PUNTOS]
+ *                     monto_equivalencia:
+ *                       type: number
+ *                       description: Bolívares por cada punto
+ *                     fecha_inicio:
+ *                       type: string
+ *                       format: date
+ *                     fecha_fin:
+ *                       type: string
+ *                       format: date
+ *       404:
+ *         description: No se encontró tasa de cambio de puntos vigente
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get('/tasa-cambio-puntos', shopController.getTasaCambioPuntos);
+
+/**
+ * @swagger
+ * /api/shop/tasa-cambio-actual:
+ *   get:
+ *     summary: Obtener la tasa de cambio actual del USD
+ *     description: Retorna la tasa de cambio USD vigente para calcular el valor de puntos
+ *     tags: [Tasas de Cambio]
+ *     responses:
+ *       200:
+ *         description: Tasa de cambio actual
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 tasa:
+ *                   type: object
+ *                   properties:
+ *                     clave:
+ *                       type: integer
+ *                     moneda:
+ *                       type: string
+ *                       enum: [USD, EUR, COP, PEN, BOB]
+ *                     monto_equivalencia:
+ *                       type: number
+ *                     fecha_inicio:
+ *                       type: string
+ *                       format: date
+ *                     fecha_fin:
+ *                       type: string
+ *                       format: date
+ *       404:
+ *         description: No se encontró tasa de cambio vigente
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get('/tasa-cambio-actual', shopController.getTasaCambioActual);
+
 module.exports = router;
