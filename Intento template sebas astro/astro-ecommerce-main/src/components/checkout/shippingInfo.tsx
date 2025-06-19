@@ -1,9 +1,9 @@
 interface Props {
-  title: string;
+  title?: string; /** Título opcional para la sección */
 }
 
 export default function OrderSummary({
-
+  title
 }: Props) {
 
   return (

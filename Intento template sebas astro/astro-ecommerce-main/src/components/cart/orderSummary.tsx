@@ -1,6 +1,6 @@
 interface Props {
   subtotal: number;
-  textColor: string
+  textColor?: string /** Propiedad opcional para el color del texto */
 }
 
 export default function OrderSummary({
