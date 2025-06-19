@@ -8,3 +8,4 @@ dist/
 package-lock.json
 .astro/
 .github/
+backend/node_modules/
