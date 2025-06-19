@@ -2,8 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const shopRoutes = require('./routes/shopRoutes');
 const clientRoutes = require('./routes/clientRoutes');
-const roleRoutes = require('./routes/roleRoutes'); 
-const privilegeRoutes = require('./routes/privilegeRoutes');
 const { specs, swaggerUi } = require('./config/swagger');
 require('dotenv').config();
 
@@ -41,8 +39,6 @@ app.get('/', (req, res) => {
 
 /** Rutas de la API */
 app.use('/api/shop', shopRoutes);
-app.use('/api/roles', roleRoutes);
-app.use('/api/privileges', privilegeRoutes); 
 app.use('/api/clientes', clientRoutes);
 
 /** Manejo de rutas no encontradas */
@@ -65,6 +61,4 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);
   console.log(`Documentación disponible en: http://localhost:${PORT}/api-docs`);
-  
 });
-

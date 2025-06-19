@@ -184,8 +184,7 @@ const options = {
       }
     }
   },
-  apis: ['./routes/*.js'],
-   // rutas a los archivos que contienen las definiciones OpenAPI
+  apis: ['./routes/*.js'], // rutas a los archivos que contienen las definiciones OpenAPI
 };
 
 /** Especificación de OpenAPI */
