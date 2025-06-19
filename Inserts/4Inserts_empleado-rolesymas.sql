@@ -379,17 +379,17 @@ INSERT INTO lugar_tienda (clave, nombre, tipo, fk_lugar_tienda) VALUES
 (15, 'Exhibidor Central de Ofertas', 'anaquel', 10); -- Clave: 15
 
 --Insertar presentacion (10 ejemplos)
-INSERT INTO presentacion (EAN_13, nombre, cantidad_unidades, fk_cerveza) VALUES
-(7501234567890, 'Botella 330ml', 1, 1),
-(7501234567891, 'Lata 355ml', 1, 2),
-(7501234567892, 'Pack 6 Botellas 330ml', 6, 3),
-(7501234567893, 'Botella 500ml', 1, 4),
-(7501234567894, 'Lata 473ml', 1, 5),
-(7501234567895, 'Pack 12 Latas 355ml', 12, 6),
-(7501234567896, 'Botella 1L', 1, 7),
-(7501234567897, 'Growler 2L', 1, 8),
-(7501234567898, 'Pack 4 Latas 473ml', 4, 9),
-(7501234567899, 'Botella 750ml', 1, 10);
+INSERT INTO presentacion (EAN_13, nombre, cantidad_unidades, precio_unitario, fk_cerveza) VALUES
+(7501234567890, 'Botella 330ml', 1, 5, 1),
+(7501234567891, 'Lata 355ml', 1, 4, 2),
+(7501234567892, 'Pack 6 Botellas 330ml', 6, 10, 3),
+(7501234567893, 'Botella 500ml', 1, 5, 4),
+(7501234567894, 'Lata 473ml', 1, 5, 5),
+(7501234567895, 'Pack 12 Latas 355ml', 12, 18, 6),
+(7501234567896, 'Botella 1L', 1, 10, 7),
+(7501234567897, 'Growler 2L', 1, 14, 8),
+(7501234567898, 'Pack 4 Latas 473ml', 4, 8, 9),
+(7501234567899, 'Botella 750ml', 1, 8, 10);
 
 --Insertar almacen (10 ejemplos)
 INSERT INTO almacen (fk_presentacion, cantidad_unidades) VALUES
