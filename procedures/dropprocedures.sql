@@ -1,0 +1,12 @@
+drop FUNCTION registrar_cliente_tienda;
+drop FUNCTION finalizar_venta_fisica;
+drop FUNCTION registrar_venta_fisica;
+drop procedure registrar_cliente_tienda;
+drop procedure finalizar_venta_fisica;
+drop procedure registrar_venta_fisica;
+drop procedure registrar_cliente_tienda;
+drop procedure finalizar_venta_fisica;
+drop procedure registrar_venta_fisica;
+drop procedure registrar_cliente_tienda;
+drop procedure finalizar_venta_fisica;
+drop procedure registrar_venta_fisica;

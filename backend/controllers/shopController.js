@@ -12,6 +12,7 @@ const getAvailableProducts = async (req, res) => {
         p.ean_13,
         p.nombre AS nombre_presentacion,
         p.cantidad_unidades,
+        p.precio,
         c.nombre AS nombre_cerveza,
         c.grado_alcohol,
         tc.nombre AS tipo_cerveza,
@@ -130,6 +131,7 @@ const getProductsWithOffers = async (req, res) => {
         p.ean_13,
         p.nombre AS nombre_presentacion,
         p.cantidad_unidades,
+        p.precio,
         c.nombre AS nombre_cerveza,
         c.grado_alcohol,
         tc.nombre AS tipo_cerveza,
@@ -138,6 +140,7 @@ const getProductsWithOffers = async (req, res) => {
         lt.nombre AS lugar_tienda,
         tf.nombre AS tienda_fisica,
         o.porcentaje_descuento,
+        Round((p.precio * (1 - (CAST(o.porcentaje_descuento AS DECIMAL) / 100))),2) AS precio_oferta, 
         o.fecha_inicio AS fecha_inicio_oferta,
         o.fecha_fin AS fecha_fin_oferta
       FROM presentacion p

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import type { Cliente, EstadoAutopago, DatosPago } from '../../types/autopago';
+import type { DatosPago } from '../../types/autopago';
+import type { Cliente, ClienteNatural, ClienteJuridico } from '../../types/client';
 import PantallaInicio from './PantallaInicio';
 import IdentificacionCliente from './IdentificacionCliente';
 import RegistroCliente from './RegistroCliente';
@@ -10,6 +11,8 @@ import { useStore } from '@nanostores/react';
 import { cartStore } from '../../store/cartStore';
 import type { Beer } from '../../types/beer';
 
+export type EstadoAutopago = 'inicio' | 'identificacion' | 'registro' | 'compra' | 'carrito' | 'pago' | 'confirmacion';
+
 /** Componente principal que maneja el flujo completo del autopago */
 const AutopagoFlow: React.FC = () => {
   const [estadoActual, setEstadoActual] = useState<EstadoAutopago>('inicio');
@@ -18,6 +21,22 @@ const AutopagoFlow: React.FC = () => {
   const [mensaje, setMensaje] = useState<string>('');
   const [tipoMensaje, setTipoMensaje] = useState<'success' | 'error' | 'info'>('info');
   const [datosPagoFinal, setDatosPagoFinal] = useState<DatosPago | null>(null);
+
+  /** Helper para obtener el nombre del cliente según su tipo */
+  const obtenerNombreCliente = (cliente: Cliente): string => {
+    if (cliente.tipo === 'natural') {
+      const clienteNatural = cliente as ClienteNatural;
+      return `${clienteNatural.nombre || clienteNatural.primer_nombre} ${clienteNatural.apellido || clienteNatural.primer_apellido}`;
+    } else {
+      const clienteJuridico = cliente as ClienteJuridico;
+      return clienteJuridico.denominacion_comercial || clienteJuridico.razon_social;
+    }
+  };
+
+  /** Helper para obtener el documento del cliente */
+  const obtenerDocumentoCliente = (cliente: Cliente): string => {
+    return cliente.documento?.toString() || cliente.rif.toString();
+  };
 
   // Estado del carrito
   const cartState = useStore(cartStore) as { items: any[]; total: number };
@@ -80,7 +99,7 @@ const AutopagoFlow: React.FC = () => {
   /** Manejo de identificación exitosa del cliente */
   const handleClienteIdentificado = (clienteData: Cliente) => {
     setCliente(clienteData);
-    setMensaje(`¡Bienvenido ${clienteData.nombre} ${clienteData.apellido}!`);
+    setMensaje(`¡Bienvenido ${obtenerNombreCliente(clienteData)}!`);
     setTipoMensaje('success');
     cambiarEstado('compra');
   };
@@ -96,7 +115,7 @@ const AutopagoFlow: React.FC = () => {
   /** Manejo de cliente registrado exitosamente */
   const handleClienteRegistrado = (nuevoCliente: Cliente) => {
     setCliente(nuevoCliente);
-    setMensaje(`¡Bienvenido ${nuevoCliente.nombre} ${nuevoCliente.apellido}! Su registro fue exitoso.`);
+    setMensaje(`¡Bienvenido ${obtenerNombreCliente(nuevoCliente)}! Su registro fue exitoso.`);
     setTipoMensaje('success');
     cambiarEstado('compra');
   };
@@ -198,9 +217,9 @@ const AutopagoFlow: React.FC = () => {
               </div>
               <div>
                 <h5 className="font-semibold text-gray-800">
-                  {cliente.nombre} {cliente.apellido}
+                  {obtenerNombreCliente(cliente)}
                 </h5>
-                <p className="text-sm text-gray-600">{cliente.cedula_rif}</p>
+                <p className="text-sm text-gray-600">{obtenerDocumentoCliente(cliente)}</p>
               </div>
             </div>
             <button
@@ -407,7 +426,7 @@ const AutopagoFlow: React.FC = () => {
                     </div>
                     <h2 className="text-3xl font-bold text-green-600 mb-4">¡Compra Exitosa!</h2>
                     <p className="text-xl text-gray-600 mb-6">
-                      Gracias por tu compra, {cliente?.nombre} {cliente?.apellido}
+                      Gracias por tu compra, {cliente ? obtenerNombreCliente(cliente) : ''}
                     </p>
                     
                     {/* Resumen del pago */}

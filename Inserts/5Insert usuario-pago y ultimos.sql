@@ -54,12 +54,12 @@ INSERT INTO inventario_tienda (clave, fk_lugar_tienda, fk_presentacion, fk_tiend
 (2, 2, 2, 1, 200),
 (3, 3, 3, 2, 80),
 (4, 4, 4, 2, 120),
-(5, 5, 5, 3, 250),
+(5, 5, 5, 1, 250),
 (6, 6, 1, 3, 90),
 (7, 7, 2, 4, 180),
-(8, 8, 3, 4, 70),
-(9, 9, 4, 5, 300),
-(10, 10, 5, 5, 110);
+(8, 8, 3, 1, 70),
+(9, 9, 4, 1, 300),
+(10, 10, 5, 1, 110);
 
 INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario) VALUES
 (1, 1, 2, 12000),

@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const shopRoutes = require('./routes/shopRoutes');
+const clientRoutes = require('./routes/clientRoutes');
 const { specs, swaggerUi } = require('./config/swagger');
 require('dotenv').config();
 
@@ -28,13 +29,17 @@ app.get('/', (req, res) => {
       offers: '/api/shop/offers',
       tiendas: '/api/shop/tiendas',
       paymentMethods: '/api/shop/payment-methods/:userId',
-      createOrder: '/api/shop/order'
+      createOrder: '/api/shop/order',
+      clientIdentify: '/api/clientes/identificar',
+      clientCreate: '/api/clientes/crear',
+      clientPlaces: '/api/clientes/lugares'
     }
   });
 });
 
 /** Rutas de la API */
 app.use('/api/shop', shopRoutes);
+app.use('/api/clientes', clientRoutes);
 
 /** Manejo de rutas no encontradas */
 app.use('*', (req, res) => {

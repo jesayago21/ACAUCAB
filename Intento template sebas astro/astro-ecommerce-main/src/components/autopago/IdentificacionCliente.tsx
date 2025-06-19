@@ -1,197 +1,201 @@
 import React, { useState } from 'react';
-import type { Cliente, IdentificacionProps } from '../../types/autopago';
+import { clientService } from '../../services/clientService';
+import type { Cliente } from '../../types/client';
 
-/** Componente para identificación del cliente por cédula o RIF */
-const IdentificacionCliente: React.FC<IdentificacionProps> = ({ 
-  onClienteIdentificado, 
+interface IdentificacionClienteProps {
+  onClienteIdentificado: (cliente: Cliente) => void;
+  onClienteNoEncontrado: (documento: string) => void;
+  onError: (error: string) => void;
+}
+
+const IdentificacionCliente: React.FC<IdentificacionClienteProps> = ({
+  onClienteIdentificado,
   onClienteNoEncontrado,
-  onError 
+  onError
 }) => {
-  const [cedulaRif, setCedulaRif] = useState('');
+  const [documento, setDocumento] = useState('');
   const [cargando, setCargando] = useState(false);
+  const [tipoDocumento, setTipoDocumento] = useState<'cedula' | 'rif' | null>(null);
 
-  /** Función para validar cédula o RIF venezolano */
-  const validarCedulaRif = (valor: string): boolean => {
-    // Eliminar espacios y guiones
-    const limpio = valor.replace(/[\s-]/g, '');
+  const validarFormato = (valor: string) => {
+    const valorLimpio = valor.toUpperCase().replace(/\s+/g, '');
     
-    // Validar formato básico (V, E, J, G seguido de números)
-    const regex = /^[VEJG]\d{7,9}$/i;
-    return regex.test(limpio);
+    if (clientService.validarCedula(valorLimpio)) {
+      setTipoDocumento('cedula');
+      return true;
+    }
+    
+    if (clientService.validarRIF(valorLimpio)) {
+      setTipoDocumento('rif');
+      return true;
+    }
+    
+    setTipoDocumento(null);
+    return false;
   };
 
-  /** Manejo del envío del formulario */
+  const handleDocumentoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valor = e.target.value;
+    setDocumento(valor);
+    validarFormato(valor);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!cedulaRif.trim()) {
-      onError('Por favor ingrese la cédula o RIF');
+    if (!documento.trim()) {
+      onError('Por favor ingrese su documento de identificación');
       return;
     }
 
-    if (!validarCedulaRif(cedulaRif)) {
-      onError('Formato inválido. Use V12345678, E12345678, J123456789 o G20012345678');
+    const documentoLimpio = documento.toUpperCase().replace(/\s+/g, '');
+    
+    if (!validarFormato(documentoLimpio)) {
+      onError('Formato de documento inválido. Use el formato: V12345678 o J123456789');
       return;
     }
 
     setCargando(true);
 
     try {
-      // Simular búsqueda del cliente en base de datos
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Simular que algunos clientes existen y otros no
-      const clienteExiste = Math.random() > 0.5; // 50% de probabilidad
-      
-      if (clienteExiste) {
-        /** Cliente encontrado en la base de datos */
-        const cliente: Cliente = {
-          cedula_rif: cedulaRif.toUpperCase(),
-          nombre: `Juan ${cedulaRif.slice(-4)}`,
-          apellido: 'Pérez',
-          email: `cliente${cedulaRif.slice(-4)}@email.com`,
-          telefono: '+58 414 123 4567'
-        };
+      const numeroDocumento = clientService.extraerNumeroDocumento(documentoLimpio);
+      const respuesta = await clientService.identificarCliente(numeroDocumento);
 
-        onClienteIdentificado(cliente);
+      if (respuesta.found && respuesta.cliente) {
+        onClienteIdentificado(respuesta.cliente);
       } else {
-        /** Cliente no encontrado - debe registrarse */
-        onClienteNoEncontrado(cedulaRif.toUpperCase());
+        onClienteNoEncontrado(documentoLimpio);
       }
     } catch (error) {
-      onError('Error al buscar el cliente. Intente nuevamente.');
+      console.error('Error al identificar cliente:', error);
+      onError(error instanceof Error ? error.message : 'Error de conexión');
     } finally {
       setCargando(false);
     }
   };
 
+  const getPlaceholder = () => {
+    return 'Ej: V12345678 o J123456789';
+  };
+
+  const getDocumentoInfo = () => {
+    if (!tipoDocumento) return null;
+    
+    return (
+      <div className="mt-2 text-sm">
+        {tipoDocumento === 'cedula' ? (
+          <div className="flex items-center text-green-600">
+            <i className="fas fa-user mr-2"></i>
+            Cliente Natural (Persona)
+          </div>
+        ) : (
+          <div className="flex items-center text-blue-600">
+            <i className="fas fa-building mr-2"></i>
+            Cliente Jurídico (Empresa)
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 py-8">
       <div className="container mx-auto px-4">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-md mx-auto">
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-to-r from-green-600 to-green-700 px-8 py-6">
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
-                  <i className="fas fa-user-circle text-white text-2xl"></i>
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-2">
-                  Identificación del Cliente
-                </h2>
-                <p className="text-green-100">
-                  Ingrese su cédula de identidad o RIF para continuar
-                </p>
+            <div className="bg-gradient-to-r from-green-600 to-green-700 p-6 text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-white bg-opacity-20 rounded-full mb-4">
+                <i className="fas fa-id-card text-white text-2xl"></i>
               </div>
+              <h2 className="text-2xl font-bold text-white mb-2">
+                Identificación de Cliente
+              </h2>
+              <p className="text-green-100">
+                Ingrese su cédula o RIF para continuar
+              </p>
             </div>
 
             {/* Formulario */}
-            <div className="px-8 py-8">
+            <div className="p-6">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label htmlFor="cedulaRif" className="block text-sm font-medium text-gray-700 mb-2">
-                    Cédula o RIF *
+                  <label 
+                    htmlFor="documento" 
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Documento de Identidad
                   </label>
-                  <input
-                    type="text"
-                    id="cedulaRif"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-center text-xl font-semibold"
-                    placeholder="V12345678"
-                    value={cedulaRif}
-                    onChange={(e) => setCedulaRif(e.target.value.toUpperCase())}
-                    disabled={cargando}
-                    maxLength={12}
-                    style={{ letterSpacing: '2px' }}
-                  />
-                  <p className="mt-2 text-sm text-gray-500 text-center">
-                    Formatos válidos: V, E, J o G seguido de números
-                  </p>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      id="documento"
+                      value={documento}
+                      onChange={handleDocumentoChange}
+                      placeholder={getPlaceholder()}
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300 text-lg ${
+                        tipoDocumento 
+                          ? 'border-green-300 bg-green-50' 
+                          : documento && !tipoDocumento 
+                            ? 'border-red-300 bg-red-50' 
+                            : 'border-gray-300'
+                      }`}
+                      disabled={cargando}
+                      autoComplete="off"
+                      maxLength={12}
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                      {tipoDocumento && (
+                        <i className={`fas ${
+                          tipoDocumento === 'cedula' ? 'fa-user text-green-500' : 'fa-building text-blue-500'
+                        }`}></i>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {getDocumentoInfo()}
+                  
+                  {documento && !tipoDocumento && (
+                    <div className="mt-2 text-sm text-red-600 flex items-center">
+                      <i className="fas fa-exclamation-triangle mr-2"></i>
+                      Formato inválido. Use V12345678 para personas o J123456789 para empresas.
+                    </div>
+                  )}
                 </div>
 
+                {/* Botón de envío */}
                 <button
                   type="submit"
-                  className="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white text-lg font-semibold rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:transform-none"
-                  disabled={cargando || !cedulaRif.trim()}
+                  disabled={cargando || !tipoDocumento}
+                  className={`w-full py-3 px-4 rounded-lg font-semibold text-lg transition-all duration-300 transform ${
+                    cargando || !tipoDocumento
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 hover:scale-105 shadow-lg hover:shadow-xl'
+                  }`}
                 >
                   {cargando ? (
-                    <>
-                      <i className="fas fa-spinner fa-spin mr-2"></i>
-                      Buscando Cliente...
-                    </>
+                    <div className="flex items-center justify-center">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
+                      Verificando...
+                    </div>
                   ) : (
-                    <>
+                    <div className="flex items-center justify-center">
                       <i className="fas fa-search mr-2"></i>
-                      Buscar Cliente
-                    </>
+                      Identificar Cliente
+                    </div>
                   )}
                 </button>
               </form>
 
-              {/* Ejemplos de formato */}
-              <div className="mt-8 bg-green-50 rounded-xl p-6">
-                <h4 className="font-semibold text-green-800 mb-3">
-                  <i className="fas fa-lightbulb mr-2"></i>
-                  Ejemplos de formato válido:
+              {/* Información de ayuda */}
+              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
+                  <i className="fas fa-info-circle mr-2 text-blue-500"></i>
+                  Formatos aceptados
                 </h4>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                      <i className="fas fa-user text-green-600 text-xs"></i>
-                    </div>
-                    <div>
-                      <div className="font-semibold text-green-800">Venezolanos:</div>
-                      <div className="text-green-600">V12345678</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                      <i className="fas fa-globe text-green-600 text-xs"></i>
-                    </div>
-                    <div>
-                      <div className="font-semibold text-green-800">Extranjeros:</div>
-                      <div className="text-green-600">E12345678</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                      <i className="fas fa-building text-green-600 text-xs"></i>
-                    </div>
-                    <div>
-                      <div className="font-semibold text-green-800">Jurídico:</div>
-                      <div className="text-green-600">J123456789</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                      <i className="fas fa-landmark text-green-600 text-xs"></i>
-                    </div>
-                    <div>
-                      <div className="font-semibold text-green-800">Gobierno:</div>
-                      <div className="text-green-600">G20012345678</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Información de privacidad */}
-              <div className="mt-6 bg-blue-50 rounded-xl p-6">
-                <h4 className="font-semibold text-blue-800 mb-3">
-                  <i className="fas fa-shield-alt mr-2"></i>
-                  Información de Privacidad
-                </h4>
-                <ul className="text-sm text-blue-700 space-y-2">
-                  <li className="flex items-start">
-                    <i className="fas fa-check text-blue-500 mr-2 mt-0.5 text-xs"></i>
-                    <span>Si es cliente registrado, se cargarán automáticamente sus datos</span>
-                  </li>
-                  <li className="flex items-start">
-                    <i className="fas fa-check text-blue-500 mr-2 mt-0.5 text-xs"></i>
-                    <span>Si es nuevo, podrá registrarse de forma rápida y segura</span>
-                  </li>
-                  <li className="flex items-start">
-                    <i className="fas fa-check text-blue-500 mr-2 mt-0.5 text-xs"></i>
-                    <span>Sus datos están protegidos según las normativas vigentes</span>
-                  </li>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• <strong>Personas:</strong> V12345678 o E12345678</li>
+                  <li>• <strong>Empresas:</strong> J123456789 o G123456789</li>
                 </ul>
               </div>
             </div>
