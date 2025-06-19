@@ -329,7 +329,7 @@ CREATE TABLE IF NOT EXISTS presentacion (
     EAN_13 BIGINT NOT NULL,
     nombre VARCHAR (50) NOT NULL,
     cantidad_unidades INT NOT NULL,
-    precio_unitario INT NOT NULL,
+    precio INT NOT NULL,
     fk_cerveza INT NOT NULL,
     CONSTRAINT pk_presentacion PRIMARY KEY (clave),
     CONSTRAINT fk_cerveza_presentacion FOREIGN KEY (fk_cerveza) REFERENCES cerveza(clave), 

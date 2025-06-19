@@ -379,7 +379,7 @@ INSERT INTO lugar_tienda (clave, nombre, tipo, fk_lugar_tienda) VALUES
 (15, 'Exhibidor Central de Ofertas', 'anaquel', 10); -- Clave: 15
 
 --Insertar presentacion (10 ejemplos)
-INSERT INTO presentacion (EAN_13, nombre, cantidad_unidades, precio_unitario, fk_cerveza) VALUES
+INSERT INTO presentacion (EAN_13, nombre, cantidad_unidades, precio, fk_cerveza) VALUES
 (7501234567890, 'Botella 330ml', 1, 5, 1),
 (7501234567891, 'Lata 355ml', 1, 4, 2),
 (7501234567892, 'Pack 6 Botellas 330ml', 6, 10, 3),
