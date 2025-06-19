@@ -3,6 +3,8 @@ const cors = require('cors');
 const shopRoutes = require('./routes/shopRoutes');
 const clientRoutes = require('./routes/clientRoutes');
 const { specs, swaggerUi } = require('./config/swagger');
+const roleRoutes = require('./routes/roleRoutes');
+const userRoutes = require('./routes/userRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -32,7 +34,8 @@ app.get('/', (req, res) => {
       createOrder: '/api/shop/order',
       clientIdentify: '/api/clientes/identificar',
       clientCreate: '/api/clientes/crear',
-      clientPlaces: '/api/clientes/lugares'
+      clientPlaces: '/api/clientes/lugares',
+      roles: '/api/roles'
     }
   });
 });
@@ -40,6 +43,8 @@ app.get('/', (req, res) => {
 /** Rutas de la API */
 app.use('/api/shop', shopRoutes);
 app.use('/api/clientes', clientRoutes);
+app.use('/roles', roleRoutes);
+app.use('/usuarios', userRoutes);
 
 /** Manejo de rutas no encontradas */
 app.use('*', (req, res) => {
