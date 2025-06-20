@@ -375,9 +375,3 @@ router.put('/:rolClave/privileges', roleController.assignPrivilegesToRole);
 router.get('/:rolClave/privileges', roleController.getPrivilegesByRoleId);
 
 module.exports = router;
-
-
-
-
-
-module.exports = router;
