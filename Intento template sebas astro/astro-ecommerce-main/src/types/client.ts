@@ -7,29 +7,6 @@ export interface ClienteBase {
   tipo: TipoCliente;
 }
 
-/** Estructura para teléfonos */
-export interface Telefono {
-  clave?: number;
-  codigo: number; // 0414, 0416, etc.
-  numero: number;
-  extension?: number;
-}
-
-/** Estructura para correos electrónicos */
-export interface CorreoElectronico {
-  clave?: number;
-  direccion_email: string;
-}
-
-/** Estructura para personas de contacto (solo clientes jurídicos) */
-export interface PersonaContacto {
-  clave?: number;
-  primer_nombre: string;
-  primer_apellido: string;
-  correo: CorreoElectronico;
-  telefono: Telefono;
-}
-
 export interface ClienteNatural extends ClienteBase {
   tipo: 'natural';
   ci: number;
@@ -39,9 +16,6 @@ export interface ClienteNatural extends ClienteBase {
   segundo_apellido?: string;
   direccion_habitacion: string;
   fk_direccion_habitacion?: number;
-  // Contacto
-  correo: CorreoElectronico;
-  telefonos: Telefono[];
   // Campos calculados del backend
   documento?: number;
   nombre?: string;
@@ -60,10 +34,6 @@ export interface ClienteJuridico extends ClienteBase {
   direccion_fisica: string;
   fk_direccion_fiscal?: number;
   fk_direccion_fisica?: number;
-  // Contacto
-  correo: CorreoElectronico;
-  telefonos: Telefono[];
-  personas_contacto: PersonaContacto[];
   // Campos calculados del backend
   documento?: number;
   lugar_fiscal?: string;
@@ -77,25 +47,6 @@ export interface Lugar {
   nombre: string;
   tipo: 'estado' | 'municipio' | 'parroquia';
   fk_lugar?: number;
-}
-
-/** Estructura jerárquica de lugares */
-export interface LugarJerarquico {
-  estados: LugarEstado[];
-}
-
-export interface LugarEstado extends Lugar {
-  tipo: 'estado';
-  municipios: LugarMunicipio[];
-}
-
-export interface LugarMunicipio extends Lugar {
-  tipo: 'municipio';
-  parroquias: LugarParroquia[];
-}
-
-export interface LugarParroquia extends Lugar {
-  tipo: 'parroquia';
 }
 
 export interface IdentificarClienteRequest {

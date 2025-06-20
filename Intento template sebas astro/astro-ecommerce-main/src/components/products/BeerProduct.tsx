@@ -1,15 +1,11 @@
 import React from 'react';
-import { addToCart } from '../../store/cartStore';
 import type { Beer } from '../../types/beer';
+import { addToCart } from '../../store/cartStore';
 
 interface BeerProductProps extends Beer {
-  onAddToCart?: () => void;
-  original_price?: number;
-  tiene_oferta?: boolean;
-  porcentaje_descuento?: number;
+  onAddToCart?: (id: string) => void;
 }
 
-/** Componente para mostrar un producto de cerveza con ofertas */
 const BeerProduct: React.FC<BeerProductProps> = ({
   id,
   thumb_src,
@@ -17,128 +13,88 @@ const BeerProduct: React.FC<BeerProductProps> = ({
   title,
   description,
   price,
-  original_price,
   stock,
-  tiene_oferta = false,
-  porcentaje_descuento,
   onAddToCart
 }) => {
-  const isOutOfStock = stock <= 0;
-
-  /** Manejar clic en agregar al carrito */
   const handleAddToCart = () => {
-    if (!isOutOfStock) {
-      addToCart({
-        id,
-        title,
-        price,
-        thumb_src,
-        thumb_alt,
-        description,
-        stock
-      });
-      onAddToCart?.();
-    }
+    const beer: Beer = {
+      id,
+      thumb_src,
+      thumb_alt,
+      title,
+      description,
+      price,
+      stock
+    };
+    addToCart(beer);
+    onAddToCart?.(id);
   };
 
-  /** Renderizar badge de oferta */
-  const renderOfertaBadge = () => {
-    if (!tiene_oferta || !porcentaje_descuento) return null;
-
-    return (
-      <div className="absolute top-2 left-2 z-10">
-        <div className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg">
-          -{porcentaje_descuento}%
-        </div>
-      </div>
-    );
-  };
-
-  /** Renderizar precios */
-  const renderPrecios = () => {
-    return (
-      <div className="mb-4">
-        {tiene_oferta && original_price ? (
-          <div className="space-y-1">
-            {/* Precio original tachado */}
-            <div className="text-gray-500 text-sm">
-              <span className="line-through font-medium">${original_price.toFixed(2)}</span>
-            </div>
-            {/* Precio en oferta en rojo */}
-            <div className="flex items-center space-x-2">
-              <span className="text-2xl font-bold text-red-600">
-                ${price.toFixed(2)}
-              </span>
-              <span className="text-green-600 text-sm font-medium">
-                ¡Ahorra ${(original_price - price).toFixed(2)}!
-              </span>
-            </div>
-          </div>
-        ) : (
-          <div className="text-2xl font-bold text-green-600">
-            ${price.toFixed(2)}
-          </div>
-        )}
-      </div>
-    );
-  };
+  /** Determinar el estado del producto */
+  const isOutOfStock = stock === 0;
+  const isLowStock = stock <= 5 && stock > 0;
 
   return (
-    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden">
-      {/* Contenedor de imagen con badge de oferta */}
-      <div className="relative overflow-hidden">
-        {renderOfertaBadge()}
+    <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 overflow-hidden h-full flex flex-col">
+      {/* Imagen del producto */}
+      <div className="relative">
         <img
           src={thumb_src}
+          className="w-full h-48 object-cover"
           alt={thumb_alt}
-          className="w-full h-32 object-cover transition-transform duration-300 hover:scale-110"
-          onError={(e) => {
-            // Fallback a imagen por defecto si no se encuentra la imagen
-            const target = e.target as HTMLImageElement;
-            if (target.src.includes('beer-sixpack')) {
-              target.src = '/images/products/beer-sixpack-default.jpeg';
-            } else {
-              target.src = '/images/products/beer-unit-default.jpg';
-            }
-          }}
         />
-        {/* Overlay en estado agotado */}
-        {isOutOfStock && (
-          <div className="absolute inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center">
-            <div className="text-white text-center">
-              <i className="fas fa-ban text-2xl mb-2"></i>
-              <p className="font-semibold text-sm">Agotado</p>
-            </div>
+        
+        {/* Badges de estado */}
+        {isLowStock && (
+          <div className="absolute top-2 right-2">
+            <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+              <i className="fas fa-exclamation-triangle mr-1"></i>
+              ¡Últimas {stock}!
+            </span>
           </div>
         )}
+        
+        {isOutOfStock && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <span className="bg-red-500 text-white px-4 py-2 rounded-lg font-semibold">
+              <i className="fas fa-times-circle mr-2"></i>
+              AGOTADO
+            </span>
+          </div>
+        )}
+
+        {/* Overlay con precio destacado */}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+          <div className="text-white text-right">
+            <span className="text-2xl font-bold">${price.toFixed(2)}</span>
+          </div>
+        </div>
       </div>
 
       {/* Contenido del producto */}
-      <div className="p-4">
-        {/* Título */}
+      <div className="p-5 flex flex-col flex-grow">
+        {/* Título del producto */}
         <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
           {title}
         </h3>
 
         {/* Descripción */}
-        <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+        <p className="text-gray-600 text-sm flex-grow mb-4 line-clamp-3">
           {description}
         </p>
 
-        {/* Precios */}
-        {renderPrecios()}
-
-        {/* Stock disponible */}
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-sm text-gray-500">
-            Stock: {stock} unidades
-          </span>
-          {stock <= 5 && stock > 0 && (
-            <span className="text-orange-500 text-sm font-medium">
-              <i className="fas fa-exclamation-triangle mr-1"></i>
-              ¡Últimas unidades!
+        {/* Información de stock */}
+        <div className="flex items-center mb-4">
+          <div className="flex items-center text-sm text-gray-500">
+            <i className="fas fa-boxes mr-2"></i>
+            <span>Stock: </span>
+            <span className={`ml-1 font-semibold ${
+              isOutOfStock ? 'text-red-500' : 
+              isLowStock ? 'text-yellow-600' : 'text-green-600'
+            }`}>
+              {stock} unidades
             </span>
-          )}
+          </div>
         </div>
 
         {/* Botón de acción */}
@@ -148,7 +104,7 @@ const BeerProduct: React.FC<BeerProductProps> = ({
           className={`w-full py-3 px-4 rounded-lg font-semibold text-base transition-all duration-200 transform ${
             isOutOfStock
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              : 'bg-green-500 hover:bg-green-600 text-white hover:scale-105 shadow-md hover:shadow-lg active:scale-95'
+              : 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 hover:scale-105 shadow-lg hover:shadow-xl active:scale-95'
           }`}
         >
           {isOutOfStock ? (
@@ -163,6 +119,8 @@ const BeerProduct: React.FC<BeerProductProps> = ({
             </>
           )}
         </button>
+
+
       </div>
     </div>
   );

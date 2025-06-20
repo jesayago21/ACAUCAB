@@ -16,15 +16,11 @@ export type EstadoAutopago = 'inicio' | 'identificacion' | 'registro' | 'compra'
 /** Métodos de pago disponibles */
 export type MetodoPago = 'efectivo' | 'tarjeta' | 'cheque' | 'puntos';
 
-/** Tipos de tarjeta */
-export type TipoTarjeta = 'debito' | 'credito';
-
 /** Datos de un pago parcial */
 export interface PagoParcial {
   metodo: MetodoPago;
   monto: number;
   referencia?: string; /** Para tarjetas, cheques, etc. */
-  tipoTarjeta?: TipoTarjeta; /** Solo para método tarjeta */
 }
 
 /** Datos completos del pago */

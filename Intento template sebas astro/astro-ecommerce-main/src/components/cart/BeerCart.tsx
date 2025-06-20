@@ -133,7 +133,7 @@ const BeerCart: React.FC<BeerCartProps> = ({
         {/* Botón de checkout (opcional) */}
         {showCheckoutButton && (
           <button 
-            className="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+            className="w-full py-3 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 transform hover:scale-105"
             onClick={onCheckout}
           >
             <i className="fas fa-credit-card mr-2"></i>

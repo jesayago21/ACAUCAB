@@ -15,5 +15,23 @@ export default {
     },
   },
   plugins: [],
-  important: true, // Esto hace que todas las clases de Tailwind usen !important
+  // Usar !important selectivamente - solo para layout y componentes principales
+  important: [
+    '.autopago-main',
+    '.bg-green-500',
+    '.bg-green-600', 
+    '.bg-blue-500',
+    '.bg-blue-600',
+    '.text-white',
+    '.rounded-lg',
+    '.rounded-xl',
+    '.shadow-lg',
+    '.shadow-xl',
+    '.grid',
+    '.flex',
+    '.sticky',
+    '.fixed',
+    '.absolute',
+    '.relative'
+  ],
 } 

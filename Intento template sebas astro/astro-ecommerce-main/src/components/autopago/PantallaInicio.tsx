@@ -65,7 +65,7 @@ const PantallaInicio: React.FC<PantallaInicioProps> = ({ onIniciarCompra }) => {
             <div className="mb-8">
               <button
                 onClick={onIniciarCompra}
-                className="inline-flex items-center px-12 py-4 bg-green-500 hover:bg-green-600 text-white text-xl font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-200"
+                className="inline-flex items-center px-12 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white text-xl font-semibold rounded-full shadow-lg hover:from-green-700 hover:to-green-800 transform hover:scale-105 transition-all duration-200"
               >
                 <i className="fas fa-shopping-cart mr-3"></i>
                 EMPEZAR COMPRA

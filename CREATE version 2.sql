@@ -122,6 +122,16 @@ CREATE TABLE IF NOT EXISTS lugar_tienda (
     CONSTRAINT chk_tipo_lugar_tienda CHECK (tipo IN ('zona', 'pasillo', 'anaquel'))
 );
 
+CREATE TABLE IF NOT EXISTS tasa_cambio (
+    clave SERIAL,
+    moneda tipo_moneda NOT NULL,
+    monto_equivalencia DECIMAL(10,2) NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE,
+    CONSTRAINT pk_tasa_cambio PRIMARY KEY (clave),
+    CONSTRAINT chk_monto_equivalencia CHECK (monto_equivalencia > 0),
+    CONSTRAINT chk_fechas_tasa_cambio CHECK (fecha_fin IS NULL OR fecha_inicio <= fecha_fin)
+);
 
 CREATE TABLE IF NOT EXISTS cliente (
     clave SERIAL,

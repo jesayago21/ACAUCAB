@@ -2,11 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const shopRoutes = require('./routes/shopRoutes');
 const clientRoutes = require('./routes/clientRoutes');
-const roleRoutes = require('./routes/roleRoutes');
-const privilegeRoutes = require('./routes/privilegeRoutes');
+const roleRoutes = require('./routes/roleRoutes'); 
+// const privilegeRoutes = require('./routes/privilegeRoutes'); // Comentado temporalmente - archivo no existe
 const { specs, swaggerUi } = require('./config/swagger');
-const roleRoutes = require('./routes/roleRoutes');
-const userRoutes = require('./routes/userRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -15,20 +13,6 @@ const PORT = process.env.PORT || 5000;
 /** Middleware básico */
 app.use(cors()); // Permite peticiones de otros orígenes (tu frontend)
 app.use(express.json()); // Para parsear el body de las peticiones como JSON
-
-// Middleware para logging de peticiones
-app.use((req, res, next) => {
-  console.log('--- Nueva Petición ---');
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
-  if (req.query && Object.keys(req.query).length > 0) {
-    console.log('Query:', req.query);
-  }
-  if (req.body && Object.keys(req.body).length > 0) {
-    console.log('Body:', req.body);
-  }
-  console.log('----------------------');
-  next();
-});
 
 /** Configuración de Swagger UI */
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
@@ -50,17 +34,16 @@ app.get('/', (req, res) => {
       createOrder: '/api/shop/order',
       clientIdentify: '/api/clientes/identificar',
       clientCreate: '/api/clientes/crear',
-      clientPlaces: '/api/clientes/lugares',
-      roles: '/api/roles'
+      clientPlaces: '/api/clientes/lugares'
     }
   });
 });
 
 /** Rutas de la API */
 app.use('/api/shop', shopRoutes);
+app.use('/api/roles', roleRoutes);
+// app.use('/api/privileges', privilegeRoutes); // Comentado temporalmente - archivo no existe 
 app.use('/api/clientes', clientRoutes);
-app.use('/roles', roleRoutes);
-app.use('/usuarios', userRoutes);
 
 /** Manejo de rutas no encontradas */
 app.use('*', (req, res) => {
@@ -82,4 +65,6 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);
   console.log(`Documentación disponible en: http://localhost:${PORT}/api-docs`);
+  
 });
+
