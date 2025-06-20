@@ -129,7 +129,7 @@ export default function MetodosPago({
   const handlePagoPuntos = () => {
     if (!puntosCliente || !tasaPuntos || puntosAUsar <= 0) return;
     
-    const tasaActual = tasaPuntos.monto_equivalencia || tasaPuntos.tasa || 1;
+    const tasaActual = parseFloat(String(tasaPuntos.monto_equivalencia || tasaPuntos.tasa || 1));
     const maxPuntos = Math.min(puntosCliente.puntos_disponibles, Math.ceil(montoPendiente / tasaActual));
     const puntosFinales = Math.min(puntosAUsar, maxPuntos);
     const montoEnBolivares = parseFloat((puntosFinales * tasaActual).toFixed(2));
@@ -359,7 +359,7 @@ export default function MetodosPago({
                           Equivale a: Bs. {formatearPrecio(puntosCliente.valor_en_bolivares)}
                         </p>
                         <p className="text-xs text-green-600">
-                          1 punto = Bs. {(tasaPuntos.monto_equivalencia || tasaPuntos.tasa || 1).toFixed(2)}
+                          1 punto = Bs. {(parseFloat(String(tasaPuntos.monto_equivalencia || tasaPuntos.tasa || 1))).toFixed(2)}
                         </p>
                       </div>
 
@@ -370,13 +370,13 @@ export default function MetodosPago({
                         <input
                           type="number"
                           min="1"
-                          max={Math.min(puntosCliente.puntos_disponibles, Math.ceil(montoPendiente / (tasaPuntos.monto_equivalencia || tasaPuntos.tasa || 1)))}
+                          max={Math.min(puntosCliente.puntos_disponibles, Math.ceil(montoPendiente / parseFloat(String(tasaPuntos.monto_equivalencia || tasaPuntos.tasa || 1))))}
                           value={puntosAUsar}
                           onChange={(e) => setPuntosAUsar(parseInt(e.target.value) || 0)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A1B5A0]"
                         />
                         <p className="text-xs text-gray-500 mt-1">
-                          Equivale a: Bs. {formatearPrecio(puntosAUsar * (tasaPuntos.monto_equivalencia || tasaPuntos.tasa || 1))}
+                          Equivale a: Bs. {formatearPrecio(puntosAUsar * parseFloat(String(tasaPuntos.monto_equivalencia || tasaPuntos.tasa || 1)))}
                         </p>
                       </div>
 

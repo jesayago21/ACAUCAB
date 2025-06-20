@@ -496,8 +496,24 @@ npm start
 cd "Frontend/Front final"
 npm install
 npm run dev
-# Aplicación en http://localhost:4321
+# Aplicación en http://localhost:3000
 ```
+
+### 🔍 Spotlight Debugging (Nuevo)
+
+Spotlight se activa automáticamente en modo desarrollo para debugging avanzado:
+
+- **Error Tracking**: Captura automática de errores con stack traces
+- **Performance Monitoring**: Métricas de rendimiento en tiempo real
+- **Network Inspector**: Monitoreo de llamadas API
+- **Console Integration**: Logs mejorados con contexto
+
+Para configurar Sentry (opcional):
+
+1. Crea una cuenta en [sentry.io](https://sentry.io/)
+2. Obtén tu DSN del proyecto
+3. Crea un archivo `.env` basado en `env.example`
+4. Agrega tu `PUBLIC_SENTRY_DSN`
 
 ### Documentación API
 

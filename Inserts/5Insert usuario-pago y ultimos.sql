@@ -109,6 +109,10 @@ INSERT INTO tasa_cambio (moneda, monto_equivalencia, fecha_inicio, fecha_fin) VA
 ('USD', 38.90, '2024-04-01', '2025-06-16'),
 ('EUR', 42.50, '2024-04-01', '2025-06-16'), 
 ('USD', 39.50, '2025-06-17', NULL); 
+-- Insertar tasa de cambio para puntos (ejemplo: 1 punto = 10 Bs)
+INSERT INTO tasa_cambio (moneda, monto_equivalencia, fecha_inicio) 
+VALUES ('PUNTOS', 10.00, CURRENT_DATE)
+ON CONFLICT DO NOTHING;
 
 
 INSERT INTO metodo_de_pago (moneda, metodo_preferido, fk_usuario, valor, numero_cheque, fecha_vencimiento, banco, numero_tarjeta, tipo) VALUES
