@@ -5,6 +5,8 @@ const clientRoutes = require('./routes/clientRoutes');
 const roleRoutes = require('./routes/roleRoutes');
 const privilegeRoutes = require('./routes/privilegeRoutes');
 const { specs, swaggerUi } = require('./config/swagger');
+const roleRoutes = require('./routes/roleRoutes');
+const userRoutes = require('./routes/userRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -49,8 +51,7 @@ app.get('/', (req, res) => {
       clientIdentify: '/api/clientes/identificar',
       clientCreate: '/api/clientes/crear',
       clientPlaces: '/api/clientes/lugares',
-      roles: '/api/roles',
-      privileges: '/api/privileges'
+      roles: '/api/roles'
     }
   });
 });
@@ -58,8 +59,8 @@ app.get('/', (req, res) => {
 /** Rutas de la API */
 app.use('/api/shop', shopRoutes);
 app.use('/api/clientes', clientRoutes);
-app.use('/api/roles', roleRoutes);
-app.use('/api/privileges', privilegeRoutes);
+app.use('/roles', roleRoutes);
+app.use('/usuarios', userRoutes);
 
 /** Manejo de rutas no encontradas */
 app.use('*', (req, res) => {

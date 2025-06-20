@@ -33,7 +33,7 @@ exports.createRole = async (req, res) => {
 exports.getAllRoles = async (req, res) => {
     try {
         // Selecciona clave, nombre y descripcion para mostrar la información completa del rol
-        const result = await pool.query('SELECT clave, nombre, descripcion FROM rol ORDER BY nombre ASC');
+        const result = await pool.query('SELECT clave, nombre FROM rol ORDER BY nombre ASC');
         res.status(200).json(result.rows);
     } catch (error) {
         console.error('Error al obtener los roles:', error);
