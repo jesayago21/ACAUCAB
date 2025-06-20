@@ -261,6 +261,228 @@ const getTasaCambioPuntos = async (req, res) => {
   }
 };
 
+/** Crear una venta de tienda física */
+const createVentaFisica = async (req, res) => {
+  const {
+    cliente_id,
+    tienda_id = 1, // Default a tienda ID 1
+    items,
+    metodos_pago,
+    total_venta
+  } = req.body;
+
+  // Validación básica de entrada
+  if (!cliente_id || !items || !Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ 
+      success: false,
+      message: 'Datos de venta incompletos o inválidos' 
+    });
+  }
+
+  try {
+    // Iniciar transacción
+    await db.query('BEGIN');
+
+    // 1. Crear la venta en venta_tienda_fisica
+    const insertVentaQuery = `
+      INSERT INTO venta_tienda_fisica (fecha, total_venta, fk_tienda_fisica, fk_cliente)
+      VALUES (CURRENT_DATE, $1, $2, $3)
+      RETURNING clave;
+    `;
+    
+    const ventaResult = await db.query(insertVentaQuery, [total_venta, tienda_id, cliente_id]);
+    const ventaId = ventaResult.rows[0].clave;
+
+    // 2. Insertar los detalles de la venta
+    for (const item of items) {
+      // Obtener el inventario_tienda correspondiente al producto
+      const inventarioQuery = `
+        SELECT clave, cantidad
+        FROM inventario_tienda 
+        WHERE fk_presentacion = $1 AND fk_tienda_fisica = $2
+        LIMIT 1;
+      `;
+      
+      const inventarioResult = await db.query(inventarioQuery, [item.producto_id, tienda_id]);
+      
+      if (inventarioResult.rows.length === 0) {
+        throw new Error(`Producto ${item.producto_id} no disponible en inventario`);
+      }
+      
+      const inventarioTienda = inventarioResult.rows[0];
+      
+      if (inventarioTienda.cantidad < item.cantidad) {
+        throw new Error(`Stock insuficiente para producto ${item.producto_id}. Disponible: ${inventarioTienda.cantidad}, Solicitado: ${item.cantidad}`);
+      }
+
+      // Insertar detalle de venta
+      const insertDetalleQuery = `
+        INSERT INTO detalle_venta_fisica (cantidad, precio_unitario, fk_venta_tienda_fisica, fk_inventario_tienda)
+        VALUES ($1, $2, $3, $4);
+      `;
+      
+      await db.query(insertDetalleQuery, [
+        item.cantidad,
+        item.precio_unitario,
+        ventaId,
+        inventarioTienda.clave
+      ]);
+
+      // Actualizar inventario (restar cantidad vendida)
+      const updateInventarioQuery = `
+        UPDATE inventario_tienda 
+        SET cantidad = cantidad - $1 
+        WHERE clave = $2;
+      `;
+      
+      await db.query(updateInventarioQuery, [item.cantidad, inventarioTienda.clave]);
+    }
+
+    // 3. Manejar métodos de pago con lógica específica por tipo
+    for (const metodoPago of metodos_pago) {
+      let insertMetodoPagoQuery;
+      let metodoPagoParams;
+      
+      // Construir query específico según el tipo de método de pago
+      switch (metodoPago.tipo) {
+        case 'Efectivo':
+          insertMetodoPagoQuery = `
+            INSERT INTO metodo_de_pago (moneda, metodo_preferido, valor, tipo)
+            VALUES ('VES', FALSE, $1, $2)
+            RETURNING clave;
+          `;
+          metodoPagoParams = [metodoPago.monto, metodoPago.tipo];
+          break;
+          
+        case 'Cheque':
+          insertMetodoPagoQuery = `
+            INSERT INTO metodo_de_pago (moneda, metodo_preferido, numero_cheque, banco, tipo)
+            VALUES ('VES', FALSE, $1, $2, $3)
+            RETURNING clave;
+          `;
+          metodoPagoParams = [
+            metodoPago.detalles?.numero_cheque || null,
+            metodoPago.detalles?.banco || null,
+            metodoPago.tipo
+          ];
+          break;
+          
+        case 'Tarjeta de credito':
+        case 'Tarjeta de debito':
+          insertMetodoPagoQuery = `
+            INSERT INTO metodo_de_pago (moneda, metodo_preferido, numero_tarjeta, fecha_vencimiento, banco, tipo)
+            VALUES ('VES', FALSE, $1, $2, $3, $4)
+            RETURNING clave;
+          `;
+          metodoPagoParams = [
+            metodoPago.detalles?.numero_tarjeta || null,
+            metodoPago.detalles?.fecha_vencimiento || null,
+            metodoPago.detalles?.banco || null,
+            metodoPago.tipo
+          ];
+          break;
+          
+        case 'Puntos':
+          insertMetodoPagoQuery = `
+            INSERT INTO metodo_de_pago (moneda, metodo_preferido, tipo)
+            VALUES ('PUNTOS', FALSE, $1)
+            RETURNING clave;
+          `;
+          metodoPagoParams = [metodoPago.tipo];
+          break;
+          
+        default:
+          throw new Error(`Tipo de método de pago no soportado: ${metodoPago.tipo}`);
+      }
+      
+      const metodoPagoResult = await db.query(insertMetodoPagoQuery, metodoPagoParams);
+      const metodoPagoId = metodoPagoResult.rows[0].clave;
+
+      // Obtener tasa de cambio apropiada según el método
+      const monedaPago = metodoPago.tipo === 'Puntos' ? 'PUNTOS' : 'VES';
+      const tasaQuery = `
+        SELECT clave FROM tasa_cambio 
+        WHERE moneda = $1
+        AND (fecha_fin IS NULL OR fecha_fin >= CURRENT_DATE)
+        ORDER BY fecha_inicio DESC 
+        LIMIT 1;
+      `;
+      
+      const tasaResult = await db.query(tasaQuery, [monedaPago]);
+      const tasaId = tasaResult.rows.length > 0 ? tasaResult.rows[0].clave : 1; // Fallback
+
+      // Crear registro de pago
+      const insertPagoQuery = `
+        INSERT INTO pago (fecha_pago, monto_total, fk_tasa_cambio, fk_metodo_de_pago, fk_venta_tienda_fisica)
+        VALUES (CURRENT_DATE, $1, $2, $3, $4);
+      `;
+      
+      await db.query(insertPagoQuery, [
+        metodoPago.monto,
+        tasaId,
+        metodoPagoId,
+        ventaId
+      ]);
+
+      // Si es pago con puntos, descontar los puntos usados del cliente
+      if (metodoPago.tipo === 'Puntos' && metodoPago.detalles?.puntos_usados) {
+        const updatePuntosUsadosQuery = `
+          UPDATE cliente 
+          SET puntos_acumulados = puntos_acumulados - $1 
+          WHERE clave = $2;
+        `;
+        
+        await db.query(updatePuntosUsadosQuery, [
+          metodoPago.detalles.puntos_usados,
+          cliente_id
+        ]);
+      }
+    }
+
+    // 4. Actualizar puntos del cliente (1 punto por producto)
+    const puntosGanados = items.reduce((sum, item) => sum + item.cantidad, 0);
+    const updatePuntosQuery = `
+      UPDATE cliente 
+      SET puntos_acumulados = COALESCE(puntos_acumulados, 0) + $1 
+      WHERE clave = $2;
+    `;
+    
+    await db.query(updatePuntosQuery, [puntosGanados, cliente_id]);
+
+    // Calcular total de puntos usados en la venta
+    const totalPuntosUsados = metodos_pago
+      .filter(mp => mp.tipo === 'Puntos' && mp.detalles?.puntos_usados)
+      .reduce((sum, mp) => sum + mp.detalles.puntos_usados, 0);
+
+    // Confirmar transacción
+    await db.query('COMMIT');
+
+    // Crear mensaje informativo
+    let mensaje = `Venta creada exitosamente. Puntos ganados: ${puntosGanados}`;
+    if (totalPuntosUsados > 0) {
+      mensaje += `, Puntos usados: ${totalPuntosUsados}`;
+    }
+
+    res.status(201).json({
+      success: true,
+      venta_id: ventaId,
+      puntos_ganados: puntosGanados,
+      puntos_usados: totalPuntosUsados,
+      message: mensaje
+    });
+
+  } catch (error) {
+    // Rollback en caso de error
+    await db.query('ROLLBACK');
+    console.error('Error creating venta física:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al procesar la venta',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getAvailableProducts,
   getUserPaymentMethods,
@@ -269,4 +491,5 @@ module.exports = {
   getTiendasFisicas,
   getTasaCambioActual,
   getTasaCambioPuntos,
+  createVentaFisica,
 };

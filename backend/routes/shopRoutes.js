@@ -258,4 +258,76 @@ router.get('/tasa-cambio-puntos', shopController.getTasaCambioPuntos);
  */
 router.get('/tasa-cambio-actual', shopController.getTasaCambioActual);
 
+/**
+ * @swagger
+ * /api/shop/venta-fisica:
+ *   post:
+ *     summary: Crear una nueva venta en tienda física
+ *     description: Procesa una venta directa en tienda física con actualización de inventario y métodos de pago
+ *     tags: [Ventas]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - cliente_id
+ *               - items
+ *               - metodos_pago
+ *               - total_venta
+ *             properties:
+ *               cliente_id:
+ *                 type: integer
+ *                 description: ID del cliente
+ *               tienda_id:
+ *                 type: integer
+ *                 default: 1
+ *                 description: ID de la tienda física
+ *               items:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     producto_id:
+ *                       type: integer
+ *                     cantidad:
+ *                       type: integer
+ *                     precio_unitario:
+ *                       type: number
+ *               metodos_pago:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     tipo:
+ *                       type: string
+ *                       enum: [Efectivo, Cheque, Tarjeta de credito, Tarjeta de debito, Puntos]
+ *                     monto:
+ *                       type: number
+ *                     detalles:
+ *                       type: object
+ *               total_venta:
+ *                 type: number
+ *     responses:
+ *       201:
+ *         description: Venta creada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 venta_id:
+ *                   type: integer
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Datos de entrada inválidos
+ *       500:
+ *         description: Error al procesar la venta
+ */
+router.post('/venta-fisica', shopController.createVentaFisica);
+
 module.exports = router;

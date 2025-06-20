@@ -7,7 +7,9 @@ import type {
   Lugar, 
   TasaCambio, 
   PuntosCliente,
-  Venta 
+  Venta,
+  ItemCarrito,
+  MetodoPago
 } from '../types/api';
 
 // Configuración de la API usando variables de entorno
@@ -166,9 +168,9 @@ export const productoService = {
       id: producto.clave,
       id_presentacion: producto.clave,
       nombre: `${producto.nombre_cerveza} - ${producto.nombre_presentacion}`,
-      precio_original: producto.precio,
+      precio_original: parseFloat(producto.precio.toFixed(2)),
       precio_oferta: producto.tiene_oferta && producto.porcentaje_descuento 
-        ? Math.round(producto.precio * (1 - producto.porcentaje_descuento / 100))
+        ? parseFloat((producto.precio * (1 - producto.porcentaje_descuento / 100)).toFixed(2))
         : null,
       stock_disponible: producto.cantidad_disponible,
       // Generar unique_key verdaderamente único
@@ -193,9 +195,9 @@ export const productoService = {
       id: producto.clave,
       id_presentacion: producto.clave,
       nombre: `${producto.nombre_cerveza} - ${producto.nombre_presentacion}`,
-      precio_original: producto.precio,
+      precio_original: parseFloat(producto.precio.toFixed(2)),
       precio_oferta: producto.tiene_oferta && producto.porcentaje_descuento 
-        ? Math.round(producto.precio * (1 - producto.porcentaje_descuento / 100))
+        ? parseFloat((producto.precio * (1 - producto.porcentaje_descuento / 100)).toFixed(2))
         : null,
       stock_disponible: producto.cantidad_disponible,
       // Generar unique_key verdaderamente único para ofertas
@@ -231,15 +233,25 @@ export const tasaCambioService = {
   /** Obtener tasa de cambio de puntos */
   async obtenerTasaCambioPuntos(): Promise<TasaCambio> {
     const response = await fetchWithTimeout(`${API_BASE_URL}/shop/tasa-cambio-puntos`);
-    const data = await handleResponse<{tasa: TasaCambio}>(response);
-    return data.tasa;
+    const data = await handleResponse<{tasa: any}>(response);
+    // Mapear campos para compatibilidad
+    return {
+      ...data.tasa,
+      tasa: data.tasa.monto_equivalencia,
+      fecha: data.tasa.fecha_inicio
+    };
   },
 
   /** Obtener tasa de cambio actual (USD) */
   async obtenerTasaCambioActual(): Promise<TasaCambio> {
     const response = await fetchWithTimeout(`${API_BASE_URL}/shop/tasa-cambio-actual`);
-    const data = await handleResponse<{tasa: TasaCambio}>(response);
-    return data.tasa;
+    const data = await handleResponse<{tasa: any}>(response);
+    // Mapear campos para compatibilidad
+    return {
+      ...data.tasa,
+      tasa: data.tasa.monto_equivalencia,
+      fecha: data.tasa.fecha_inicio
+    };
   },
 
   /** Obtener tasa de cambio por moneda - método legacy */
@@ -274,7 +286,33 @@ export const tasaCambioService = {
 
 /** Servicios para Ventas */
 export const ventaService = {
-  /** Crear una nueva venta */
+  /** Crear una nueva venta en tienda física */
+  async crearVentaFisica(venta: {
+    cliente_id: number;
+    tienda_id: number;
+    items: Array<{
+      producto_id: number;
+      cantidad: number;
+      precio_unitario: number;
+    }>;
+    metodos_pago: Array<{
+      tipo: string;
+      monto: number;
+      detalles?: any;
+    }>;
+    total_venta: number;
+  }): Promise<{ success: boolean; venta_id: number; message: string }> {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/shop/venta-fisica`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(venta),
+    });
+    return handleResponse<{ success: boolean; venta_id: number; message: string }>(response);
+  },
+
+  /** Crear una nueva venta online (método legacy) */
   async crearVenta(venta: Omit<Venta, 'clave' | 'fecha'>): Promise<Venta> {
     const response = await fetchWithTimeout(`${API_BASE_URL}/shop/order`, {
       method: 'POST',
