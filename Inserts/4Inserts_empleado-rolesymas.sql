@@ -169,55 +169,608 @@ INSERT INTO telefono (codigo, numero, extension, fk_empleado, fk_cliente, fk_mie
 (0424, 9012345, 9, 901234567, NULL, NULL, NULL),
 (0426, 1122334, 10, NULL, 10, NULL, NULL);
 
+--Insertar privilegios
+
+-- Tabla: receta
 INSERT INTO privilegio (clave, nombre, descripcion) VALUES
-(1, 'Crear usuarios', 'Permite crear nuevos usuarios en el sistema'),
-(2, 'Editar usuarios', 'Permite editar información de usuarios'),
-(3, 'Eliminar usuarios', 'Permite eliminar usuarios del sistema'),
-(4, 'Ver reportes', 'Permite visualizar reportes'),
-(5, 'Configurar sistema', 'Permite modificar la configuración general'),
-(6, 'Exportar datos', 'Permite exportar información a archivos'),
-(7, 'Importar datos', 'Permite importar información desde archivos'),
-(8, 'Cambiar contraseña', 'Permite cambiar la contraseña propia'),
-(9, 'Ver historial', 'Permite ver el historial de compras o ventas'),
-(10, 'Gestionar roles', 'Permite crear, editar o eliminar roles de usuario'),
-(11, 'Consultar cervezas', 'Permite ver las cervezas disponibles'),
-(12, 'Realizar ventas', 'Permite registrar ventas de cervezas'),
-(13, 'Realizar compras', 'Permite registrar compras de cervezas'),
-(14, 'Gestionar promociones', 'Permite crear y editar promociones de cervezas'),
-(15, 'Gestionar proveedores', 'Permite añadir o modificar proveedores de cervezas'),
-(16, 'Gestionar clientes', 'Permite añadir o modificar información de clientes'),
-(17, 'Gestionar pedidos', 'Permite gestionar los pedidos encargados'),
-(18, 'Consultar catálogo', 'Permite ver el catálogo de cervezas'),
-(19, 'Ver inventario', 'Permite ver el inventario actual de cervezas'),
-(20, 'Gestionar inventario', 'Permite modificar el inventario de cervezas'),
-(21, 'Acceso a soporte', 'Permite acceder al sistema de soporte técnico'),
-(22, 'Ver estadísticas', 'Permite ver estadísticas de ventas y usuarios');
+(1, 'Crear receta', 'Permite registrar una nueva receta de cerveza.'),
+(2, 'Consultar receta', 'Permite ver los detalles de las recetas existentes.'),
+(3, 'Modificar receta', 'Permite editar la información de una receta existente.'),
+(4, 'Eliminar receta', 'Permite eliminar una receta del sistema.');
+
+-- Tabla: tipo_cerveza
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(5, 'Crear tipo_cerveza', 'Permite registrar un nuevo tipo o categoría de cerveza.'),
+(6, 'Consultar tipo_cerveza', 'Permite ver la lista de tipos de cerveza.'),
+(7, 'Modificar tipo_cerveza', 'Permite editar la información de un tipo de cerveza.'),
+(8, 'Eliminar tipo_cerveza', 'Permite eliminar un tipo de cerveza del sistema.');
+
+-- Tabla: caracteristica
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(9, 'Crear caracteristica', 'Permite añadir nuevas características para cervezas (ej. Amargor).'),
+(10, 'Consultar caracteristica', 'Permite ver las características existentes.'),
+(11, 'Modificar caracteristica', 'Permite editar una característica existente.'),
+(12, 'Eliminar caracteristica', 'Permite eliminar una característica del sistema.');
+
+-- Tabla: tipo_evento
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(13, 'Crear tipo_evento', 'Permite crear un nuevo tipo de evento (ej. Cata, Festival).'),
+(14, 'Consultar tipo_evento', 'Permite ver la lista de tipos de evento.'),
+(15, 'Modificar tipo_evento', 'Permite editar un tipo de evento existente.'),
+(16, 'Eliminar tipo_evento', 'Permite eliminar un tipo de evento del sistema.');
+
+-- Tabla: ingrediente
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(17, 'Crear ingrediente', 'Permite registrar un nuevo ingrediente para recetas.'),
+(18, 'Consultar ingrediente', 'Permite ver la lista de ingredientes disponibles.'),
+(19, 'Modificar ingrediente', 'Permite editar un ingrediente existente.'),
+(20, 'Eliminar ingrediente', 'Permite eliminar un ingrediente del sistema.');
+
+-- Tabla: cargo
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(21, 'Crear cargo', 'Permite registrar un nuevo cargo para empleados.'),
+(22, 'Consultar cargo', 'Permite ver la lista de cargos existentes.'),
+(23, 'Modificar cargo', 'Permite editar la información de un cargo.'),
+(24, 'Eliminar cargo', 'Permite eliminar un cargo del sistema.');
+
+-- Tabla: rol
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(25, 'Crear rol', 'Permite crear un nuevo rol de usuario en el sistema.'),
+(26, 'Consultar rol', 'Permite ver la lista de roles de usuario.'),
+(27, 'Modificar rol', 'Permite editar el nombre de un rol.'),
+(28, 'Eliminar rol', 'Permite eliminar un rol de usuario.');
+
+-- Tabla: privilegio
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(29, 'Crear privilegio', 'Permite crear nuevos privilegios en el sistema.'),
+(30, 'Consultar privilegio', 'Permite ver la lista de todos los privilegios.'),
+(31, 'Modificar privilegio', 'Permite editar un privilegio existente.'),
+(32, 'Eliminar privilegio', 'Permite eliminar un privilegio del sistema.');
+
+-- Tabla: tipo_beneficio
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(33, 'Crear tipo_beneficio', 'Permite crear nuevos tipos de beneficios para empleados.'),
+(34, 'Consultar tipo_beneficio', 'Permite ver los tipos de beneficios existentes.'),
+(35, 'Modificar tipo_beneficio', 'Permite editar un tipo de beneficio.'),
+(36, 'Eliminar tipo_beneficio', 'Permite eliminar un tipo de beneficio.');
+
+-- Tabla: tipo_invitado
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(37, 'Crear tipo_invitado', 'Permite crear un nuevo tipo de invitado (ej. Ponente).'),
+(38, 'Consultar tipo_invitado', 'Permite ver la lista de tipos de invitado.'),
+(39, 'Modificar tipo_invitado', 'Permite editar un tipo de invitado existente.'),
+(40, 'Eliminar tipo_invitado', 'Permite eliminar un tipo de invitado.');
+
+-- Tabla: lugar
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(41, 'Crear lugar', 'Permite añadir nuevos lugares (estados, municipios, parroquias).'),
+(42, 'Consultar lugar', 'Permite ver la estructura de lugares.'),
+(43, 'Modificar lugar', 'Permite editar un lugar existente.'),
+(44, 'Eliminar lugar', 'Permite eliminar un lugar del sistema.');
+
+-- Tabla: estatus
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(45, 'Crear estatus', 'Permite definir nuevos estados para procesos (compra, venta, etc.).'),
+(46, 'Consultar estatus', 'Permite ver los posibles estados del sistema.'),
+(47, 'Modificar estatus', 'Permite editar un estado existente.'),
+(48, 'Eliminar estatus', 'Permite eliminar un estado del sistema.');
+
+-- Tabla: lugar_tienda
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(49, 'Crear lugar_tienda', 'Permite añadir ubicaciones en una tienda (pasillo, anaquel).'),
+(50, 'Consultar lugar_tienda', 'Permite ver las ubicaciones de una tienda.'),
+(51, 'Modificar lugar_tienda', 'Permite editar una ubicación de tienda.'),
+(52, 'Eliminar lugar_tienda', 'Permite eliminar una ubicación de tienda.');
+
+-- Tabla: tasa_cambio
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(53, 'Crear tasa_cambio', 'Permite registrar una nueva tasa de cambio monetaria.'),
+(54, 'Consultar tasa_cambio', 'Permite ver el historial de tasas de cambio.'),
+(55, 'Modificar tasa_cambio', 'Permite editar una tasa de cambio (ej. fecha fin).'),
+(56, 'Eliminar tasa_cambio', 'Permite eliminar un registro de tasa de cambio.');
+
+-- Tabla: cliente
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(57, 'Crear cliente', 'Permite registrar nuevos clientes (naturales o jurídicos).'),
+(58, 'Consultar cliente', 'Permite ver la información de los clientes.'),
+(59, 'Modificar cliente', 'Permite editar los datos de un cliente.'),
+(60, 'Eliminar cliente', 'Permite eliminar un cliente del sistema.');
+
+-- Tabla: empleado
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(61, 'Crear empleado', 'Permite registrar un nuevo empleado.'),
+(62, 'Consultar empleado', 'Permite ver la información de los empleados.'),
+(63, 'Modificar empleado', 'Permite editar los datos de un empleado.'),
+(64, 'Eliminar empleado', 'Permite dar de baja a un empleado.');
+
+-- Tabla: miembro
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(65, 'Crear miembro', 'Permite afiliar un nuevo miembro a la asociación.'),
+(66, 'Consultar miembro', 'Permite ver la información de los miembros.'),
+(67, 'Modificar miembro', 'Permite editar los datos de un miembro.'),
+(68, 'Eliminar miembro', 'Permite desafiliar a un miembro.');
+
+-- Tabla: usuario
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(69, 'Crear usuario', 'Permite crear una nueva cuenta de usuario.'),
+(70, 'Consultar usuario', 'Permite ver la información de los usuarios.'),
+(71, 'Modificar usuario', 'Permite editar los datos de un usuario (ej. cambiar rol).'),
+(72, 'Eliminar usuario', 'Permite eliminar una cuenta de usuario.');
+
+-- Tabla: metodo_de_pago
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(73, 'Crear metodo_de_pago', 'Permite registrar un método de pago para un usuario.'),
+(74, 'Consultar metodo_de_pago', 'Permite ver los métodos de pago registrados.'),
+(75, 'Modificar metodo_de_pago', 'Permite editar un método de pago existente.'),
+(76, 'Eliminar metodo_de_pago', 'Permite eliminar un método de pago de un usuario.');
+
+-- Tabla: horario
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(77, 'Crear horario', 'Permite definir nuevos bloques de horarios de trabajo.'),
+(78, 'Consultar horario', 'Permite ver los horarios definidos.'),
+(79, 'Modificar horario', 'Permite editar un horario existente.'),
+(80, 'Eliminar horario', 'Permite eliminar un horario.');
+
+-- Tabla: cerveza
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(81, 'Crear cerveza', 'Permite registrar una nueva cerveza producida por un miembro.'),
+(82, 'Consultar cerveza', 'Permite ver el catálogo de cervezas.'),
+(83, 'Modificar cerveza', 'Permite editar la información de una cerveza.'),
+(84, 'Eliminar cerveza', 'Permite eliminar una cerveza del catálogo.');
+
+-- Tabla: presentacion
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(85, 'Crear presentacion', 'Permite crear una nueva presentación para una cerveza (ej. botella).'),
+(86, 'Consultar presentacion', 'Permite ver las presentaciones de cervezas.'),
+(87, 'Modificar presentacion', 'Permite editar una presentación existente.'),
+(88, 'Eliminar presentacion', 'Permite eliminar una presentación.');
+
+-- Tabla: tienda_fisica
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(89, 'Crear tienda_fisica', 'Permite registrar una nueva tienda física.'),
+(90, 'Consultar tienda_fisica', 'Permite ver la lista de tiendas físicas.'),
+(91, 'Modificar tienda_fisica', 'Permite editar la información de una tienda.'),
+(92, 'Eliminar tienda_fisica', 'Permite cerrar o eliminar una tienda.');
+
+-- Tabla: departamento
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(93, 'Crear departamento', 'Permite crear un nuevo departamento en una tienda física.'),
+(94, 'Consultar departamento', 'Permite ver los departamentos de las tiendas.'),
+(95, 'Modificar departamento', 'Permite editar la información de un departamento.'),
+(96, 'Eliminar departamento', 'Permite eliminar un departamento.');
+
+-- Tabla: tienda_online
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(97, 'Crear tienda_online', 'Permite registrar una nueva tienda online.'),
+(98, 'Consultar tienda_online', 'Permite ver la lista de tiendas online.'),
+(99, 'Modificar tienda_online', 'Permite editar la información de una tienda online.'),
+(100, 'Eliminar tienda_online', 'Permite eliminar una tienda online.');
+
+-- Tabla: evento
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(101, 'Crear evento', 'Permite organizar y registrar un nuevo evento.'),
+(102, 'Consultar evento', 'Permite ver la lista de eventos.'),
+(103, 'Modificar evento', 'Permite editar la información de un evento.'),
+(104, 'Eliminar evento', 'Permite cancelar o eliminar un evento.');
+
+-- Tabla: invitado
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(105, 'Crear invitado', 'Permite registrar un invitado para un evento.'),
+(106, 'Consultar invitado', 'Permite ver la lista de invitados.'),
+(107, 'Modificar invitado', 'Permite editar la información de un invitado.'),
+(108, 'Eliminar invitado', 'Permite eliminar un invitado.');
+
+-- Tabla: almacen
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(109, 'Crear almacen', 'Permite añadir una nueva línea de producto al almacén central.'),
+(110, 'Consultar almacen', 'Permite ver el stock en el almacén central.'),
+(111, 'Modificar almacen', 'Permite actualizar la cantidad de un producto en el almacén.'),
+(112, 'Eliminar almacen', 'Permite eliminar una línea de producto del almacén.');
+
+-- Tabla: persona_contacto
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(113, 'Crear persona_contacto', 'Permite añadir una persona de contacto a un cliente o miembro.'),
+(114, 'Consultar persona_contacto', 'Permite ver las personas de contacto.'),
+(115, 'Modificar persona_contacto', 'Permite editar los datos de una persona de contacto.'),
+(116, 'Eliminar persona_contacto', 'Permite eliminar una persona de contacto.');
+
+-- Tabla: inventario_tienda
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(117, 'Crear inventario_tienda', 'Permite añadir un producto al inventario de una tienda.'),
+(118, 'Consultar inventario_tienda', 'Permite ver el inventario de una tienda física.'),
+(119, 'Modificar inventario_tienda', 'Permite actualizar el stock en tienda.'),
+(120, 'Eliminar inventario_tienda', 'Permite retirar un producto del inventario de tienda.');
+
+-- Tabla: inventario_evento
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(121, 'Crear inventario_evento', 'Permite asignar stock de productos a un evento.'),
+(122, 'Consultar inventario_evento', 'Permite ver el inventario de un evento.'),
+(123, 'Modificar inventario_evento', 'Permite ajustar las cantidades de stock en un evento.'),
+(124, 'Eliminar inventario_evento', 'Permite retirar un producto del inventario de un evento.');
+
+-- Tabla: compra
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(125, 'Crear compra', 'Permite registrar una nueva compra a un miembro.'),
+(126, 'Consultar compra', 'Permite ver el historial de compras.'),
+(127, 'Modificar compra', 'Permite editar los detalles de una compra.'),
+(128, 'Eliminar compra', 'Permite anular o eliminar una compra.');
+
+-- Tabla: venta_tienda_fisica
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(129, 'Crear venta_tienda_fisica', 'Permite registrar una venta en tienda física.'),
+(130, 'Consultar venta_tienda_fisica', 'Permite ver el historial de ventas en tiendas.'),
+(131, 'Modificar venta_tienda_fisica', 'Permite editar una venta de tienda.'),
+(132, 'Eliminar venta_tienda_fisica', 'Permite anular una venta de tienda.');
+
+-- Tabla: venta_online
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(133, 'Crear venta_online', 'Permite procesar un nuevo pedido online.'),
+(134, 'Consultar venta_online', 'Permite ver el historial de ventas online.'),
+(135, 'Modificar venta_online', 'Permite editar un pedido online.'),
+(136, 'Eliminar venta_online', 'Permite cancelar un pedido online.');
+
+-- Tabla: venta_evento
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(137, 'Crear venta_evento', 'Permite registrar una venta de productos en un evento.'),
+(138, 'Consultar venta_evento', 'Permite ver el historial de ventas en eventos.'),
+(139, 'Modificar venta_evento', 'Permite editar una venta de evento.'),
+(140, 'Eliminar venta_evento', 'Permite anular una venta de evento.');
+
+-- Tabla: venta_entrada
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(141, 'Crear venta_entrada', 'Permite registrar la venta de una entrada a un evento.'),
+(142, 'Consultar venta_entrada', 'Permite ver el historial de venta de entradas.'),
+(143, 'Modificar venta_entrada', 'Permite editar una venta de entrada.'),
+(144, 'Eliminar venta_entrada', 'Permite anular una venta de entrada.');
+
+-- Tabla: contrato
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(145, 'Crear contrato', 'Permite generar un nuevo contrato para un empleado.'),
+(146, 'Consultar contrato', 'Permite ver los contratos de los empleados.'),
+(147, 'Modificar contrato', 'Permite editar los términos de un contrato.'),
+(148, 'Eliminar contrato', 'Permite finalizar o eliminar un contrato.');
+
+-- Tabla: oferta
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(149, 'Crear oferta', 'Permite crear una nueva oferta para un producto.'),
+(150, 'Consultar oferta', 'Permite ver las ofertas activas e inactivas.'),
+(151, 'Modificar oferta', 'Permite editar una oferta existente.'),
+(152, 'Eliminar oferta', 'Permite eliminar una oferta.');
+
+-- Tabla: detalle_compra
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(153, 'Crear detalle_compra', 'Permite añadir un item a una orden de compra.'),
+(154, 'Consultar detalle_compra', 'Permite ver los items de una orden de compra.'),
+(155, 'Modificar detalle_compra', 'Permite cambiar un item en una compra.'),
+(156, 'Eliminar detalle_compra', 'Permite quitar un item de una orden de compra.');
+
+-- Tabla: detalle_venta_fisica
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(157, 'Crear detalle_venta_fisica', 'Permite añadir un producto a una venta física.'),
+(158, 'Consultar detalle_venta_fisica', 'Permite ver los productos de una venta física.'),
+(159, 'Modificar detalle_venta_fisica', 'Permite cambiar un producto en una venta.'),
+(160, 'Eliminar detalle_venta_fisica', 'Permite quitar un producto de una venta.');
+
+-- Tabla: detalle_venta_online
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(161, 'Crear detalle_venta_online', 'Permite añadir un producto a un pedido online.'),
+(162, 'Consultar detalle_venta_online', 'Permite ver los productos de un pedido online.'),
+(163, 'Modificar detalle_venta_online', 'Permite cambiar un producto en un pedido.'),
+(164, 'Eliminar detalle_venta_online', 'Permite quitar un producto de un pedido.');
+
+-- Tabla: detalle_venta_evento
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(165, 'Crear detalle_venta_evento', 'Permite añadir un producto a una venta de evento.'),
+(166, 'Consultar detalle_venta_evento', 'Permite ver los productos de una venta de evento.'),
+(167, 'Modificar detalle_venta_evento', 'Permite cambiar un producto en una venta de evento.'),
+(168, 'Eliminar detalle_venta_evento', 'Permite quitar un producto de una venta de evento.');
+
+-- Tabla: cuota
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(169, 'Crear cuota', 'Permite generar una cuota para un miembro.'),
+(170, 'Consultar cuota', 'Permite ver las cuotas de los miembros.'),
+(171, 'Modificar cuota', 'Permite editar el monto o fecha de una cuota.'),
+(172, 'Eliminar cuota', 'Permite anular o eliminar una cuota.');
+
+-- Tabla: pago
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(173, 'Crear pago', 'Permite registrar un pago para una venta o cuota.'),
+(174, 'Consultar pago', 'Permite ver el historial de pagos.'),
+(175, 'Modificar pago', 'Permite editar un registro de pago.'),
+(176, 'Eliminar pago', 'Permite anular un registro de pago.');
+
+-- Tabla: asistencia
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(177, 'Crear asistencia', 'Permite registrar la asistencia de un cliente a un evento.'),
+(178, 'Consultar asistencia', 'Permite ver los registros de asistencia a eventos.'),
+(179, 'Modificar asistencia', 'Permite editar un registro de asistencia.'),
+(180, 'Eliminar asistencia', 'Permite eliminar un registro de asistencia.');
+
+-- Tabla: control_entrada
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(181, 'Crear control_entrada', 'Permite registrar la entrada/salida de un empleado.'),
+(182, 'Consultar control_entrada', 'Permite ver los registros de asistencia de empleados.'),
+(183, 'Modificar control_entrada', 'Permite corregir un registro de entrada/salida.'),
+(184, 'Eliminar control_entrada', 'Permite eliminar un registro de asistencia de empleado.');
+
+-- Tabla: vacacion
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(185, 'Crear vacacion', 'Permite registrar vacaciones para un empleado.'),
+(186, 'Consultar vacacion', 'Permite ver las vacaciones de los empleados.'),
+(187, 'Modificar vacacion', 'Permite editar un período de vacaciones.'),
+(188, 'Eliminar vacacion', 'Permite anular un registro de vacaciones.');
+
+-- Tabla: reposicion
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(189, 'Crear reposicion', 'Permite ejecutar una reposición de stock a una tienda.'),
+(190, 'Consultar reposicion', 'Permite ver el historial de reposiciones.'),
+(191, 'Modificar reposicion', 'Permite editar un registro de reposición.'),
+(192, 'Eliminar reposicion', 'Permite anular una reposición.');
+
+-- Tabla: eve_mie (Evento - Miembro)
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(193, 'Crear eve_mie', 'Permite asignar la participación de un miembro a un evento.'),
+(194, 'Consultar eve_mie', 'Permite ver los miembros participantes en un evento.'),
+(195, 'Modificar eve_mie', 'Permite editar la descripción de participación de un miembro.'),
+(196, 'Eliminar eve_mie', 'Permite revocar la participación de un miembro en un evento.');
+
+-- Tabla: car_tip (Caracteristica - Tipo Cerveza)
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(197, 'Crear car_tip', 'Permite asignar una característica a un tipo de cerveza.'),
+(198, 'Consultar car_tip', 'Permite ver las características de los tipos de cerveza.'),
+(199, 'Modificar car_tip', 'Permite editar los valores de una característica para un tipo.'),
+(200, 'Eliminar car_tip', 'Permite quitar una característica de un tipo de cerveza.');
+
+-- Tabla: instruccion
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(201, 'Crear instruccion', 'Permite registrar un nuevo paso o instrucción para recetas.'),
+(202, 'Consultar instruccion', 'Permite ver la lista de instrucciones.'),
+(203, 'Modificar instruccion', 'Permite editar una instrucción.'),
+(204, 'Eliminar instruccion', 'Permite eliminar una instrucción.');
+
+-- Tabla: ing_rec (Ingrediente - Receta)
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(205, 'Crear ing_rec', 'Permite añadir un ingrediente o instrucción a una receta.'),
+(206, 'Consultar ing_rec', 'Permite ver los pasos e ingredientes de una receta.'),
+(207, 'Modificar ing_rec', 'Permite editar un paso o ingrediente en una receta.'),
+(208, 'Eliminar ing_rec', 'Permite quitar un paso o ingrediente de una receta.');
+
+-- Tabla: rol_pri (Rol - Privilegio)
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(209, 'Crear rol_pri', 'Permite asignar un privilegio a un rol.'),
+(210, 'Consultar rol_pri', 'Permite ver las asignaciones de privilegios a roles.'),
+(211, 'Modificar rol_pri', 'Permite editar una asignación (ej. cambiar fecha).'),
+(212, 'Eliminar rol_pri', 'Permite revocar un privilegio de un rol.');
+
+-- Tabla: emp_ben (Empleado - Beneficio)
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(213, 'Crear emp_ben', 'Permite asignar un beneficio a un empleado.'),
+(214, 'Consultar emp_ben', 'Permite ver los beneficios asignados a los empleados.'),
+(215, 'Modificar emp_ben', 'Permite editar un beneficio asignado (ej. monto).'),
+(216, 'Eliminar emp_ben', 'Permite revocar un beneficio de un empleado.');
+
+-- Tabla: inv_eve (Invitado - Evento)
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(217, 'Crear inv_eve', 'Permite registrar la asistencia de un invitado a un evento.'),
+(218, 'Consultar inv_eve', 'Permite ver la asistencia de invitados a eventos.'),
+(219, 'Modificar inv_eve', 'Permite editar los detalles de asistencia de un invitado.'),
+(220, 'Eliminar inv_eve', 'Permite anular la asistencia de un invitado.');
+
+-- Tabla: con_hor (Contrato - Horario)
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(221, 'Crear con_hor', 'Permite asignar un horario a un contrato de empleado.'),
+(222, 'Consultar con_hor', 'Permite ver los horarios asignados a contratos.'),
+(223, 'Modificar con_hor', 'Permite cambiar el estado de un horario en un contrato.'),
+(224, 'Eliminar con_hor', 'Permite quitar un horario de un contrato.');
+
+-- Tabla: car_cer (Caracteristica - Cerveza)
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(225, 'Crear car_cer', 'Permite asignar una característica a una cerveza específica.'),
+(226, 'Consultar car_cer', 'Permite ver las características de cervezas individuales.'),
+(227, 'Modificar car_cer', 'Permite editar el valor de una característica para una cerveza.'),
+(228, 'Eliminar car_cer', 'Permite quitar una característica de una cerveza.');
+
+-- Tabla: historico (Solo consulta)
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(229, 'Crear historico', 'Permite crear una entrada en el historial (Uso restringido).'),
+(230, 'Consultar historico', 'Permite ver el historial de cambios de estado de las operaciones.'),
+(231, 'Modificar historico', 'Permite modificar una entrada del historial (Uso restringido).'),
+(232, 'Eliminar historico', 'Permite eliminar una entrada del historial (Uso restringido).');
+-- Nota: CRUD en 'historico' debe ser manejado por el sistema/triggers, no por usuarios finales.
+
+-- Tabla: telefono
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(233, 'Crear telefono', 'Permite añadir un número de teléfono a una entidad.'),
+(234, 'Consultar telefono', 'Permite ver los números de teléfono registrados.'),
+(235, 'Modificar telefono', 'Permite editar un número de teléfono.'),
+(236, 'Eliminar telefono', 'Permite eliminar un número de teléfono.');
+
+-- Tabla: correo_electronico
+INSERT INTO privilegio (clave, nombre, descripcion) VALUES
+(237, 'Crear correo_electronico', 'Permite añadir un correo a una entidad.'),
+(238, 'Consultar correo_electronico', 'Permite ver los correos registrados.'),
+(239, 'Modificar correo_electronico', 'Permite editar un correo electrónico.'),
+(240, 'Eliminar correo_electronico', 'Permite eliminar un correo electrónico.');
 
 -- Insertar roles (10 ejemplos)
 INSERT INTO rol (clave, nombre) VALUES
-(1,'Administrador'),
-(2, 'Supervisor'),
-(3, 'Soporte Técnico'),
-(4,'Gerente'),
-(5,'Analista'),
-(6,'Cliente'),
-(7,'Miembro'),
-(8,'Empleado'),
-(9,'Repartidor'),
-(10,'Vendedor');
+(1, 'Administrador'),      -- Control total del sistema
+(2, 'Gerencia'),           -- Acceso a nivel directivo y de negocio
+(3, 'Supervisión'),        -- Acceso para supervisar operaciones y personal
+(4, 'Personal Operativo'), -- Acceso para Vendedores, Repartidores, etc.
+(5, 'Acceso Básico Empleado'), -- Permisos mínimos (ver su propio perfil, etc.)
+(6, 'Miembro'),            -- Acceso para productores afiliados
+(7, 'Cliente');  
 
+--Insertar privilegios por roles 
+--------------------------------------------------------------------------------
+-- Rol 1: Administrador (Control total del sistema)
+-- Tiene todos los privilegios sin excepción.
+--------------------------------------------------------------------------------
+INSERT INTO rol_pri (fecha, fk_rol, fk_privilegio)
+SELECT NOW(), 1, clave FROM privilegio;
 
-INSERT INTO rol_pri (clave, fecha, fk_rol, fk_privilegio) VALUES
-(1, CURRENT_DATE, 1, 1), -- Administrador con privilegio de crear usuarios
-(2, CURRENT_DATE, 1, 2), -- Administrador con privilegio de editar usuarios
-(3, CURRENT_DATE, 1, 3), -- Administrador con privilegio de eliminar usuarios
-(4, CURRENT_DATE, 1, 4), -- Administrador con privilegio de ver reportes
-(5, CURRENT_DATE, 1, 5), -- Administrador con privilegio de configurar sistema
-(6, CURRENT_DATE, 1, 6), -- Administrador con privilegio de exportar datos
-(7, CURRENT_DATE, 1, 7), -- Administrador con privilegio de importar datos
-(8, CURRENT_DATE, 1, 8), -- Administrador con privilegio de cambiar contraseña
-(9, CURRENT_DATE, 1, 9), -- Administrador con privilegio de ver historial
-(10, CURRENT_DATE, 1, 10); -- Administrador con privilegio de gestionar roles
+--------------------------------------------------------------------------------
+-- Rol 2: Gerencia (Acceso a nivel directivo y de negocio)
+--------------------------------------------------------------------------------
+-- GESTIÓN DE PERSONAL Y ESTRUCTURA ORGANIZACIONAL
+INSERT INTO rol_pri (fecha, fk_rol, fk_privilegio) VALUES
+(NOW(), 2, 21), (NOW(), 2, 22), (NOW(), 2, 23), (NOW(), 2, 24), -- CRUD Cargo
+(NOW(), 2, 33), (NOW(), 2, 34), (NOW(), 2, 35), (NOW(), 2, 36), -- CRUD Tipo Beneficio
+(NOW(), 2, 61), (NOW(), 2, 62), (NOW(), 2, 63), (NOW(), 2, 64), -- CRUD Empleado
+(NOW(), 2, 77), (NOW(), 2, 78), (NOW(), 2, 79), (NOW(), 2, 80), -- CRUD Horario
+(NOW(), 2, 145), (NOW(), 2, 146), (NOW(), 2, 147), (NOW(), 2, 148), -- CRUD Contrato
+(NOW(), 2, 185), (NOW(), 2, 186), (NOW(), 2, 187), (NOW(), 2, 188), -- CRUD Vacacion
+(NOW(), 2, 213), (NOW(), 2, 214), (NOW(), 2, 215), (NOW(), 2, 216), -- Asignar/revocar Beneficio
+(NOW(), 2, 221), (NOW(), 2, 222), (NOW(), 2, 223), (NOW(), 2, 224); -- Asignar/revocar Horario
+
+-- GESTIÓN FINANCIERA Y DE VENTAS (CONTROL TOTAL)
+INSERT INTO rol_pri (fecha, fk_rol, fk_privilegio) VALUES
+(NOW(), 2, 53), (NOW(), 2, 54), (NOW(), 2, 55), (NOW(), 2, 56),    -- CRUD Tasa Cambio
+(NOW(), 2, 125), (NOW(), 2, 126), (NOW(), 2, 127), (NOW(), 2, 128),-- CRUD Compra (a miembros)
+(NOW(), 2, 130), (NOW(), 2, 134), (NOW(), 2, 138), (NOW(), 2, 142),-- Consultar todas las ventas
+(NOW(), 2, 149), (NOW(), 2, 150), (NOW(), 2, 151), (NOW(), 2, 152),-- CRUD Oferta
+(NOW(), 2, 169), (NOW(), 2, 170), (NOW(), 2, 171), (NOW(), 2, 172),-- CRUD Cuota (de miembros)
+(NOW(), 2, 174); -- Consultar Pagos
+
+-- GESTIÓN DE TIENDAS, EVENTOS Y OPERACIONES
+INSERT INTO rol_pri (fecha, fk_rol, fk_privilegio) VALUES
+(NOW(), 2, 89), (NOW(), 2, 90), (NOW(), 2, 91), (NOW(), 2, 92), -- CRUD Tienda Fisica
+(NOW(), 2, 93), (NOW(), 2, 94), (NOW(), 2, 95), (NOW(), 2, 96), -- CRUD Departamento
+(NOW(), 2, 97), (NOW(), 2, 98), (NOW(), 2, 99), (NOW(), 2, 100),-- CRUD Tienda Online
+(NOW(), 2, 101), (NOW(), 2, 102), (NOW(), 2, 103), (NOW(), 2, 104), -- CRUD Evento
+(NOW(), 2, 65), (NOW(), 2, 66), (NOW(), 2, 67), (NOW(), 2, 68);    -- CRUD Miembro (afiliar/desafiliar)
+
+-- PERMISOS DE CONSULTA GENERAL
+INSERT INTO rol_pri (fecha, fk_rol, fk_privilegio) VALUES
+(NOW(), 2, 2), (NOW(), 2, 6), (NOW(), 2, 10), (NOW(), 2, 14), (NOW(), 2, 18),
+(NOW(), 2, 58), (NOW(), 2, 70), (NOW(), 2, 82), (NOW(), 2, 86), (NOW(), 2, 110),
+(NOW(), 2, 118), (NOW(), 2, 230); -- Consultar casi todo
+
+--------------------------------------------------------------------------------
+-- Rol 3: Supervisión (Gestión de operaciones diarias)
+--------------------------------------------------------------------------------
+-- GESTIÓN DE INVENTARIO Y STOCK (SU TAREA PRINCIPAL)
+INSERT INTO rol_pri (fecha, fk_rol, fk_privilegio) VALUES
+(NOW(), 3, 110), -- Consultar almacen
+(NOW(), 3, 111), -- Modificar almacen
+(NOW(), 3, 117), -- Crear inventario_tienda
+(NOW(), 3, 118), -- Consultar inventario_tienda
+(NOW(), 3, 119), -- Modificar inventario_tienda
+(NOW(), 3, 189), -- Crear reposicion
+(NOW(), 3, 190), -- Consultar reposicion
+(NOW(), 3, 191); -- Modificar reposicion
+
+-- SUPERVISIÓN DE PERSONAL Y HORARIOS
+INSERT INTO rol_pri (fecha, fk_rol, fk_privilegio) VALUES
+(NOW(), 3, 62),  -- Consultar empleado (su equipo)
+(NOW(), 3, 78),  -- Consultar horario
+(NOW(), 3, 146), -- Consultar contrato (de su equipo)
+(NOW(), 3, 182), -- Consultar control_entrada
+(NOW(), 3, 183), -- Modificar control_entrada (corregir fichajes)
+(NOW(), 3, 221), -- Asignar horario a contrato
+(NOW(), 3, 222); -- Consultar asignación de horario
+
+-- SUPERVISIÓN DE VENTAS
+INSERT INTO rol_pri (fecha, fk_rol, fk_privilegio) VALUES
+(NOW(), 3, 130), -- Consultar venta_tienda_fisica
+(NOW(), 3, 131), -- Modificar venta_tienda_fisica (para devoluciones/correcciones)
+(NOW(), 3, 134), -- Consultar venta_online
+(NOW(), 3, 138), -- Consultar venta_evento
+(NOW(), 3, 174); -- Consultar pago
+
+-- CONSULTAS GENERALES PARA SU TRABAJO
+INSERT INTO rol_pri (fecha, fk_rol, fk_privilegio) VALUES
+(NOW(), 3, 58), -- Consultar cliente
+(NOW(), 3, 82), -- Consultar cerveza
+(NOW(), 3, 86); -- Consultar presentacion
+
+--------------------------------------------------------------------------------
+-- Rol 4: Personal Operativo (Vendedores, Repartidores, etc.)
+--------------------------------------------------------------------------------
+-- PERMISOS PARA VENDEDORES
+INSERT INTO rol_pri (fecha, fk_rol, fk_privilegio) VALUES
+(NOW(), 4, 129), -- Crear venta_tienda_fisica
+(NOW(), 4, 130), -- Consultar venta_tienda_fisica (sus ventas)
+(NOW(), 4, 157), -- Crear detalle_venta_fisica
+(NOW(), 4, 173), -- Crear pago
+(NOW(), 4, 57),  -- Crear cliente
+(NOW(), 4, 58),  -- Consultar cliente
+(NOW(), 4, 118), -- Consultar inventario_tienda (ver stock)
+(NOW(), 4, 150); -- Consultar oferta
+
+-- PERMISOS PARA REPARTIDORES
+INSERT INTO rol_pri (fecha, fk_rol, fk_privilegio) VALUES
+(NOW(), 4, 134), -- Consultar venta_online (para ver entregas)
+(NOW(), 4, 135), -- Modificar venta_online (actualizar estado)
+(NOW(), 4, 190); -- Consultar reposicion (para saber qué mover)
+
+-- PERMISOS BÁSICOS DE EMPLEADO (heredados)
+INSERT INTO rol_pri (fecha, fk_rol, fk_privilegio) VALUES
+(NOW(), 4, 62),  -- Consultar empleado (su perfil)
+(NOW(), 4, 181); -- Crear control_entrada (fichar)
+
+--------------------------------------------------------------------------------
+-- Rol 5: Acceso Básico Empleado (Permisos mínimos de autoservicio)
+--------------------------------------------------------------------------------
+INSERT INTO rol_pri (fecha, fk_rol, fk_privilegio) VALUES
+(NOW(), 5, 62),  -- Consultar empleado (su propio perfil)
+(NOW(), 5, 63),  -- Modificar empleado (su propio perfil)
+(NOW(), 5, 146), -- Consultar contrato (el suyo)
+(NOW(), 5, 181), -- Crear control_entrada (fichar)
+(NOW(), 5, 186), -- Consultar vacacion (las suyas)
+(NOW(), 5, 222), -- Consultar con_hor (su horario)
+(NOW(), 5, 234), -- Consultar telefono (el suyo)
+(NOW(), 5, 235); -- Modificar telefono (el suyo)
+
+--------------------------------------------------------------------------------
+-- Rol 6: Miembro (Productor de cerveza afiliado)
+--------------------------------------------------------------------------------
+-- GESTIÓN DE SU PERFIL
+INSERT INTO rol_pri (fecha, fk_rol, fk_privilegio) VALUES
+(NOW(), 6, 66),  -- Consultar miembro (su perfil)
+(NOW(), 6, 67),  -- Modificar miembro (su perfil)
+(NOW(), 6, 113), (NOW(), 6, 114), (NOW(), 6, 115), (NOW(), 6, 116), -- CRUD Persona Contacto
+(NOW(), 6, 233), (NOW(), 6, 234), (NOW(), 6, 235), (NOW(), 6, 236), -- CRUD Telefono
+(NOW(), 6, 237), (NOW(), 6, 238), (NOW(), 6, 239), (NOW(), 6, 240); -- CRUD Correo
+
+-- GESTIÓN DE SUS PRODUCTOS
+INSERT INTO rol_pri (fecha, fk_rol, fk_privilegio) VALUES
+(NOW(), 6, 1), (NOW(), 6, 2), (NOW(), 6, 3), (NOW(), 6, 4),      -- CRUD Receta
+(NOW(), 6, 81), (NOW(), 6, 82), (NOW(), 6, 83), (NOW(), 6, 84),  -- CRUD Cerveza
+(NOW(), 6, 85), (NOW(), 6, 86), (NOW(), 6, 87), (NOW(), 6, 88);  -- CRUD Presentacion
+
+-- CONSULTA DE FINANZAS Y PARTICIPACIÓN
+INSERT INTO rol_pri (fecha, fk_rol, fk_privilegio) VALUES
+(NOW(), 6, 126), -- Consultar compra (compras que le hacen a él)
+(NOW(), 6, 170), -- Consultar cuota (sus cuotas)
+(NOW(), 6, 193), -- Crear eve_mie (participar en evento)
+(NOW(), 6, 194), -- Consultar eve_mie
+(NOW(), 6, 196); -- Eliminar eve_mie (cancelar participación)
+
+--------------------------------------------------------------------------------
+-- Rol 7: Cliente (Usuario final que compra)
+--------------------------------------------------------------------------------
+-- GESTIÓN DE SU CUENTA
+INSERT INTO rol_pri (fecha, fk_rol, fk_privilegio) VALUES
+(NOW(), 7, 58),  -- Consultar cliente (su perfil)
+(NOW(), 7, 59),  -- Modificar cliente (su perfil)
+(NOW(), 7, 73), (NOW(), 7, 74), (NOW(), 7, 75), (NOW(), 7, 76), -- CRUD Metodo de pago
+(NOW(), 7, 233), (NOW(), 7, 234), (NOW(), 7, 235), (NOW(), 7, 236), -- CRUD Telefono
+(NOW(), 7, 237), (NOW(), 7, 238), (NOW(), 7, 239), (NOW(), 7, 240); -- CRUD Correo
+
+-- INTERACCIÓN CON LA TIENDA
+INSERT INTO rol_pri (fecha, fk_rol, fk_privilegio) VALUES
+(NOW(), 7, 82),  -- Consultar cerveza
+(NOW(), 7, 86),  -- Consultar presentacion
+(NOW(), 7, 102), -- Consultar evento
+(NOW(), 7, 150), -- Consultar oferta
+(NOW(), 7, 133), -- Crear venta_online
+(NOW(), 7, 134), -- Consultar venta_online (sus compras)
+(NOW(), 7, 141), -- Crear venta_entrada (comprar entrada)
+(NOW(), 7, 142), -- Consultar venta_entrada (sus entradas)
+(NOW(), 7, 177), -- Crear asistencia (al registrarse en un evento)
+(NOW(), 7, 178); -- Consultar asistencia (la suya)
 
 
 INSERT INTO correo_electronico (clave, direccion_email, fk_cliente, fk_miembro, fk_persona_contacto) VALUES

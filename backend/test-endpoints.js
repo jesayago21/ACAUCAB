@@ -29,6 +29,10 @@ async function testEndpoints() {
   console.log('🧪 PROBANDO ENDPOINTS DE ACAUCAB API');
   console.log('=' .repeat(50));
   
+  //Probando endpoint de roles
+  await makeRequest(`${BASE_URL}/api/roles/`);
+
+
   // 1. Probar endpoint de bienvenida
   await makeRequest(`${BASE_URL}/`);
   
@@ -122,12 +126,18 @@ async function testProductsEndpoint() {
   }
 }
 
+async function testRolesEndpoint(){
+  await makeRequest(`${BASE_URL}/api/roles/`);
+}
+
 /** Ejecutar las pruebas según el argumento pasado */
 if (require.main === module) {
   const testType = process.argv[2];
   
   if (testType === 'products') {
     testProductsEndpoint();
+  } else if (testType === 'roles') {
+    testRolesEndpoint();
   } else {
     testEndpoints();
   }
@@ -136,5 +146,6 @@ if (require.main === module) {
 module.exports = {
   makeRequest,
   testEndpoints,
-  testProductsEndpoint
+  testProductsEndpoint,
+  testRolesEndpoint
 }; 
