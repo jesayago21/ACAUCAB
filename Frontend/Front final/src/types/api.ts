@@ -94,8 +94,11 @@ export interface Lugar {
 export interface TasaCambio {
   clave: number;
   moneda: 'USD' | 'EUR' | 'VES' | 'PUNTOS';
-  tasa: number;
-  fecha: string;
+  monto_equivalencia: number;
+  tasa?: number; // Campo derivado para compatibilidad
+  fecha_inicio: string;
+  fecha_fin?: string | null;
+  fecha?: string; // Campo derivado para compatibilidad
 }
 
 export interface MetodoPago {

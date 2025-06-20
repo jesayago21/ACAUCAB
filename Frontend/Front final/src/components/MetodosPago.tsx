@@ -55,18 +55,28 @@ export default function MetodosPago({
   const cargarDatosIniciales = async () => {
     try {
       // Cargar tasa de cambio de puntos
-      const tasaData = await tasaCambioService.obtenerTasaCambio('PUNTOS');
+      const tasaData = await tasaCambioService.obtenerTasaCambioPuntos();
       setTasaPuntos(tasaData);
       
-      // Simular puntos del cliente (para el prototipo)
-      const puntosSimulados: PuntosCliente = {
-        puntos_disponibles: 150,
-        valor_en_bolivares: 150 * tasaData.tasa,
-        tasa_cambio: tasaData.tasa
+      // Usar los puntos reales del cliente
+      const puntosDisponibles = cliente.puntos_acumulados || 0;
+      const puntosData: PuntosCliente = {
+        puntos_disponibles: puntosDisponibles,
+        valor_en_bolivares: parseFloat((puntosDisponibles * tasaData.monto_equivalencia).toFixed(2)),
+        tasa_cambio: tasaData.monto_equivalencia
       };
-      setPuntosCliente(puntosSimulados);
+      setPuntosCliente(puntosData);
     } catch (error) {
       console.error('Error cargando datos iniciales:', error);
+      // Fallback con datos del cliente sin tasa
+      if (cliente.puntos_acumulados) {
+        const puntosSimulados: PuntosCliente = {
+          puntos_disponibles: cliente.puntos_acumulados,
+          valor_en_bolivares: cliente.puntos_acumulados * 1, // 1:1 como fallback
+          tasa_cambio: 1
+        };
+        setPuntosCliente(puntosSimulados);
+      }
     }
   };
 
@@ -119,9 +129,10 @@ export default function MetodosPago({
   const handlePagoPuntos = () => {
     if (!puntosCliente || !tasaPuntos || puntosAUsar <= 0) return;
     
-    const maxPuntos = Math.min(puntosCliente.puntos_disponibles, Math.ceil(montoPendiente / tasaPuntos.tasa));
+    const tasaActual = tasaPuntos.monto_equivalencia || tasaPuntos.tasa || 1;
+    const maxPuntos = Math.min(puntosCliente.puntos_disponibles, Math.ceil(montoPendiente / tasaActual));
     const puntosFinales = Math.min(puntosAUsar, maxPuntos);
-    const montoEnBolivares = puntosFinales * tasaPuntos.tasa;
+    const montoEnBolivares = parseFloat((puntosFinales * tasaActual).toFixed(2));
     
     aplicarPago('Puntos', montoEnBolivares, { puntos_usados: puntosFinales });
     
@@ -129,7 +140,7 @@ export default function MetodosPago({
     setPuntosCliente(prev => prev ? {
       ...prev,
       puntos_disponibles: prev.puntos_disponibles - puntosFinales,
-      valor_en_bolivares: (prev.puntos_disponibles - puntosFinales) * tasaPuntos.tasa
+      valor_en_bolivares: parseFloat(((prev.puntos_disponibles - puntosFinales) * tasaActual).toFixed(2))
     } : null);
   };
 
@@ -169,10 +180,43 @@ export default function MetodosPago({
     }
 
     setProcesando(true);
-    // Simular procesamiento
-    setTimeout(() => {
-      onPagoExitoso();
-    }, 2000);
+    
+    try {
+      // Preparar datos para la venta
+      const ventaData = {
+        cliente_id: cliente.clave!,
+        tienda_id: 1, // ID de la tienda física
+        items: carrito.items.map(item => ({
+          producto_id: item.producto.clave,
+          cantidad: item.cantidad,
+          precio_unitario: item.precio_unitario
+        })),
+        metodos_pago: pagosAplicados.map(pago => ({
+          tipo: pago.tipo,
+          monto: pago.monto,
+          detalles: pago.detalles
+        })),
+        total_venta: carrito.totalPrecio
+      };
+
+      // Crear la venta en el backend
+      const resultado = await ventaService.crearVentaFisica(ventaData);
+      
+      if (resultado.success) {
+        // Éxito - proceder al estado exitoso
+        onPagoExitoso();
+      } else {
+        throw new Error(resultado.message || 'Error al procesar la venta');
+      }
+      
+    } catch (error) {
+      console.error('Error procesando el pago:', error);
+      setProcesando(false);
+      
+      // Mostrar mensaje de error al usuario
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      alert(`Error al procesar el pago: ${errorMessage}\n\nPor favor, intente nuevamente.`);
+    }
   };
 
   const nombreCliente = cliente.tipo === 'natural' 
@@ -315,7 +359,7 @@ export default function MetodosPago({
                           Equivale a: Bs. {formatearPrecio(puntosCliente.valor_en_bolivares)}
                         </p>
                         <p className="text-xs text-green-600">
-                          1 punto = Bs. {tasaPuntos.tasa}
+                          1 punto = Bs. {(tasaPuntos.monto_equivalencia || tasaPuntos.tasa || 1).toFixed(2)}
                         </p>
                       </div>
 
@@ -326,13 +370,13 @@ export default function MetodosPago({
                         <input
                           type="number"
                           min="1"
-                          max={Math.min(puntosCliente.puntos_disponibles, Math.ceil(montoPendiente / tasaPuntos.tasa))}
+                          max={Math.min(puntosCliente.puntos_disponibles, Math.ceil(montoPendiente / (tasaPuntos.monto_equivalencia || tasaPuntos.tasa || 1)))}
                           value={puntosAUsar}
                           onChange={(e) => setPuntosAUsar(parseInt(e.target.value) || 0)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A1B5A0]"
                         />
                         <p className="text-xs text-gray-500 mt-1">
-                          Equivale a: Bs. {formatearPrecio(puntosAUsar * tasaPuntos.tasa)}
+                          Equivale a: Bs. {formatearPrecio(puntosAUsar * (tasaPuntos.monto_equivalencia || tasaPuntos.tasa || 1))}
                         </p>
                       </div>
 

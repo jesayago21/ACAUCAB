@@ -342,3 +342,250 @@ All commands are run from the root of the project, from a terminal:
 ## 👀 Want to learn more?
 
 Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+
+# Sistema de Autopago ACAUCAB - Versión Final
+
+## 🚀 Nuevas Funcionalidades Implementadas
+
+### ✅ Conexión al Backend Real
+
+- **Endpoint de Ventas**: `/api/shop/venta-fisica` para procesar ventas de tienda física
+- **Manejo de Transacciones**: Sistema completo con rollback en caso de errores
+- **Actualización de Inventario**: Reduce automáticamente el stock disponible
+- **Registro de Pagos**: Soporta múltiples métodos de pago simultáneos
+
+### ✅ Sistema de Puntos Mejorado
+
+- **Tasa de Cambio Real**: Obtiene la tasa de puntos desde `/api/shop/tasa-cambio-puntos`
+- **Cálculo de Bs Canjeables**: Muestra el valor exacto en bolívares de los puntos disponibles
+- **Validación de Límites**: Impide usar más puntos de los disponibles o del monto pendiente
+- **Actualización Automática**: Los puntos se actualizan en tiempo real durante el proceso
+
+### ✅ Precisión Decimal en Precios
+
+- **Dos Decimales**: Todos los precios se muestran con exactamente 2 decimales
+- **Cálculos Precisos**: Usa `parseFloat().toFixed(2)` en lugar de `Math.round()`
+- **Ofertas Visibles**: Los descuentos de 10% ahora se aprecian claramente (ej: Bs. 27.00 → Bs. 24.30)
+- **Formateo Consistente**: Aplicado en ProductCard, Carrito, MetodosPago y useCarrito
+
+### ✅ Funcionalidades del Backend
+
+#### Controlador de Ventas (`createVentaFisica`)
+
+```javascript
+// Proceso completo de venta:
+1. Validación de datos de entrada
+2. Inicio de transacción de BD
+3. Creación de venta en venta_tienda_fisica
+4. Inserción de detalles por cada producto
+5. Verificación y actualización de inventario
+6. Registro de métodos de pago
+7. Actualización de puntos del cliente
+8. Commit de transacción o rollback en errores
+```
+
+#### Endpoints de Tasas de Cambio
+
+- `GET /api/shop/tasa-cambio-puntos`: Tasa de conversión puntos → Bs
+- `GET /api/shop/tasa-cambio-actual`: Tasa de cambio USD actual
+
+## 📋 Preparación de la Base de Datos
+
+### 1. Ejecutar Migración de Puntos
+
+```sql
+-- Ejecutar en la base de datos:
+\i migration_add_puntos_moneda.sql
+```
+
+### 2. Verificar Datos de Prueba
+
+```sql
+-- Verificar que existe la tasa de puntos
+SELECT * FROM tasa_cambio WHERE moneda = 'PUNTOS';
+
+-- Si no existe, insertarla manualmente:
+INSERT INTO tasa_cambio (moneda, monto_equivalencia, fecha_inicio)
+VALUES ('PUNTOS', 1.50, CURRENT_DATE);
+```
+
+## 🎯 Flujo de Pago Completo
+
+### 1. Identificación del Cliente
+
+- Verificación de CI/RIF en tiempo real
+- Registro automático si no existe
+- Carga de puntos acumulados del cliente
+
+### 2. Selección de Productos
+
+- Catálogo con precios precisos (2 decimales)
+- Ofertas claramente visibles
+- Control de stock en tiempo real
+
+### 3. Métodos de Pago Múltiples
+
+- **Efectivo**: Monto específico
+- **Tarjetas**: Crédito/débito con validación
+- **Cheques**: Con número y banco
+- **Puntos**: Conversión automática usando tasa real del backend
+
+### 4. Procesamiento de Venta
+
+- Envío de datos al backend `/api/shop/venta-fisica`
+- Validación de stock
+- Actualización de inventario
+- Registro de pagos
+- Actualización de puntos del cliente
+
+## 🔧 Configuración del Frontend
+
+### Variables de Entorno
+
+```env
+PUBLIC_API_BASE_URL=http://localhost:5000
+PUBLIC_API_TIMEOUT=10000
+PUBLIC_NODE_ENV=development
+```
+
+### Dependencias Principales
+
+- **Astro**: Framework principal
+- **React**: Componentes interactivos
+- **TypeScript**: Tipado fuerte
+- **Tailwind CSS**: Estilos responsive
+
+## 📱 Características de UX/UI
+
+### Optimización para Kioscos
+
+- Botones táctiles mínimo 44px
+- Prevención de zoom y selección de texto
+- Transiciones suaves
+- Feedback visual inmediato
+
+### Manejo de Errores
+
+- Validación en tiempo real
+- Mensajes de error claros
+- Fallbacks para conexión perdida
+- Transacciones seguras con rollback
+
+## 🎨 Paleta de Colores
+
+- **Principal**: #3D4A3A (Verde botella)
+- **Acentos**: #A1B5A0 (Verde claro)
+- **Fondo**: #F4EFE6 (Beige suave)
+- **Texto**: #2C2C2C (Gris oscuro)
+- **Ofertas**: #D9534F (Rojo llamativo)
+
+## 🚀 Cómo Ejecutar
+
+### Backend
+
+```bash
+cd backend
+npm install
+npm start
+# Servidor en http://localhost:5000
+```
+
+### Frontend
+
+```bash
+cd "Frontend/Front final"
+npm install
+npm run dev
+# Aplicación en http://localhost:4321
+```
+
+### Documentación API
+
+- Swagger disponible en: `http://localhost:5000/api-docs`
+- Incluye todos los endpoints del sistema de autopago
+
+## 📊 Estructura de Datos
+
+### Venta Física
+
+```json
+{
+  "cliente_id": 1,
+  "tienda_id": 1,
+  "items": [
+    {
+      "producto_id": 5,
+      "cantidad": 2,
+      "precio_unitario": 24.3
+    }
+  ],
+  "metodos_pago": [
+    {
+      "tipo": "Efectivo",
+      "monto": 40.0
+    },
+    {
+      "tipo": "Puntos",
+      "monto": 8.6,
+      "detalles": { "puntos_usados": 6 }
+    }
+  ],
+  "total_venta": 48.6
+}
+```
+
+### Respuesta del Backend
+
+```json
+{
+  "success": true,
+  "venta_id": 123,
+  "message": "Venta creada exitosamente. Puntos ganados: 2"
+}
+```
+
+## 🔐 Seguridad y Validaciones
+
+- Validación de stock antes de procesar venta
+- Transacciones atomicas con rollback automático
+- Verificación de límites de puntos
+- Sanitización de datos de entrada
+- Manejo seguro de métodos de pago
+
+## 📈 Beneficios Implementados
+
+1. **Precisión**: Precios con 2 decimales evitan errores de redondeo
+2. **Eficiencia**: Conexión real al backend para datos actualizados
+3. **Usabilidad**: Sistema de puntos intuitivo con conversión automática
+4. **Confiabilidad**: Transacciones seguras con validación completa
+5. **Escalabilidad**: Estructura preparada para múltiples tiendas y productos
+
+---
+
+## 🐛 Solución de Problemas
+
+### Error: "invalid input value for enum tipo_moneda: PUNTOS"
+
+**Solución**: Ejecutar la migración:
+
+```sql
+\i migration_add_puntos_moneda.sql
+```
+
+### Error de conexión al backend
+
+**Verificar**:
+
+- Backend corriendo en puerto 5000
+- Variables de entorno configuradas
+- Base de datos PostgreSQL activa
+
+### Precios no se muestran con decimales
+
+**Verificado**: Ya corregido en todos los componentes con `toLocaleString` y `toFixed(2)`
+
+---
+
+**Sistema desarrollado para ACAUCAB - Distribuidora de Cervezas Artesanales**
+
+✅ **Status**: Funcional con backend conectado y precisión decimal implementada

@@ -40,10 +40,10 @@ export default function ProductCard({
 
   /** Calcular precio con descuento usando los datos del backend */
   const tieneOferta = producto.tiene_oferta && producto.porcentaje_descuento && producto.porcentaje_descuento > 0;
-  const precioOriginal = producto.precio;
+  const precioOriginal = parseFloat(producto.precio.toFixed(2));
   const precioOferta = tieneOferta 
-    ? Math.round(producto.precio * (1 - producto.porcentaje_descuento! / 100))
-    : producto.precio;
+    ? parseFloat((producto.precio * (1 - producto.porcentaje_descuento! / 100)).toFixed(2))
+    : parseFloat(producto.precio.toFixed(2));
   const porcentajeDescuento = producto.porcentaje_descuento || 0;
 
   /** Manejar cambio de cantidad */
@@ -132,21 +132,21 @@ export default function ProductCard({
               <div className="space-y-1">
                 <div className="flex items-center space-x-2">
                   <span className="text-xl font-bold text-[#D9534F]">
-                    Bs. {precioOferta.toLocaleString()}
+                    Bs. {precioOferta.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-500 line-through">
-                    Bs. {precioOriginal.toLocaleString()}
+                    Bs. {precioOriginal.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                   <span className="text-sm text-green-600 font-medium">
-                    Ahorra Bs. {(precioOriginal - precioOferta).toLocaleString()}
+                    Ahorra Bs. {(precioOriginal - precioOferta).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
               </div>
             ) : (
               <span className="text-xl font-bold text-[#3D4A3A]">
-                Bs. {precioOriginal.toLocaleString()}
+                Bs. {precioOriginal.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             )}
           </div>
@@ -243,7 +243,7 @@ export default function ProductCard({
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-red-800">Oferta especial</span>
                   <span className="text-sm text-red-600">
-                    Ahorra Bs. {(precioOriginal - precioOferta).toLocaleString()}
+                    Ahorra Bs. {(precioOriginal - precioOferta).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
                 {producto.fecha_fin_oferta && (

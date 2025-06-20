@@ -20,7 +20,7 @@ export function useCarrito(): UseCarritoReturn {
   /** Calcular totales usando useMemo para optimización */
   const { totalItems, totalPrecio, puntosGanados } = useMemo(() => {
     const totalItems = items.reduce((sum, item) => sum + item.cantidad, 0);
-    const totalPrecio = items.reduce((sum, item) => sum + item.subtotal, 0);
+    const totalPrecio = parseFloat(items.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2));
     
     // Calcular puntos ganados: 1 punto por cada unidad de producto
     const puntosGanados = items.reduce((sum, item) => sum + item.cantidad, 0);
@@ -84,7 +84,7 @@ export function useCarrito(): UseCarritoReturn {
             ? {
                 ...item,
                 cantidad: nuevaCantidad,
-                subtotal: nuevaCantidad * item.precio_unitario
+                subtotal: parseFloat((nuevaCantidad * item.precio_unitario).toFixed(2))
               }
             : item
         );
@@ -100,14 +100,14 @@ export function useCarrito(): UseCarritoReturn {
         }
         
         const precioUnitario = producto.tiene_oferta && producto.porcentaje_descuento 
-          ? Math.round(producto.precio * (1 - producto.porcentaje_descuento / 100))
-          : producto.precio;
+          ? parseFloat((producto.precio * (1 - producto.porcentaje_descuento / 100)).toFixed(2))
+          : parseFloat(producto.precio.toFixed(2));
           
         const nuevoItem: ItemCarrito = {
           producto,
           cantidad,
           precio_unitario: precioUnitario,
-          subtotal: cantidad * precioUnitario
+          subtotal: parseFloat((cantidad * precioUnitario).toFixed(2))
         };
         
         const nuevosItems = [...prevItems, nuevoItem];
@@ -150,7 +150,7 @@ export function useCarrito(): UseCarritoReturn {
           return {
             ...item,
             cantidad,
-            subtotal: cantidad * item.precio_unitario
+            subtotal: parseFloat((cantidad * item.precio_unitario).toFixed(2))
           };
         }
         return item;
