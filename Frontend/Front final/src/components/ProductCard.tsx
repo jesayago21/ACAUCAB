@@ -23,19 +23,20 @@ export default function ProductCard({
   /** Obtener la ruta de la imagen con lógica de fallback */
   const obtenerRutaImagen = (): string => {
     try {
-      if (imagenError) {
-        // Fallback: usar SVG simple sin caracteres especiales
-        return producto.cantidad_unidades === 6 
-          ? "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='160' viewBox='0 0 200 160'%3E%3Crect width='200' height='160' fill='%233D4A3A'/%3E%3Ctext x='100' y='80' text-anchor='middle' fill='white' font-family='Arial' font-size='14'%3ESIXPACK%3C/text%3E%3Ctext x='100' y='100' text-anchor='middle' fill='%23A1B5A0' font-family='Arial' font-size='12'%3ESin imagen%3C/text%3E%3C/svg%3E"
-          : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='160' viewBox='0 0 200 160'%3E%3Crect width='200' height='160' fill='%233D4A3A'/%3E%3Ccircle cx='100' cy='80' r='30' fill='%23A1B5A0'/%3E%3Ctext x='100' y='85' text-anchor='middle' fill='white' font-family='Arial' font-size='16'%3EB%3C/text%3E%3Ctext x='100' y='120' text-anchor='middle' fill='%23A1B5A0' font-family='Arial' font-size='12'%3ESin imagen%3C/text%3E%3C/svg%3E";
-      }
-      
       // Usar la clave/id de la presentación para el nombre de archivo
       return `/images/products/beer-${producto.clave}.jpg`;
     } catch (error) {
       console.error('Error en obtenerRutaImagen:', error);
-      return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='160' viewBox='0 0 200 160'%3E%3Crect width='200' height='160' fill='%23999'/%3E%3Ctext x='100' y='80' text-anchor='middle' fill='white' font-family='Arial' font-size='12'%3EError%3C/text%3E%3C/svg%3E";
+      return obtenerImagenFallback();
     }
+  };
+
+  /** Obtener imagen de fallback */
+  const obtenerImagenFallback = (): string => {
+    // Fallback: usar SVG simple sin caracteres especiales
+    return producto.cantidad_unidades === 6 
+      ? "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='160' viewBox='0 0 200 160'%3E%3Crect width='200' height='160' fill='%233D4A3A'/%3E%3Ctext x='100' y='80' text-anchor='middle' fill='white' font-family='Arial' font-size='14'%3ESIXPACK%3C/text%3E%3Ctext x='100' y='100' text-anchor='middle' fill='%23A1B5A0' font-family='Arial' font-size='12'%3ESin imagen%3C/text%3E%3C/svg%3E"
+      : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='160' viewBox='0 0 200 160'%3E%3Crect width='200' height='160' fill='%233D4A3A'/%3E%3Ccircle cx='100' cy='80' r='30' fill='%23A1B5A0'/%3E%3Ctext x='100' y='85' text-anchor='middle' fill='white' font-family='Arial' font-size='16'%3EB%3C/text%3E%3Ctext x='100' y='120' text-anchor='middle' fill='%23A1B5A0' font-family='Arial' font-size='12'%3ESin imagen%3C/text%3E%3C/svg%3E";
   };
 
   /** Calcular precio con descuento usando los datos del backend */
@@ -77,10 +78,16 @@ export default function ProductCard({
         {/* Imagen del producto - Clickeable para expandir */}
         <div className="relative cursor-pointer" onClick={toggleExpandido}>
           <img
-            src={obtenerRutaImagen()}
+            src={imagenError ? obtenerImagenFallback() : obtenerRutaImagen()}
             alt={producto.nombre_cerveza}
             className="w-full h-40 object-cover"
-            onError={() => setImagenError(true)}
+            onError={(e) => {
+              if (!imagenError) {
+                setImagenError(true);
+                // Cambiar la src directamente para evitar loops
+                (e.target as HTMLImageElement).src = obtenerImagenFallback();
+              }
+            }}
           />
           
           {/* Badge de oferta */}

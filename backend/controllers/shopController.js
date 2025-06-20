@@ -338,32 +338,77 @@ const createVentaFisica = async (req, res) => {
       await db.query(updateInventarioQuery, [item.cantidad, inventarioTienda.clave]);
     }
 
-    // 3. Manejar métodos de pago (simplificado por ahora)
+    // 3. Manejar métodos de pago con lógica específica por tipo
     for (const metodoPago of metodos_pago) {
-      // Crear método de pago temporal para la venta
-      const insertMetodoPagoQuery = `
-        INSERT INTO metodo_de_pago (moneda, metodo_preferido, valor, tipo)
-        VALUES ('VES', FALSE, $1, $2)
-        RETURNING clave;
-      `;
+      let insertMetodoPagoQuery;
+      let metodoPagoParams;
       
-      const metodoPagoResult = await db.query(insertMetodoPagoQuery, [
-        metodoPago.monto,
-        metodoPago.tipo
-      ]);
+      // Construir query específico según el tipo de método de pago
+      switch (metodoPago.tipo) {
+        case 'Efectivo':
+          insertMetodoPagoQuery = `
+            INSERT INTO metodo_de_pago (moneda, metodo_preferido, valor, tipo)
+            VALUES ('VES', FALSE, $1, $2)
+            RETURNING clave;
+          `;
+          metodoPagoParams = [metodoPago.monto, metodoPago.tipo];
+          break;
+          
+        case 'Cheque':
+          insertMetodoPagoQuery = `
+            INSERT INTO metodo_de_pago (moneda, metodo_preferido, numero_cheque, banco, tipo)
+            VALUES ('VES', FALSE, $1, $2, $3)
+            RETURNING clave;
+          `;
+          metodoPagoParams = [
+            metodoPago.detalles?.numero_cheque || null,
+            metodoPago.detalles?.banco || null,
+            metodoPago.tipo
+          ];
+          break;
+          
+        case 'Tarjeta de credito':
+        case 'Tarjeta de debito':
+          insertMetodoPagoQuery = `
+            INSERT INTO metodo_de_pago (moneda, metodo_preferido, numero_tarjeta, fecha_vencimiento, banco, tipo)
+            VALUES ('VES', FALSE, $1, $2, $3, $4)
+            RETURNING clave;
+          `;
+          metodoPagoParams = [
+            metodoPago.detalles?.numero_tarjeta || null,
+            metodoPago.detalles?.fecha_vencimiento || null,
+            metodoPago.detalles?.banco || null,
+            metodoPago.tipo
+          ];
+          break;
+          
+        case 'Puntos':
+          insertMetodoPagoQuery = `
+            INSERT INTO metodo_de_pago (moneda, metodo_preferido, tipo)
+            VALUES ('PUNTOS', FALSE, $1)
+            RETURNING clave;
+          `;
+          metodoPagoParams = [metodoPago.tipo];
+          break;
+          
+        default:
+          throw new Error(`Tipo de método de pago no soportado: ${metodoPago.tipo}`);
+      }
       
+      const metodoPagoResult = await db.query(insertMetodoPagoQuery, metodoPagoParams);
       const metodoPagoId = metodoPagoResult.rows[0].clave;
 
-      // Obtener tasa de cambio VES actual
+      // Obtener tasa de cambio apropiada según el método
+      const monedaPago = metodoPago.tipo === 'Puntos' ? 'PUNTOS' : 'VES';
       const tasaQuery = `
         SELECT clave FROM tasa_cambio 
-        WHERE moneda = 'VES' 
+        WHERE moneda = $1
         AND (fecha_fin IS NULL OR fecha_fin >= CURRENT_DATE)
         ORDER BY fecha_inicio DESC 
         LIMIT 1;
       `;
       
-      const tasaResult = await db.query(tasaQuery);
+      const tasaResult = await db.query(tasaQuery, [monedaPago]);
       const tasaId = tasaResult.rows.length > 0 ? tasaResult.rows[0].clave : 1; // Fallback
 
       // Crear registro de pago
@@ -378,6 +423,20 @@ const createVentaFisica = async (req, res) => {
         metodoPagoId,
         ventaId
       ]);
+
+      // Si es pago con puntos, descontar los puntos usados del cliente
+      if (metodoPago.tipo === 'Puntos' && metodoPago.detalles?.puntos_usados) {
+        const updatePuntosUsadosQuery = `
+          UPDATE cliente 
+          SET puntos_acumulados = puntos_acumulados - $1 
+          WHERE clave = $2;
+        `;
+        
+        await db.query(updatePuntosUsadosQuery, [
+          metodoPago.detalles.puntos_usados,
+          cliente_id
+        ]);
+      }
     }
 
     // 4. Actualizar puntos del cliente (1 punto por producto)
@@ -390,13 +449,26 @@ const createVentaFisica = async (req, res) => {
     
     await db.query(updatePuntosQuery, [puntosGanados, cliente_id]);
 
+    // Calcular total de puntos usados en la venta
+    const totalPuntosUsados = metodos_pago
+      .filter(mp => mp.tipo === 'Puntos' && mp.detalles?.puntos_usados)
+      .reduce((sum, mp) => sum + mp.detalles.puntos_usados, 0);
+
     // Confirmar transacción
     await db.query('COMMIT');
+
+    // Crear mensaje informativo
+    let mensaje = `Venta creada exitosamente. Puntos ganados: ${puntosGanados}`;
+    if (totalPuntosUsados > 0) {
+      mensaje += `, Puntos usados: ${totalPuntosUsados}`;
+    }
 
     res.status(201).json({
       success: true,
       venta_id: ventaId,
-      message: `Venta creada exitosamente. Puntos ganados: ${puntosGanados}`
+      puntos_ganados: puntosGanados,
+      puntos_usados: totalPuntosUsados,
+      message: mensaje
     });
 
   } catch (error) {

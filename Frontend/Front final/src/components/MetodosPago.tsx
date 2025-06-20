@@ -32,11 +32,13 @@ export default function MetodosPago({
   
   // Estados para puntos
   const [puntosCliente, setPuntosCliente] = useState<PuntosCliente | null>(null);
-  const [puntosAUsar, setPuntosAUsar] = useState(0);
+  const [montoPuntos, setMontoPuntos] = useState('');
   const [tasaPuntos, setTasaPuntos] = useState<TasaCambio | null>(null);
   
   // Estados para formularios
-  const [montoEfectivo, setMontoEfectivo] = useState(0);
+  const [montoEfectivo, setMontoEfectivo] = useState('');
+  const [montoTarjeta, setMontoTarjeta] = useState('');
+  const [montoCheque, setMontoCheque] = useState('');
   const [datosTarjeta, setDatosTarjeta] = useState({
     numero: '',
     vencimiento: '',
@@ -103,8 +105,10 @@ export default function MetodosPago({
     setMontoPendiente(prev => prev - monto);
 
     // Resetear formularios
-    setMontoEfectivo(0);
-    setPuntosAUsar(0);
+    setMontoEfectivo('');
+    setMontoPuntos('');
+    setMontoTarjeta('');
+    setMontoCheque('');
     setDatosTarjeta({ numero: '', vencimiento: '', banco: '' });
     setDatosCheque({ numero: '', banco: '' });
   };
@@ -120,21 +124,31 @@ export default function MetodosPago({
 
   /** Aplicar pago con efectivo */
   const handlePagoEfectivo = () => {
-    if (montoEfectivo > 0) {
-      aplicarPago('Efectivo', Math.min(montoEfectivo, montoPendiente));
+    const monto = parseFloat(montoEfectivo) || 0;
+    if (monto > 0 && monto <= montoPendiente) {
+      aplicarPago('Efectivo', monto);
     }
   };
 
   /** Aplicar pago con puntos */
   const handlePagoPuntos = () => {
-    if (!puntosCliente || !tasaPuntos || puntosAUsar <= 0) return;
+    if (!puntosCliente || !tasaPuntos) return;
+    
+    const montoDeseado = parseFloat(montoPuntos) || 0;
+    if (montoDeseado <= 0) return;
     
     const tasaActual = parseFloat(String(tasaPuntos.monto_equivalencia || tasaPuntos.tasa || 1));
-    const maxPuntos = Math.min(puntosCliente.puntos_disponibles, Math.ceil(montoPendiente / tasaActual));
-    const puntosFinales = Math.min(puntosAUsar, maxPuntos);
-    const montoEnBolivares = parseFloat((puntosFinales * tasaActual).toFixed(2));
+    const puntosNecesarios = Math.ceil(montoDeseado / tasaActual);
+    const montoMaximo = Math.min(puntosCliente.valor_en_bolivares, montoPendiente);
+    const montoFinal = Math.min(montoDeseado, montoMaximo);
+    const puntosFinales = Math.ceil(montoFinal / tasaActual);
     
-    aplicarPago('Puntos', montoEnBolivares, { puntos_usados: puntosFinales });
+    if (puntosFinales > puntosCliente.puntos_disponibles) {
+      alert('No tienes suficientes puntos para este monto');
+      return;
+    }
+    
+    aplicarPago('Puntos', montoFinal, { puntos_usados: puntosFinales });
     
     // Actualizar puntos disponibles
     setPuntosCliente(prev => prev ? {
@@ -151,8 +165,14 @@ export default function MetodosPago({
       return;
     }
 
+    const monto = parseFloat(montoTarjeta) || 0;
+    if (monto <= 0 || monto > montoPendiente) {
+      alert('Ingrese un monto válido');
+      return;
+    }
+
     const tipoFinal = subtipoTarjeta === 'credito' ? 'Tarjeta de credito' : 'Tarjeta de debito';
-    aplicarPago(tipoFinal as PagoAplicado['tipo'], montoPendiente, {
+    aplicarPago(tipoFinal as PagoAplicado['tipo'], monto, {
       numero_tarjeta: datosTarjeta.numero,
       fecha_vencimiento: datosTarjeta.vencimiento,
       banco: datosTarjeta.banco
@@ -166,7 +186,13 @@ export default function MetodosPago({
       return;
     }
 
-    aplicarPago('Cheque', montoPendiente, {
+    const monto = parseFloat(montoCheque) || 0;
+    if (monto <= 0 || monto > montoPendiente) {
+      alert('Ingrese un monto válido');
+      return;
+    }
+
+    aplicarPago('Cheque', monto, {
       numero_cheque: datosCheque.numero,
       banco: datosCheque.banco
     });
@@ -324,10 +350,11 @@ export default function MetodosPago({
                       </label>
                       <input
                         type="number"
-                        min="1"
+                        min="0.01"
                         max={montoPendiente}
+                        step="0.01"
                         value={montoEfectivo}
-                        onChange={(e) => setMontoEfectivo(parseFloat(e.target.value) || 0)}
+                        onChange={(e) => setMontoEfectivo(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A1B5A0]"
                         placeholder="0.00"
                       />
@@ -337,7 +364,7 @@ export default function MetodosPago({
                     </div>
                     <button
                       onClick={handlePagoEfectivo}
-                      disabled={montoEfectivo <= 0 || montoEfectivo > montoPendiente}
+                      disabled={!montoEfectivo || parseFloat(montoEfectivo) <= 0 || parseFloat(montoEfectivo) > montoPendiente}
                       className="w-full bg-[#3D4A3A] hover:bg-[#2C3631] text-white font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Aplicar Pago en Efectivo
@@ -365,24 +392,31 @@ export default function MetodosPago({
 
                       <div>
                         <label className="block text-sm font-medium text-[#2C2C2C] mb-2">
-                          Puntos a usar
+                          Monto en Bs. (usando puntos)
                         </label>
                         <input
                           type="number"
-                          min="1"
-                          max={Math.min(puntosCliente.puntos_disponibles, Math.ceil(montoPendiente / parseFloat(String(tasaPuntos.monto_equivalencia || tasaPuntos.tasa || 1))))}
-                          value={puntosAUsar}
-                          onChange={(e) => setPuntosAUsar(parseInt(e.target.value) || 0)}
+                          min="0.01"
+                          max={Math.min(puntosCliente.valor_en_bolivares, montoPendiente)}
+                          step="0.01"
+                          value={montoPuntos}
+                          onChange={(e) => setMontoPuntos(e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A1B5A0]"
+                          placeholder="0.00"
                         />
                         <p className="text-xs text-gray-500 mt-1">
-                          Equivale a: Bs. {formatearPrecio(puntosAUsar * parseFloat(String(tasaPuntos.monto_equivalencia || tasaPuntos.tasa || 1)))}
+                          Máximo disponible: Bs. {formatearPrecio(Math.min(puntosCliente.valor_en_bolivares, montoPendiente))}
                         </p>
+                        {montoPuntos && (
+                          <p className="text-xs text-blue-600 mt-1">
+                            Puntos necesarios: {Math.ceil(parseFloat(montoPuntos) / parseFloat(String(tasaPuntos.monto_equivalencia || tasaPuntos.tasa || 1)))}
+                          </p>
+                        )}
                       </div>
 
                       <button
                         onClick={handlePagoPuntos}
-                        disabled={puntosAUsar <= 0 || puntosAUsar > puntosCliente.puntos_disponibles}
+                        disabled={!montoPuntos || parseFloat(montoPuntos) <= 0 || parseFloat(montoPuntos) > Math.min(puntosCliente.valor_en_bolivares, montoPendiente)}
                         className="w-full bg-[#3D4A3A] hover:bg-[#2C3631] text-white font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Aplicar Pago con Puntos
@@ -464,18 +498,34 @@ export default function MetodosPago({
                       </div>
                     </div>
 
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                      <p className="text-sm text-yellow-800">
-                        <strong>Monto a pagar:</strong> Bs. {formatearPrecio(montoPendiente)}
+                    <div>
+                      <label className="block text-sm font-medium text-[#2C2C2C] mb-2">
+                        Monto (Bs.)
+                      </label>
+                      <input
+                        type="number"
+                        min="0.01"
+                        max={montoPendiente}
+                        step="0.01"
+                        value={montoTarjeta}
+                        onChange={(e) => setMontoTarjeta(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A1B5A0]"
+                        placeholder="0.00"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Pendiente: Bs. {formatearPrecio(montoPendiente)}
                       </p>
+                    </div>
+
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                       <p className="text-xs text-yellow-700">
-                        Este monto será cobrado a su tarjeta de {subtipoTarjeta}
+                        Será cobrado a su tarjeta de {subtipoTarjeta}
                       </p>
                     </div>
 
                     <button
                       onClick={handlePagoTarjeta}
-                      disabled={!datosTarjeta.numero || !datosTarjeta.vencimiento || !datosTarjeta.banco}
+                      disabled={!datosTarjeta.numero || !datosTarjeta.vencimiento || !datosTarjeta.banco || !montoTarjeta || parseFloat(montoTarjeta) <= 0}
                       className="w-full bg-[#3D4A3A] hover:bg-[#2C3631] text-white font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Procesar Pago con Tarjeta
@@ -514,15 +564,28 @@ export default function MetodosPago({
                       />
                     </div>
 
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                      <p className="text-sm text-yellow-800">
-                        <strong>Monto del cheque:</strong> Bs. {formatearPrecio(montoPendiente)}
+                    <div>
+                      <label className="block text-sm font-medium text-[#2C2C2C] mb-2">
+                        Monto del Cheque (Bs.)
+                      </label>
+                      <input
+                        type="number"
+                        min="0.01"
+                        max={montoPendiente}
+                        step="0.01"
+                        value={montoCheque}
+                        onChange={(e) => setMontoCheque(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A1B5A0]"
+                        placeholder="0.00"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Pendiente: Bs. {formatearPrecio(montoPendiente)}
                       </p>
                     </div>
 
                     <button
                       onClick={handlePagoCheque}
-                      disabled={!datosCheque.numero || !datosCheque.banco}
+                      disabled={!datosCheque.numero || !datosCheque.banco || !montoCheque || parseFloat(montoCheque) <= 0}
                       className="w-full bg-[#3D4A3A] hover:bg-[#2C3631] text-white font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Procesar Pago con Cheque
