@@ -8,24 +8,45 @@ import type {
 } from '../types/auth';
 
 const API_BASE_URL = import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:5000';
-const API_TIMEOUT = parseInt(import.meta.env.PUBLIC_API_TIMEOUT || '10000');
+const API_TIMEOUT = parseInt(import.meta.env.PUBLIC_API_TIMEOUT || '30000'); // Aumentado a 30 segundos
+
+/** Crear AbortController con timeout personalizado */
+const createTimeoutController = (timeoutMs: number = API_TIMEOUT): AbortController => {
+  const controller = new AbortController();
+  
+  setTimeout(() => {
+    controller.abort();
+  }, timeoutMs);
+  
+  return controller;
+};
 
 /** Configuración base para fetch */
-const fetchConfig = {
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  signal: AbortSignal.timeout(API_TIMEOUT)
+const createFetchConfig = (timeoutMs: number = API_TIMEOUT) => {
+  const controller = createTimeoutController(timeoutMs);
+  
+  return {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    signal: controller.signal
+  };
 };
 
 /** Realizar login */
 export const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   try {
+    console.log('🔐 Intentando login con:', { username: credentials.username, url: `${API_BASE_URL}/api/auth/login` });
+    
+    const fetchConfig = createFetchConfig();
+    
     const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
       ...fetchConfig,
       method: 'POST',
       body: JSON.stringify(credentials)
     });
+
+    console.log('📡 Respuesta recibida:', { status: response.status, ok: response.ok });
 
     if (!response.ok) {
       if (response.status === 401) {
@@ -38,16 +59,24 @@ export const login = async (credentials: LoginCredentials): Promise<LoginRespons
     }
 
     const data: LoginResponse = await response.json();
+    console.log('✅ Login exitoso:', { success: data.success, hasUser: !!data.user });
     return data;
 
   } catch (error) {
-    console.error('Error en login:', error);
+    console.error('❌ Error en login:', error);
     
     if (error instanceof Error) {
-      if (error.name === 'TimeoutError') {
+      if (error.name === 'AbortError') {
         return {
           success: false,
           message: 'Tiempo de espera agotado. Verifique su conexión.'
+        };
+      }
+      
+      if (error.message.includes('fetch')) {
+        return {
+          success: false,
+          message: 'No se pudo conectar con el servidor. Verifique que esté ejecutándose.'
         };
       }
       
@@ -67,6 +96,8 @@ export const login = async (credentials: LoginCredentials): Promise<LoginRespons
 /** Verificar si un usuario tiene un permiso específico */
 export const verificarPermiso = async (request: VerificarPermisoRequest): Promise<VerificarPermisoResponse> => {
   try {
+    const fetchConfig = createFetchConfig();
+    
     const response = await fetch(`${API_BASE_URL}/api/auth/verificar-permiso`, {
       ...fetchConfig,
       method: 'POST',
@@ -94,6 +125,8 @@ export const verificarPermiso = async (request: VerificarPermisoRequest): Promis
 /** Obtener perfil completo del usuario */
 export const obtenerPerfilUsuario = async (usuarioId: number): Promise<{ success: boolean; user?: Usuario; message?: string }> => {
   try {
+    const fetchConfig = createFetchConfig();
+    
     const response = await fetch(`${API_BASE_URL}/api/auth/perfil/${usuarioId}`, {
       ...fetchConfig,
       method: 'GET'

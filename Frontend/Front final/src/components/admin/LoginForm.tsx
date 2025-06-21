@@ -58,14 +58,38 @@ export default function LoginForm({
       const { login } = await import('../../services/authService');
       const response = await login(credentials);
       
+      console.log('🔍 Respuesta del login:', response);
+      
       if (response.success && response.user) {
+        // Validar que el usuario tiene los datos mínimos necesarios
+        if (!response.user.username || !response.user.rol || !response.user.permisos) {
+          console.error('❌ Datos de usuario incompletos recibidos:', response.user);
+          setError('Los datos del usuario están incompletos. Contacte al administrador.');
+          return;
+        }
+        
+        console.log('✅ Login exitoso, usuario válido:', {
+          username: response.user.username,
+          rol: response.user.rol.nombre,
+          permisos: response.user.permisos.length
+        });
+        
         onLoginSuccess(response);
       } else {
         setError(response.message || 'Error durante el login');
       }
     } catch (error) {
-      console.error('Error en login:', error);
-      setError('Error de conexión. Verifique su red.');
+      console.error('❌ Error en login:', error);
+      
+      if (error instanceof Error) {
+        if (error.message.includes('No se pudo conectar')) {
+          setError('No se pudo conectar con el servidor. Verifique que el backend esté ejecutándose.');
+        } else {
+          setError('Error de conexión. Verifique su red.');
+        }
+      } else {
+        setError('Error desconocido durante el login');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -121,7 +145,7 @@ export default function LoginForm({
             <div>
               <input
                 type="text"
-                placeholder="Email"
+                placeholder="Username"
                 value={credentials.username}
                 onChange={(e) => handleInputChange('username', e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"

@@ -36,15 +36,21 @@ async function ejecutarSQL(contenidoSQL, nombreArchivo) {
   try {
     console.log(`🔄 Ejecutando: ${nombreArchivo}...`);
     
-    // Dividir el contenido por declaraciones si es necesario
-    const declaraciones = contenidoSQL
-      .split(';')
-      .map(sql => sql.trim())
-      .filter(sql => sql.length > 0 && !sql.startsWith('--'));
-    
-    for (const declaracion of declaraciones) {
-      if (declaracion.trim()) {
-        await client.query(declaracion);
+    // Para archivos grandes de inserts, ejecutar como una sola transacción
+    if (nombreArchivo.includes('insert') || nombreArchivo.includes('Insert')) {
+      // Ejecutar todo el archivo como una sola query para mantener el orden
+      await client.query(contenidoSQL);
+    } else {
+      // Para otros archivos, dividir por declaraciones
+      const declaraciones = contenidoSQL
+        .split(';')
+        .map(sql => sql.trim())
+        .filter(sql => sql.length > 0 && !sql.startsWith('--'));
+      
+      for (const declaracion of declaraciones) {
+        if (declaracion.trim()) {
+          await client.query(declaracion);
+        }
       }
     }
     
