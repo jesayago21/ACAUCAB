@@ -381,3 +381,57 @@ FOR EACH ROW
 WHEN (NEW.fk_compra IS NOT NULL)
 EXECUTE FUNCTION validar_pago_compra();
 */
+
+-- Trigger para descontar puntos cuando se paga con puntos
+CREATE OR REPLACE FUNCTION descontar_puntos_cliente()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_cliente_id INT;
+    v_puntos_usados INT;
+    v_tasa_puntos DECIMAL;
+BEGIN
+    -- Verificar si el método de pago es de tipo 'Puntos'
+    IF EXISTS (
+        SELECT 1 FROM metodo_de_pago 
+        WHERE clave = NEW.fk_metodo_de_pago 
+        AND tipo = 'Puntos'
+    ) THEN
+        -- Obtener el cliente de la venta
+        SELECT fk_cliente INTO v_cliente_id
+        FROM venta_tienda_fisica 
+        WHERE clave = NEW.fk_venta_tienda_fisica;
+        
+        -- Obtener la tasa de cambio de puntos
+        SELECT monto_equivalencia INTO v_tasa_puntos
+        FROM tasa_cambio 
+        WHERE moneda = 'PUNTOS'
+        AND (fecha_fin IS NULL OR fecha_fin >= CURRENT_DATE)
+        ORDER BY fecha_inicio DESC 
+        LIMIT 1;
+        
+        -- Si no hay tasa de cambio, usar 1:1 como fallback
+        IF v_tasa_puntos IS NULL THEN
+            v_tasa_puntos := 1;
+        END IF;
+        
+        -- Calcular puntos usados basado en el monto pagado
+        v_puntos_usados := CEIL(NEW.monto_total / v_tasa_puntos);
+        
+        -- Descontar puntos del cliente
+        UPDATE cliente 
+        SET puntos_acumulados = puntos_acumulados - v_puntos_usados
+        WHERE clave = v_cliente_id;
+        
+        -- Log para debugging
+        RAISE NOTICE 'Puntos descontados: Cliente ID %, Puntos usados: %, Monto: %, Tasa: %', 
+            v_cliente_id, v_puntos_usados, NEW.monto_total, v_tasa_puntos;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tr_descontar_puntos_cliente
+AFTER INSERT ON pago
+FOR EACH ROW
+EXECUTE FUNCTION descontar_puntos_cliente();

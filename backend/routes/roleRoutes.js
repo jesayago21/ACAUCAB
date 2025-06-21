@@ -11,7 +11,7 @@ const roleController = require('../controllers/roleController');
 
 /**
  * @swagger
- * /roles:
+ * /api/roles:
  *   post:
  *     summary: Crea un nuevo rol
  *     tags: [Roles]
@@ -72,7 +72,7 @@ router.post('/', roleController.createRole); // Aquí iría authenticateToken y 
 
 /**
  * @swagger
- * /roles:
+ * /api/roles:
  *   get:
  *     summary: Obtiene todos los roles
  *     tags: [Roles]
@@ -114,7 +114,7 @@ router.get('/', roleController.getAllRoles); // Aquí iría authenticateToken y 
 
 /**
  * @swagger
- * /roles/{id}:
+ * /api/roles/{id}:
  *   get:
  *     summary: Obtiene un rol por su ID
  *     tags: [Roles]
@@ -163,7 +163,7 @@ router.get('/:id', roleController.getRoleById); // Aquí iría authenticateToken
 
 /**
  * @swagger
- * /roles/{id}:
+ * /api/roles/{id}:
  *   put:
  *     summary: Actualiza un rol por su ID
  *     tags: [Roles]
@@ -231,7 +231,7 @@ router.put('/:id', roleController.updateRole); // Aquí iría authenticateToken 
 
 /**
  * @swagger
- * /roles/{id}:
+ * /api/roles/{id}:
  *   delete:
  *     summary: Elimina un rol por su ID
  *     tags: [Roles]
@@ -269,8 +269,6 @@ router.put('/:id', roleController.updateRole); // Aquí iría authenticateToken 
  *       500:
  *         description: Error interno del servidor.
  */
-
-
-
+router.delete('/:id', roleController.deleteRole); // Aquí iría authenticateToken y authorize(['delete_role'])
 
 module.exports = router;

@@ -135,7 +135,14 @@ export const clienteService = {
   async obtenerPuntosCliente(clienteId: number): Promise<PuntosCliente> {
     // Este endpoint no existe en las rutas, pero mantengo la estructura para futuro
     const response = await fetchWithTimeout(`${API_BASE_URL}/clientes/${clienteId}/puntos`);
-    return handleResponse<PuntosCliente>(response);
+    const data = await handleResponse<{cliente: {clave: number, puntos_acumulados: number}}>(response);
+    
+    // Convertir a formato PuntosCliente
+    return {
+      puntos_disponibles: data.cliente.puntos_acumulados,
+      valor_en_bolivares: data.cliente.puntos_acumulados * 1, // Tasa 1:1 como fallback
+      tasa_cambio: 1
+    };
   }
 };
 

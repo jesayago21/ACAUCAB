@@ -514,11 +514,55 @@ const getParroquiasPorMunicipio = async (req, res) => {
   }
 };
 
+/**
+ * Obtener puntos actualizados de un cliente
+ */
+const obtenerPuntosCliente = async (req, res) => {
+  const { clienteId } = req.params;
+  
+  if (!clienteId) {
+    return res.status(400).json({ message: 'ID del cliente es requerido' });
+  }
+
+  try {
+    const queryText = `
+      SELECT clave, puntos_acumulados
+      FROM cliente 
+      WHERE clave = $1;
+    `;
+    
+    const { rows } = await db.query(queryText, [clienteId]);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ 
+        message: 'Cliente no encontrado',
+        found: false
+      });
+    }
+
+    const cliente = rows[0];
+    
+    res.status(200).json({
+      message: 'Puntos obtenidos exitosamente',
+      found: true,
+      cliente: {
+        clave: cliente.clave,
+        puntos_acumulados: cliente.puntos_acumulados || 0
+      }
+    });
+
+  } catch (error) {
+    console.error('Error al obtener puntos del cliente:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+};
+
 module.exports = {
   identificarCliente,
   crearCliente,
   getLugares,
   getLugaresPlanos,
   getMunicipiosPorEstado,
-  getParroquiasPorMunicipio
+  getParroquiasPorMunicipio,
+  obtenerPuntosCliente
 }; 

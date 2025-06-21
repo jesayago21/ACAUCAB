@@ -3,6 +3,7 @@ const cors = require('cors');
 const shopRoutes = require('./routes/shopRoutes');
 const clientRoutes = require('./routes/clientRoutes');
 const roleRoutes = require('./routes/roleRoutes'); 
+const userRoutes = require('./routes/userRoutes');
 const authRoutes = require('./routes/authRoutes');
 // const privilegeRoutes = require('./routes/privilegeRoutes'); // Comentado temporalmente - archivo no existe
 const { specs, swaggerUi } = require('./config/swagger');
@@ -45,6 +46,7 @@ app.get('/', (req, res) => {
 /** Rutas de la API */
 app.use('/api/shop', shopRoutes);
 app.use('/api/roles', roleRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 // app.use('/api/privileges', privilegeRoutes); // Comentado temporalmente - archivo no existe 
 app.use('/api/clientes', clientRoutes);

@@ -300,32 +300,6 @@ CREATE TABLE IF NOT EXISTS metodo_de_pago (
     )
 );
 
-[nodemon] starting `node server.js`
-Servidor corriendo en el puerto 5000
-Documentación disponible en: http://localhost:5000/api-docs
-Error fetching points exchange rate: error: invalid input value for enum tipo_moneda: "PUNTOS"
-    at C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\backend\node_modules\pg-pool\index.js:45:11
-    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-    at async getTasaCambioPuntos (C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\backend\controllers\shopController.js:240:22) {
-  length: 105,
-  severity: 'ERROR',
-  code: '22P02',
-  detail: undefined,
-  hint: undefined,
-  position: '118',
-  internalPosition: undefined,
-  internalQuery: undefined,
-  where: undefined,
-  schema: undefined,
-  table: undefined,
-  column: undefined,
-  dataType: undefined,
-  constraint: undefined,
-  file: 'enum.c',
-  line: '133',
-  routine: 'enum_in'
-}
-
 CREATE TABLE IF NOT EXISTS horario (
     clave SERIAL,
     dia VARCHAR(50) NOT NULL,

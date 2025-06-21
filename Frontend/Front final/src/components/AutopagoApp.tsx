@@ -143,7 +143,30 @@ export default function AutopagoApp() {
   };
 
   /** Manejar pago exitoso */
-  const handlePagoExitoso = () => {
+  const handlePagoExitoso = async (clienteActualizado?: ClienteNatural | ClienteJuridico) => {
+    // Si recibimos un cliente actualizado, usarlo directamente
+    if (clienteActualizado) {
+      setCliente(clienteActualizado);
+    } else if (cliente && cliente.clave) {
+      // Si no recibimos cliente actualizado, intentar obtenerlo del servidor
+      try {
+        const { clienteService } = await import('../services/api');
+        const puntosActualizados = await clienteService.obtenerPuntosCliente(cliente.clave);
+        
+        // Actualizar el estado del cliente con los nuevos puntos
+        setCliente(prevCliente => {
+          if (!prevCliente) return null;
+          return {
+            ...prevCliente,
+            puntos_acumulados: puntosActualizados.puntos_disponibles
+          };
+        });
+      } catch (error) {
+        console.error('Error actualizando puntos del cliente:', error);
+        // Continuar sin actualizar puntos si hay error
+      }
+    }
+    
     setEstado('exitoso');
   };
 

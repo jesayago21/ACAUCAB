@@ -7,7 +7,7 @@ import type { UseCarritoReturn } from '../hooks/useCarrito';
 interface MetodosPagoProps {
   cliente: ClienteNatural | ClienteJuridico;
   carrito: UseCarritoReturn;
-  onPagoExitoso: () => void;
+  onPagoExitoso: (clienteActualizado?: ClienteNatural | ClienteJuridico) => void;
   onVolver: () => void;
 }
 
@@ -229,8 +229,37 @@ export default function MetodosPago({
       const resultado = await ventaService.crearVentaFisica(ventaData);
       
       if (resultado.success) {
-        // Éxito - proceder al estado exitoso
-        onPagoExitoso();
+        console.log('✅ Venta creada exitosamente:', resultado);
+        
+        // Obtener puntos actualizados del cliente después de la venta
+        try {
+          console.log('🔄 Obteniendo puntos actualizados para cliente:', cliente.clave);
+          const puntosActualizados = await clienteService.obtenerPuntosCliente(cliente.clave!);
+          
+          console.log('📊 Puntos actualizados obtenidos:', puntosActualizados);
+          
+          // Actualizar el objeto cliente con los nuevos puntos
+          const clienteActualizado = {
+            ...cliente,
+            puntos_acumulados: puntosActualizados.puntos_disponibles
+          };
+          
+          console.log('👤 Cliente actualizado:', {
+            nombre: (clienteActualizado as any).tipo === 'natural' 
+              ? `${(clienteActualizado as any).primer_nombre} ${(clienteActualizado as any).primer_apellido}`
+              : (clienteActualizado as any).razon_social,
+            puntos_anteriores: cliente.puntos_acumulados,
+            puntos_nuevos: clienteActualizado.puntos_acumulados,
+            diferencia: (cliente.puntos_acumulados || 0) - clienteActualizado.puntos_acumulados
+          });
+          
+          // Éxito - proceder al estado exitoso con cliente actualizado
+          onPagoExitoso(clienteActualizado);
+        } catch (error) {
+          console.error('❌ Error obteniendo puntos actualizados:', error);
+          // Aún así proceder al estado exitoso
+          onPagoExitoso();
+        }
       } else {
         throw new Error(resultado.message || 'Error al procesar la venta');
       }
@@ -279,6 +308,11 @@ export default function MetodosPago({
               <div>
                 <h1 className="text-xl font-bold text-[#2C2C2C]">Métodos de Pago</h1>
                 <p className="text-sm text-gray-600">{nombreCliente}</p>
+                {cliente.puntos_acumulados !== undefined && cliente.puntos_acumulados > 0 && (
+                  <p className="text-sm text-green-600 font-medium mt-1">
+                    🎯 {cliente.puntos_acumulados} puntos disponibles
+                  </p>
+                )}
               </div>
             </div>
 
