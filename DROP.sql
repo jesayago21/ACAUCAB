@@ -1,6 +1,13 @@
 DROP TYPE IF EXISTS tipo_moneda CASCADE;
 DROP TYPE IF EXISTS tipo_metodo_pago CASCADE;
 DROP TYPE IF EXISTS tipo_cliente CASCADE;
+DROP VIEW IF EXISTS v_ventas_evento CASCADE;
+DROP VIEW IF EXISTS v_ventas_tienda_fisica CASCADE;
+DROP VIEW IF EXISTS v_ventas_online CASCADE;
+DROP VIEW IF EXISTS v_ventas_tienda_fisica_detalle CASCADE;
+DROP VIEW IF EXISTS v_ventas_online_detalle CASCADE;
+DROP VIEW IF EXISTS v_ventas_evento_detalle CASCADE;
+DROP VIEW IF EXISTS v_ventas_tienda_fisica_detalle CASCADE;
 DROP TABLE IF EXISTS instruccion CASCADE;
 DROP TABLE IF EXISTS tipo_invitado CASCADE;
 DROP TABLE IF EXISTS inventario_evento CASCADE;

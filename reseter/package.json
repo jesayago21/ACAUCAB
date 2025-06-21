@@ -1,0 +1,23 @@
+{
+  "name": "acaucab-database-reset",
+  "version": "1.0.0",
+  "description": "Script para resetear automáticamente la base de datos ACAUCAB",
+  "main": "reset-database.js",
+  "scripts": {
+    "reset": "node reset-database.js",
+    "reset:force": "node reset-database.js --force",
+    "reset:basic": "node reset-database.js --basic",
+    "reset:basic:force": "node reset-database.js --basic --force",
+    "reset:list": "node reset-database.js --list", 
+    "reset:list:basic": "node reset-database.js --list --basic",
+    "reset:help": "node reset-database.js --help"
+  },
+  "dependencies": {
+    "pg": "^8.11.3",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {},
+  "keywords": ["database", "reset", "postgresql", "acaucab"],
+  "author": "ACAUCAB Team",
+  "license": "ISC"
+} 

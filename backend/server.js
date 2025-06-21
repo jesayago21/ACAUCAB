@@ -5,7 +5,7 @@ const clientRoutes = require('./routes/clientRoutes');
 const roleRoutes = require('./routes/roleRoutes'); 
 const userRoutes = require('./routes/userRoutes');
 const authRoutes = require('./routes/authRoutes');
-// const privilegeRoutes = require('./routes/privilegeRoutes'); // Comentado temporalmente - archivo no existe
+const privilegeRoutes = require('./routes/privilegeRoutes');
 const { specs, swaggerUi } = require('./config/swagger');
 require('dotenv').config();
 
@@ -48,7 +48,7 @@ app.use('/api/shop', shopRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
-// app.use('/api/privileges', privilegeRoutes); // Comentado temporalmente - archivo no existe 
+app.use('/api/privileges', privilegeRoutes);
 app.use('/api/clientes', clientRoutes);
 
 /** Manejo de rutas no encontradas */
