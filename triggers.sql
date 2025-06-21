@@ -80,13 +80,13 @@ BEGIN
     JOIN estatus e ON e.clave = h.fk_estatus
     WHERE (h.fk_venta_online = NEW.fk_venta_online)
     AND e.estado = 'procesando'
-    ORDER BY h.fecha_inicio DESC
+    ORDER BY h.fecha DESC
     LIMIT 1;
 
     -- Si encontramos un estado 'procesando' y el nuevo es 'listo para entrega'
     IF estado_anterior IS NOT NULL AND 
        (SELECT estado FROM estatus WHERE clave = NEW.fk_estatus) = 'listo para entrega' AND
-       (NEW.fecha_inicio - estado_anterior.fecha_inicio) > INTERVAL '2 hours' THEN
+       (NEW.fecha - estado_anterior.fecha) > INTERVAL '2 hours' THEN
         RAISE EXCEPTION 'No pueden pasar más de dos horas entre el estado procesando y listo para entrega';
     END IF;
     
@@ -130,7 +130,7 @@ BEGIN
         VALUES (NEW.clave, v_compra_id, 10000, 0);  -- El precio_unitario debería definirse según la lógica de negocio
         
         -- Insertar el primer estado en histórico
-        INSERT INTO historico (fecha_inicio, fk_estatus, fk_compra)
+        INSERT INTO historico (fecha, fk_estatus, fk_compra)
         VALUES (CURRENT_DATE, 
                (SELECT clave FROM estatus WHERE estado = 'procesando' AND aplicable_a = 'compra' LIMIT 1),
                v_compra_id);
@@ -145,19 +145,37 @@ AFTER UPDATE ON almacen
 FOR EACH ROW
 EXECUTE FUNCTION generar_orden_compra_automatica();
 
+/*
 -- Trigger para validar que solo el jefe de compras pueda cambiar el estatus de una orden de compra
+-- Esta versión usa una variable de sesión para identificar al usuario actual
 CREATE OR REPLACE FUNCTION validar_cambio_estatus_compra()
 RETURNS TRIGGER AS $$
+DECLARE
+    usuario_actual_id INT;
+    es_jefe_compras BOOLEAN;
 BEGIN
-    -- Verificar si el usuario actual tiene el rol de jefe de compras
-    IF NEW.fk_compra IS NOT NULL AND NOT EXISTS (
-        SELECT 1
-        FROM usuario u
-        JOIN rol r ON r.clave = u.fk_rol
-        WHERE u.clave = CURRENT_USER::integer  -- Asumiendo que tienes una función que retorna el usuario actual
-        AND r.nombre = 'Jefe de Compras'
-    ) THEN
-        RAISE EXCEPTION 'Solo el jefe de compras puede cambiar el estatus de una orden de compra';
+    -- Solo validar si es una compra
+    IF NEW.fk_compra IS NOT NULL THEN
+        -- Obtener el ID del usuario actual desde la variable de sesión
+        -- Si no está definida, usar NULL (permitir la operación)
+        usuario_actual_id := NULLIF(current_setting('app.current_user_id', true), '')::INT;
+        
+        -- Si tenemos un usuario identificado, verificar su rol
+        IF usuario_actual_id IS NOT NULL THEN
+            -- Verificar si el usuario tiene el rol de jefe de compras
+            SELECT EXISTS (
+                SELECT 1
+                FROM usuario u
+                JOIN rol r ON r.clave = u.fk_rol
+                WHERE u.clave = usuario_actual_id
+                AND r.nombre = 'Jefe de Compras'
+            ) INTO es_jefe_compras;
+            
+            -- Si no es jefe de compras, lanzar excepción
+            IF NOT es_jefe_compras THEN
+                RAISE EXCEPTION 'Solo el jefe de compras puede cambiar el estatus de una orden de compra. Usuario actual: %', usuario_actual_id;
+            END IF;
+        END IF;
     END IF;
     
     RETURN NEW;
@@ -168,9 +186,7 @@ CREATE TRIGGER tr_validar_cambio_estatus_compra
 BEFORE INSERT OR UPDATE ON historico
 FOR EACH ROW
 EXECUTE FUNCTION validar_cambio_estatus_compra();
-
-
-
+*/
 
 -- Trigger para generar órdenes de reposición automáticas
 CREATE OR REPLACE FUNCTION generar_orden_reposicion()
@@ -202,7 +218,7 @@ BEGIN
         VALUES (v_almacen_id, NEW.clave, v_usuario_id, 100, CURRENT_DATE);  -- La cantidad a reponer debería definirse según la lógica de negocio
         
         -- Insertar el primer estado en histórico
-        INSERT INTO historico (fecha_inicio, fk_estatus, fk_reposicion)
+        INSERT INTO historico (fecha, fk_estatus, fk_reposicion)
         VALUES (CURRENT_DATE, 
                (SELECT clave FROM estatus WHERE estado = 'procesando' AND aplicable_a = 'reposicion' LIMIT 1),
                currval('reposicion_clave_seq'));
@@ -347,13 +363,13 @@ DECLARE
     fecha_entregado DATE;
 BEGIN
     -- Obtener la fecha cuando se marcó como entregado
-    SELECT h.fecha_inicio INTO fecha_entregado
+    SELECT h.fecha INTO fecha_entregado
     FROM historico h
     JOIN estatus e ON e.clave = h.fk_estatus
     WHERE h.fk_compra = NEW.fk_compra
     AND e.estado = 'entregado'
     AND e.aplicable_a = 'compra'
-    ORDER BY h.fecha_inicio DESC
+    ORDER BY h.fecha DESC
     LIMIT 1;
 
     -- Verificar que hayan pasado 15 días desde la entrega
@@ -388,6 +404,7 @@ RETURNS TRIGGER AS $$
 DECLARE
     v_cliente_id INT;
     v_puntos_usados INT;
+    v_puntos_disponibles INT;
     v_tasa_puntos DECIMAL;
 BEGIN
     -- Verificar si el método de pago es de tipo 'Puntos'
@@ -396,33 +413,68 @@ BEGIN
         WHERE clave = NEW.fk_metodo_de_pago 
         AND tipo = 'Puntos'
     ) THEN
-        -- Obtener el cliente de la venta
-        SELECT fk_cliente INTO v_cliente_id
-        FROM venta_tienda_fisica 
-        WHERE clave = NEW.fk_venta_tienda_fisica;
+        -- Obtener el cliente según el tipo de venta
+        IF NEW.fk_venta_tienda_fisica IS NOT NULL THEN
+            -- Venta física
+            SELECT fk_cliente INTO v_cliente_id
+            FROM venta_tienda_fisica 
+            WHERE clave = NEW.fk_venta_tienda_fisica;
+        ELSIF NEW.fk_venta_online IS NOT NULL THEN
+            -- Venta online - obtener cliente a través del usuario
+            SELECT c.clave INTO v_cliente_id
+            FROM venta_online vo
+            JOIN usuario u ON u.clave = vo.fk_usuario
+            JOIN cliente c ON c.clave = u.fk_cliente
+            WHERE vo.clave = NEW.fk_venta_online;
+        ELSIF NEW.fk_venta_evento IS NOT NULL THEN
+            -- Venta de evento - obtener cliente directamente (no tiene fk_usuario)
+            SELECT fk_cliente INTO v_cliente_id
+            FROM venta_evento 
+            WHERE clave = NEW.fk_venta_evento;
+        ELSIF NEW.fk_venta_entrada IS NOT NULL THEN
+            -- Venta de entrada - puede tener fk_cliente directo o fk_usuario
+            SELECT COALESCE(vent.fk_cliente, c.clave) INTO v_cliente_id
+            FROM venta_entrada vent
+            LEFT JOIN usuario u ON u.clave = vent.fk_usuario
+            LEFT JOIN cliente c ON c.clave = u.fk_cliente
+            WHERE vent.clave = NEW.fk_venta_entrada;
+        END IF;
+        
+        -- Verificar que se encontró el cliente
+        IF v_cliente_id IS NULL THEN
+            RAISE EXCEPTION 'No se encontró el cliente para la venta';
+        END IF;
         
         -- Obtener la tasa de cambio de puntos
         SELECT monto_equivalencia INTO v_tasa_puntos
         FROM tasa_cambio 
-        WHERE moneda = 'PUNTOS'
-        AND (fecha_fin IS NULL OR fecha_fin >= CURRENT_DATE)
-        ORDER BY fecha_inicio DESC 
-        LIMIT 1;
+        WHERE clave = NEW.fk_tasa_cambio;
         
-        -- Si no hay tasa de cambio, usar 1:1 como fallback
+        -- Verificar que se encontró la tasa de cambio
         IF v_tasa_puntos IS NULL THEN
-            v_tasa_puntos := 1;
+            RAISE EXCEPTION 'No se encontró la tasa de cambio para el pago';
         END IF;
         
-        -- Calcular puntos usados basado en el monto pagado
+        -- Calcular puntos necesarios
         v_puntos_usados := CEIL(NEW.monto_total / v_tasa_puntos);
+        
+        -- Obtener puntos disponibles del cliente
+        SELECT puntos_acumulados INTO v_puntos_disponibles
+        FROM cliente 
+        WHERE clave = v_cliente_id;
+        
+        -- Verificar que el cliente tenga suficientes puntos
+        IF v_puntos_disponibles < v_puntos_usados THEN
+            RAISE EXCEPTION 'Cliente ID % no tiene suficientes puntos. Necesita: %, Tiene disponible: %', 
+                v_cliente_id, v_puntos_usados, v_puntos_disponibles;
+        END IF;
         
         -- Descontar puntos del cliente
         UPDATE cliente 
         SET puntos_acumulados = puntos_acumulados - v_puntos_usados
         WHERE clave = v_cliente_id;
         
-        -- Log para debugging
+        -- Mostrar información del descuento (para debugging)
         RAISE NOTICE 'Puntos descontados: Cliente ID %, Puntos usados: %, Monto: %, Tasa: %', 
             v_cliente_id, v_puntos_usados, NEW.monto_total, v_tasa_puntos;
     END IF;

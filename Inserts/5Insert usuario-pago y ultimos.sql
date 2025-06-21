@@ -22,32 +22,32 @@ INSERT INTO venta_entrada (fecha, monto_total, fk_evento, fk_cliente, fk_usuario
 ('2025-06-25', 80.00, 4, 5, NULL),
 ('2025-06-26', 100.00, 5, NULL, 5);
 
-INSERT INTO venta_tienda_fisica (fecha, total_venta, fk_tienda_fisica, fk_cliente) VALUES
-('2025-06-17', 150.75, 1, 1),
-('2025-06-17', 230.00, 2, 2),
-('2025-06-18', 85.50, 3, 3),
-('2025-06-18', 310.20, 1, 4),
-('2025-06-19', 190.00, 2, 5),
-('2025-06-19', 65.40, 3, 1),
-('2025-06-20', 450.00, 1, 2),
-('2025-06-20', 120.00, 2, 3),
-('2025-06-21', 75.80, 3, 4),
-('2025-06-21', 200.00, 1, 5);
+INSERT INTO venta_tienda_fisica (clave, fecha, total_venta, fk_tienda_fisica, fk_cliente) VALUES
+(1,'2025-06-17', 150.75, 1, 1),
+(2,'2025-06-17', 230.00, 2, 2),
+(3,'2025-06-18', 85.50, 3, 3),
+(4,'2025-06-18', 310.20, 1, 4),
+(5,'2025-06-19', 190.00, 2, 5),
+(6,'2025-06-19', 65.40, 3, 1),
+(7,'2025-06-20', 450.00, 1, 2),
+(8,'2025-06-20', 120.00, 2, 3),
+(9,'2025-06-21', 75.80, 3, 4),
+(10,'2025-06-21', 200.00, 1, 5);
 
-INSERT INTO tienda_online (nombre, url_web) VALUES
-('Cervezas Venezuela Online', 'https://www.cervezasvenezuela.com');
+INSERT INTO tienda_online (clave, nombre, url_web) VALUES
+(1,'Cervezas Venezuela Online', 'https://www.cervezasvenezuela.com');
 
 INSERT INTO venta_online (clave, fecha, monto_total, direccion_envio, fk_lugar, fk_tienda_online, fk_usuario) VALUES
-(1, '2025-06-17', 250.50, 'Avenida Libertador, Edificio Sol, Apto 5A', 1013, 1, 1),
-(2, '2025-06-17', 120.00, 'Calle Real de Sabana Grande, Quinta La Pradera', 1297, 1, 2),
-(3, '2025-06-18', 300.75, 'Plaza Venezuela, Residencias Estudiantes, Piso 10', 470, 1, 3),
-(4, '2025-06-18', 80.25, 'Urbanización El Cafetal, Callejon Miranda, Casa 12', 1004, 1, 4),
-(5, '2025-06-19', 450.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local B', 548, 1, 5),
+(1, '2025-06-17', 250.50, 'Avenida Libertador, Edificio Sol, Apto 5A', 1013, 1, 6),
+(2, '2025-06-17', 120.00, 'Calle Real de Sabana Grande, Quinta La Pradera', 1297, 1, 6),
+(3, '2025-06-18', 300.75, 'Plaza Venezuela, Residencias Estudiantes, Piso 10', 470, 1, 6),
+(4, '2025-06-18', 80.25, 'Urbanización El Cafetal, Callejon Miranda, Casa 12', 1004, 1, 6),
+(5, '2025-06-19', 450.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local B', 548, 1, 6),
 (6, '2025-06-19', 180.90, 'El Paraíso, Calle Principal, Edificio Estrella', 715, 1, 6),
-(7, '2025-06-20', 95.00, 'La Candelaria, Esquina El Horno, Apartamento 3', 649, 1, 7),
-(8, '2025-06-20', 350.40, 'Chacao, Avenida Principal, Centro Comercial', 1004, 1, 8),
-(9, '2025-06-21', 500.00, 'Altamira, Calle Sur, Residencia El Ávila, PH', 548, 1, 9),
-(10, '2025-06-21', 65.70, 'San Bernardino, Av. La Estrella, Quinta Azul', 649, 1, 10);
+(7, '2025-06-20', 95.00, 'La Candelaria, Esquina El Horno, Apartamento 3', 649, 1, 6),
+(8, '2025-06-20', 350.40, 'Chacao, Avenida Principal, Centro Comercial', 1004, 1, 6),
+(9, '2025-06-21', 500.00, 'Altamira, Calle Sur, Residencia El Ávila, PH', 548, 1, 6),
+(10, '2025-06-21', 65.70, 'San Bernardino, Av. La Estrella, Quinta Azul', 649, 1, 6);
 
 INSERT INTO inventario_tienda (clave, fk_lugar_tienda, fk_presentacion, fk_tienda_fisica, cantidad) VALUES
 (1, 1, 1, 1, 150),
