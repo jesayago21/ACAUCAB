@@ -124,61 +124,60 @@ exports.deleteRole = async (req, res) => {
 
 
 exports.assignPrivilegesToRole = async (req, res) => {
-    const { rolClave } = req.params; // Usamos 'rolClave' para coincidir con el nombre de tu PK de rol
-    const { privilegiosClave } = req.body; // Un array de claves de privilegios (ej: [1, 5, 8])
+    const { rolClave } = req.params;
+    const { privilegiosClave } = req.body;
 
     // Validación básica
     if (!Array.isArray(privilegiosClave)) {
         return res.status(400).json({ message: 'El campo "privilegiosClave" debe ser un array de IDs de privilegios.' });
     }
 
-    const client = await pool.connect(); // Obtener un cliente del pool para una transacción
+    const client = await pool.connect();
     try {
-        await client.query('BEGIN'); // Iniciar la transacción
+        await client.query('BEGIN');
 
-        // 1. Opcional: Verificar si el rol existe
+        // 1. Verificar si el rol existe
         const roleExists = await client.query('SELECT 1 FROM rol WHERE clave = $1', [rolClave]);
         if (roleExists.rows.length === 0) {
-            await client.query('ROLLBACK'); // Deshacer la transacción si el rol no existe
+            await client.query('ROLLBACK');
             return res.status(404).json({ message: 'Rol no encontrado.' });
         }
 
         // 2. Eliminar todas las asignaciones de privilegios existentes para este rol
-        await client.query('DELETE FROM rol_privilegio WHERE rol_clave = $1', [rolClave]);
+        await client.query('DELETE FROM rol_pri WHERE fk_rol = $1', [rolClave]);
 
         // 3. Insertar los nuevos privilegios solo si el array no está vacío
         if (privilegiosClave.length > 0) {
             // Construir la parte VALUES de la consulta INSERT dinámicamente
-            const values = privilegiosClave.map((privilegioClave, index) => `($1, $${index + 2})`).join(',');
+            const values = privilegiosClave.map((privilegioClave, index) => `($1, $${index + 2}, CURRENT_DATE)`).join(',');
             const queryParams = [rolClave, ...privilegiosClave];
 
             await client.query(
-                `INSERT INTO rol_pri (rol_clave, privilegio_clave) VALUES ${values}`,
+                `INSERT INTO rol_pri (fk_rol, fk_privilegio, fecha) VALUES ${values}`,
                 queryParams
             );
         }
 
-        await client.query('COMMIT'); // Confirmar la transacción
+        await client.query('COMMIT');
         res.status(200).json({ message: 'Privilegios asignados al rol exitosamente.' });
 
     } catch (error) {
-        await client.query('ROLLBACK'); // En caso de error, deshacer la transacción
+        await client.query('ROLLBACK');
         console.error('Error asignando privilegios al rol:', error);
-        // Manejo de errores de clave foránea, si un privilegio_clave no existe
         if (error.code === '23503') { // foreign_key_violation
             return res.status(400).json({ message: 'Uno o más IDs de privilegios proporcionados no son válidos.' });
         }
         res.status(500).json({ message: 'Error interno del servidor al asignar privilegios.' });
     } finally {
-        client.release(); // Liberar el cliente de vuelta al pool
+        client.release();
     }
 };
 
 exports.getPrivilegesByRoleId = async (req, res) => {
-    const { rolClave } = req.params; // Usamos 'rolClave'
+    const { rolClave } = req.params;
 
     try {
-        // Opcional: Verificar si el rol existe
+        // Verificar si el rol existe
         const roleExists = await pool.query('SELECT 1 FROM rol WHERE clave = $1', [rolClave]);
         if (roleExists.rows.length === 0) {
             return res.status(404).json({ message: 'Rol no encontrado.' });
@@ -187,9 +186,9 @@ exports.getPrivilegesByRoleId = async (req, res) => {
         const result = await pool.query(
             `SELECT p.clave, p.nombre, p.descripcion
              FROM privilegio p
-             JOIN rol_privilegio rp ON p.clave = rp.privilegio_clave
-             WHERE rp.rol_clave = $1
-             ORDER BY p.nombre ASC`, // Ordenar por nombre del privilegio
+             JOIN rol_pri rp ON p.clave = rp.fk_privilegio
+             WHERE rp.fk_rol = $1
+             ORDER BY p.nombre ASC`,
             [rolClave]
         );
         res.status(200).json(result.rows);
