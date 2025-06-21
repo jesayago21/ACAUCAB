@@ -43,7 +43,7 @@ app.get('/', (req, res) => {
 /** Rutas de la API */
 app.use('/api/shop', shopRoutes);
 app.use('/api/roles', roleRoutes);
-app.use('/api/users',userRoutes);
+app.use('/api/users', userRoutes);
 // app.use('/api/privileges', privilegeRoutes); // Comentado temporalmente - archivo no existe 
 app.use('/api/clientes', clientRoutes);
 

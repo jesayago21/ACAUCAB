@@ -422,4 +422,51 @@ router.get('/municipios/:estadoId', clientController.getMunicipiosPorEstado);
  */
 router.get('/parroquias/:municipioId', clientController.getParroquiasPorMunicipio);
 
+/**
+ * @swagger
+ * /api/clientes/{clienteId}/puntos:
+ *   get:
+ *     summary: Obtener puntos actualizados de un cliente
+ *     description: Retorna los puntos acumulados actuales de un cliente específico
+ *     tags: [Clientes]
+ *     parameters:
+ *       - in: path
+ *         name: clienteId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID único del cliente
+ *     responses:
+ *       200:
+ *         description: Puntos del cliente obtenidos exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Puntos obtenidos exitosamente"
+ *                 found:
+ *                   type: boolean
+ *                   example: true
+ *                 cliente:
+ *                   type: object
+ *                   properties:
+ *                     clave:
+ *                       type: integer
+ *                       description: ID del cliente
+ *                     puntos_acumulados:
+ *                       type: integer
+ *                       description: Puntos acumulados actuales
+ *                       example: 150
+ *       400:
+ *         description: ID del cliente no proporcionado
+ *       404:
+ *         description: Cliente no encontrado
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get('/:clienteId/puntos', clientController.obtenerPuntosCliente);
+
 module.exports = router; 

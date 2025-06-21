@@ -283,6 +283,31 @@ const createVentaFisica = async (req, res) => {
     // Iniciar transacción
     await db.query('BEGIN');
 
+    // Validar puntos del cliente si hay pagos con puntos
+    const pagosConPuntos = metodos_pago.filter(mp => mp.tipo === 'Puntos');
+    if (pagosConPuntos.length > 0) {
+      // Obtener puntos actuales del cliente
+      const puntosClienteQuery = `
+        SELECT puntos_acumulados 
+        FROM cliente 
+        WHERE clave = $1;
+      `;
+      const puntosResult = await db.query(puntosClienteQuery, [cliente_id]);
+      
+      if (puntosResult.rows.length === 0) {
+        throw new Error('Cliente no encontrado');
+      }
+      
+      const puntosDisponibles = puntosResult.rows[0].puntos_acumulados || 0;
+      const totalPuntosNecesarios = pagosConPuntos.reduce((sum, mp) => {
+        return sum + (mp.detalles?.puntos_usados || 0);
+      }, 0);
+      
+      if (puntosDisponibles < totalPuntosNecesarios) {
+        throw new Error(`Puntos insuficientes. Disponibles: ${puntosDisponibles}, Necesarios: ${totalPuntosNecesarios}`);
+      }
+    }
+
     // 1. Crear la venta en venta_tienda_fisica
     const insertVentaQuery = `
       INSERT INTO venta_tienda_fisica (fecha, total_venta, fk_tienda_fisica, fk_cliente)
@@ -424,19 +449,8 @@ const createVentaFisica = async (req, res) => {
         ventaId
       ]);
 
-      // Si es pago con puntos, descontar los puntos usados del cliente
-      if (metodoPago.tipo === 'Puntos' && metodoPago.detalles?.puntos_usados) {
-        const updatePuntosUsadosQuery = `
-          UPDATE cliente 
-          SET puntos_acumulados = puntos_acumulados - $1 
-          WHERE clave = $2;
-        `;
-        
-        await db.query(updatePuntosUsadosQuery, [
-          metodoPago.detalles.puntos_usados,
-          cliente_id
-        ]);
-      }
+      // El trigger se encargará automáticamente de descontar los puntos
+      // cuando el método de pago sea de tipo 'Puntos'
     }
 
     // 4. Actualizar puntos del cliente (1 punto por producto)

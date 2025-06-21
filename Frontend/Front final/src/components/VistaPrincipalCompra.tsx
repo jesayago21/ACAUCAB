@@ -111,6 +111,11 @@ export default function VistaPrincipalCompra({
                 <p className="text-sm text-gray-600">
                   Cliente {cliente.tipo === 'natural' ? 'Natural' : 'Jurídico'} • {cliente.rif}
                 </p>
+                {cliente.puntos_acumulados !== undefined && cliente.puntos_acumulados > 0 && (
+                  <p className="text-sm text-green-600 font-medium mt-1">
+                    🎯 {cliente.puntos_acumulados} puntos disponibles
+                  </p>
+                )}
               </div>
             </div>
 
