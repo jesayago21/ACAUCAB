@@ -1,6 +1,7 @@
 {
   "name": "jsreport-server",
   "dependencies": {
-    "jsreport": "^4.9.0"
+    "jsreport": "^4.9.0",
+    "pg": "^8.16.2"
   }
 }

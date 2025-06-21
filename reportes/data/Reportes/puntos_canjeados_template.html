@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Puntos Canjeados - ACAUCAB</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #007bff;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: #6c757d;
+            font-size: 1.2em;
+        }
+
+        .report-info {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            text-align: center;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #495057;
+            font-size: 0.9em;
+            text-transform: uppercase;
+        }
+
+        .info-value {
+            font-size: 1.1em;
+            color: #007bff;
+            margin-top: 5px;
+        }
+
+        .summary-section {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .summary-item {
+            text-align: center;
+            padding: 15px;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
+
+        .summary-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .summary-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .section-title {
+            color: #007bff;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        tr:hover {
+            background-color: #e3f2fd;
+        }
+
+        .amount {
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-natural {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .badge-juridico {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        @media print {
+            body {
+                background-color: white;
+            }
+            .container {
+                box-shadow: none;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>ACAUCAB</h1>
+            <div class="subtitle">Reporte de Puntos de Fidelidad Canjeados</div>
+        </div>
+
+        <!-- Información del Reporte -->
+        <div class="report-info">
+            <div class="info-item">
+                <div class="info-label">Período</div>
+                <div class="info-value">{{fechaInicio}} - {{fechaFin}}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Fecha de Generación</div>
+                <div class="info-value">{{fechaGeneracion}}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Hora de Generación</div>
+                <div class="info-value">{{horaGeneracion}}</div>
+            </div>
+        </div>
+
+        <!-- Resumen General -->
+        {{#if resumen}}
+        <div class="summary-section">
+            <h2 class="section-title" style="color: white; border-bottom-color: rgba(255,255,255,0.3);">Resumen General</h2>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-value">{{resumen.total_clientes_afiliados}}</div>
+                    <div class="summary-label">Clientes Afiliados</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value">{{resumen.total_pagos_puntos}}</div>
+                    <div class="summary-label">Pagos con Puntos</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value">{{resumen.total_puntos_canjeados}}</div>
+                    <div class="summary-label">Puntos Canjeados</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value">Bs. {{resumen.total_bolivares}}</div>
+                    <div class="summary-label">Valor Total</div>
+                </div>
+            </div>
+        </div>
+        {{/if}}
+
+        <!-- Resumen por Tipo de Cliente -->
+        {{#if porTipo}}
+        <h2 class="section-title">Resumen por Tipo de Cliente</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tipo de Cliente</th>
+                        <th class="center">Cantidad de Clientes</th>
+                        <th class="center">Puntos Canjeados</th>
+                        <th class="amount">Valor en Bolívares</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each porTipo}}
+                    <tr>
+                        <td>
+                            <span class="badge badge-{{tipo_cliente}}">{{tipo_cliente_formatted}}</span>
+                        </td>
+                        <td class="center">{{cantidad_clientes}}</td>
+                        <td class="center">{{total_puntos_canjeados}}</td>
+                        <td class="amount">Bs. {{total_bolivares}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+        {{/if}}
+
+        <!-- Detalle por Cliente -->
+        <h2 class="section-title">Detalle por Cliente</h2>
+        {{#if detalle}}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>RIF</th>
+                        <th>Cliente</th>
+                        <th>Tipo</th>
+                        <th class="center">Pagos</th>
+                        <th class="center">Puntos Canjeados</th>
+                        <th class="amount">Valor en Bolívares</th>
+                        <th class="center">Primera Fecha</th>
+                        <th class="center">Última Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each detalle}}
+                    <tr>
+                        <td>{{rif}}</td>
+                        <td>{{cliente}}</td>
+                        <td>
+                            <span class="badge badge-{{tipo_cliente}}">
+                                {{#if (eq tipo_cliente 'natural')}}
+                                    Natural
+                                {{else}}
+                                    Jurídico
+                                {{/if}}
+                            </span>
+                        </td>
+                        <td class="center">{{cantidad_pagos_puntos}}</td>
+                        <td class="center">{{total_puntos_canjeados}}</td>
+                        <td class="amount">Bs. {{total_bolivares}}</td>
+                        <td class="center">{{primera_fecha_pago}}</td>
+                        <td class="center">{{ultima_fecha_pago}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+        {{else}}
+        <div class="no-data">
+            <h3>No se encontraron datos</h3>
+            <p>No hay registros de puntos canjeados para el período especificado.</p>
+        </div>
+        {{/if}}
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>Reporte generado automáticamente por el sistema ACAUCAB</p>
+            <p>© 2024 ACAUCAB - Todos los derechos reservados</p>
+        </div>
+    </div>
+</body>
+</html> 

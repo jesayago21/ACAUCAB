@@ -38,6 +38,15 @@
     },
     "sample-template": {
       "createSamples": true
+    },
+    "data": {
+      "useExtensionsConnection": true,
+      "extensions": {
+        "postgres": {
+          "connectionString": "postgres://grupo7:123456@localhost:5432/grupo7",
+          "ssl": false
+        }
+      }
     }
   }
 }

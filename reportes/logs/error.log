@@ -21,3 +21,26 @@ For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides
   at async C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\reporter.js:233:24
   at async processAndResponse (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\advanced-workers\lib\workerHandler.js:42:17) rootId=kddrs60j8kp1t25, id=kddrs60j8kp1t25
 2025-06-21T16:07:22.668Z - error: Rendering request 3 finished with error in 243 ms rootId=kddrs60j8kp1t25, id=kddrs60j8kp1t25
+2025-06-21T17:59:58.515Z - error: Error when processing render request 2
+(because) could not find Chrome (ver. 136.0.7103.49). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome`) or
+ 2. your cache path is incorrectly configured (which is: C:\Users\Sebastián Cova\.cache\puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+Error: Could not find Chrome (ver. 136.0.7103.49). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome`) or
+ 2. your cache path is incorrectly configured (which is: C:\Users\Sebastián Cova\.cache\puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+  at ChromeLauncher.resolveExecutablePath (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\puppeteer-core\lib\cjs\puppeteer\node\BrowserLauncher.js:308:27)
+  at ChromeLauncher.computeLaunchArguments (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\puppeteer-core\lib\cjs\puppeteer\node\ChromeLauncher.js:93:24)
+  at async ChromeLauncher.launch (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\puppeteer-core\lib\cjs\puppeteer\node\BrowserLauncher.js:84:28)
+  at async createBrowser (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-chrome-pdf\lib\chromePoolStrategy.js:115:26)
+  at async allocateBrowser (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-chrome-pdf\lib\chromePoolStrategy.js:130:5)
+  at async getBrowser (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-chrome-pdf\lib\chromePoolStrategy.js:33:30)
+  at async module.exports (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-chrome-pdf\lib\conversion.js:11:19)
+  at async execute (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-chrome-pdf\lib\chromePoolStrategy.js:30:22)
+  at async C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-chrome-pdf\lib\lazyRecipe.js:58:20
+  at async invokeRender (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\render\render.js:93:5)
+  at async WorkerReporter._render (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\render\render.js:148:7)
+  at async C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\reporter.js:233:24
+  at async processAndResponse (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\advanced-workers\lib\workerHandler.js:42:17) rootId=ebogi45bsevewck, id=ebogi45bsevewck
+2025-06-21T17:59:58.515Z - error: Rendering request 2 finished with error in 1003 ms rootId=ebogi45bsevewck, id=ebogi45bsevewck
