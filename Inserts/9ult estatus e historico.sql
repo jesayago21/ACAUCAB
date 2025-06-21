@@ -1,174 +1,170 @@
 -- ========= INSERTS PARA ESTATUS DE COMPRAS DE MERCANCÍA =========
-INSERT INTO estatus (estado, aplicable_a) VALUES ('Generada', 'compra');
-INSERT INTO estatus (estado, aplicable_a) VALUES ('Aprobada', 'compra');
-INSERT INTO estatus (estado, aplicable_a) VALUES ('Enviada a Proveedor', 'compra');
-INSERT INTO estatus (estado, aplicable_a) VALUES ('Aceptada por proveedor', 'compra');
-INSERT INTO estatus (estado, aplicable_a) VALUES ('Recibida', 'compra');
-INSERT INTO estatus (estado, aplicable_a) VALUES ('Pagada', 'compra');
+-- Estados permitidos por el trigger: procesando, listo para entrega, entregado
+INSERT INTO estatus (clave, estado, aplicable_a) VALUES (1, 'procesando', 'compra');
+INSERT INTO estatus (clave, estado, aplicable_a) VALUES (2, 'listo para entrega', 'compra');
+INSERT INTO estatus (clave, estado, aplicable_a) VALUES (3, 'entregado', 'compra');
 
 -- ========= INSERTS PARA ESTATUS DE CUOTAS DE AFILIACIÓN =========
-INSERT INTO estatus (estado, aplicable_a) VALUES ('Pendiente de Pago', 'cuota');
-INSERT INTO estatus (estado, aplicable_a) VALUES ('Pagada', 'cuota');
-INSERT INTO estatus (estado, aplicable_a) VALUES ('Vencida', 'cuota');
+-- Estados permitidos por el trigger: por pagar, pagado, vencido
+INSERT INTO estatus (clave, estado, aplicable_a) VALUES (4, 'por pagar', 'cuota');
+INSERT INTO estatus (clave, estado, aplicable_a) VALUES (5, 'pagado', 'cuota');
+INSERT INTO estatus (clave, estado, aplicable_a) VALUES (6, 'vencido', 'cuota');
 
 -- ========= INSERTS PARA ESTATUS DE VENTAS ONLINE =========
-INSERT INTO estatus (estado, aplicable_a) VALUES ('Procesando', 'venta online');
-INSERT INTO estatus (estado, aplicable_a) VALUES ('Listo para la Entrega', 'venta online');
-INSERT INTO estatus (estado, aplicable_a) VALUES ('Entregado', 'venta online');
+-- Estados permitidos por el trigger: procesando, listo para entrega, entregado
+INSERT INTO estatus (clave, estado, aplicable_a) VALUES (7, 'procesando', 'venta online');
+INSERT INTO estatus (clave, estado, aplicable_a) VALUES (8, 'listo para entrega', 'venta online');
+INSERT INTO estatus (clave, estado, aplicable_a) VALUES (9, 'entregado', 'venta online');
 
 -- ========= INSERTS PARA ESTATUS DE REPOSICIÓN EN ESTANTES =========
-INSERT INTO estatus (estado, aplicable_a) VALUES ('Reposición Requerida', 'reposicion');
-INSERT INTO estatus (estado, aplicable_a) VALUES ('En Proceso', 'reposicion');
-INSERT INTO estatus (estado, aplicable_a) VALUES ('Completada', 'reposicion');
+-- Estados permitidos por el trigger: procesando, listo para entrega, entregado
+INSERT INTO estatus (clave, estado, aplicable_a) VALUES (10, 'procesando', 'reposicion');
+INSERT INTO estatus (clave, estado, aplicable_a) VALUES (11, 'listo para entrega', 'reposicion');
+INSERT INTO estatus (clave, estado, aplicable_a) VALUES (12, 'entregado', 'reposicion');
 
+-- ===================================================================================
+-- ACTUALIZACIÓN DE PUNTOS DE CLIENTES (ANTES DE LOS PAGOS)
+-- ===================================================================================
+
+-- Actualizar puntos de algunos clientes para permitir pagos con puntos
+UPDATE cliente SET puntos_acumulados = 100 WHERE clave = 1; -- Cliente 1 ahora tiene 100 puntos
+UPDATE cliente SET puntos_acumulados = 50 WHERE clave = 3;  -- Cliente 3 ahora tiene 50 puntos
+UPDATE cliente SET puntos_acumulados = 25 WHERE clave = 5;  -- Cliente 5 ahora tiene 25 puntos (necesita 19 para 189.45)
 
 -- =================================================================
 -- INSERCIÓN DE DATOS EN LA TABLA 'historico'
 -- Se simulan los ciclos de vida de diferentes entidades (Ventas, Compras, etc.)
 -- basándose en las reglas de negocio y los estatus definidos.
 -- =================================================================
+
 -- ===================================================================================
 -- BLOQUE 1: HISTORIAL COMPLETO PARA 5 VENTAS ONLINE
 -- Se simula el ciclo de vida de 5 ventas, cumpliendo la regla de < 2 horas
--- para pasar de 'Procesando' a 'Listo para la Entrega'.
+-- para pasar de 'procesando' a 'listo para entrega'.
 -- ===================================================================================
 
 -- Historia para Venta Online con clave = 1
 INSERT INTO historico (fecha, fk_estatus, fk_venta_online) VALUES
-('2025-06-17 10:00:00', 10, 1), -- Estatus 10: Procesando
-('2025-06-17 11:30:15', 11, 1), -- Estatus 11: Listo para la Entrega (dentro de las 2 horas)
-('2025-06-17 16:45:00', 12, 1); -- Estatus 12: Entregado
+('2025-06-17 10:00:00', 7, 1), -- Estatus 7: procesando
+('2025-06-17 11:30:15', 8, 1), -- Estatus 8: listo para entrega (dentro de las 2 horas)
+('2025-06-17 16:45:00', 9, 1); -- Estatus 9: entregado
 
 -- Historia para Venta Online con clave = 2
 INSERT INTO historico (fecha, fk_estatus, fk_venta_online) VALUES
-('2025-06-17 14:05:00', 10, 2), -- Estatus 10: Procesando
-('2025-06-17 15:50:00', 11, 2), -- Estatus 11: Listo para la Entrega (dentro de las 2 horas)
-('2025-06-18 11:00:00', 12, 2); -- Estatus 12: Entregado al día siguiente
+('2025-06-17 14:05:00', 7, 2), -- Estatus 7: procesando
+('2025-06-17 15:50:00', 8, 2), -- Estatus 8: listo para entrega (dentro de las 2 horas)
+('2025-06-18 11:00:00', 9, 2); -- Estatus 9: entregado al día siguiente
 
 -- Historia para Venta Online con clave = 3
 INSERT INTO historico (fecha, fk_estatus, fk_venta_online) VALUES
-('2025-06-18 09:00:00', 10, 3), -- Estatus 10: Procesando
-('2025-06-18 09:45:30', 11, 3), -- Estatus 11: Listo para la Entrega (procesamiento rápido)
-('2025-06-18 15:20:00', 12, 3); -- Estatus 12: Entregado
+('2025-06-18 09:00:00', 7, 3), -- Estatus 7: procesando
+('2025-06-18 09:45:30', 8, 3), -- Estatus 8: listo para entrega (procesamiento rápido)
+('2025-06-18 15:20:00', 9, 3); -- Estatus 9: entregado
 
 -- Historia para Venta Online con clave = 4 (Esta venta quedará 'Lista para Entrega' pero no 'Entregada')
 INSERT INTO historico (fecha, fk_estatus, fk_venta_online) VALUES
-('2025-06-18 18:10:00', 10, 4), -- Estatus 10: Procesando
-('2025-06-18 19:55:00', 11, 4); -- Estatus 11: Listo para la Entrega (aún pendiente de despacho final)
+('2025-06-18 18:10:00', 7, 4), -- Estatus 7: procesando
+('2025-06-18 19:55:00', 8, 4); -- Estatus 8: listo para entrega (aún pendiente de despacho final)
 
 -- Historia para Venta Online con clave = 5
 INSERT INTO historico (fecha, fk_estatus, fk_venta_online) VALUES
-('2025-06-19 13:00:00', 10, 5), -- Estatus 10: Procesando
-('2025-06-19 14:59:00', 11, 5), -- Estatus 11: Listo para la Entrega (justo a tiempo)
-('2025-06-19 19:00:00', 12, 5); -- Estatus 12: Entregado al final del día
-
+('2025-06-19 13:00:00', 7, 5), -- Estatus 7: procesando
+('2025-06-19 14:59:00', 8, 5), -- Estatus 8: listo para entrega (justo a tiempo)
+('2025-06-19 19:00:00', 9, 5); -- Estatus 9: entregado al final del día
 
 -- ===================================================================================
 -- BLOQUE 2: HISTORIAL PARA 5 ÓRDENES DE COMPRA A PROVEEDORES
--- Se simula el ciclo de vida de 5 compras, cumpliendo la regla de pagar
--- 15 días DESPUÉS de haber 'Recibido' la mercancía.
+-- Se simula el ciclo de vida de 5 compras usando los estados correctos del trigger
 -- ===================================================================================
 
 -- Historia para Compra con clave = 1 (Ciclo completo)
 INSERT INTO historico (fecha, fk_estatus, fk_compra) VALUES
-('2023-01-10 10:00:00', 1, 1), -- Estatus 1: Generada
-('2023-01-11 09:30:00', 2, 1), -- Estatus 2: Aprobada
-('2023-01-11 09:35:00', 3, 1), -- Estatus 3: Enviada a Proveedor
-('2023-01-25 14:00:00', 5, 1), -- Estatus 5: Recibida
-('2023-02-09 11:00:00', 6, 1); -- Estatus 6: Pagada (15 días después de la recepción del 25/01)
+('2023-01-10 10:00:00', 1, 1), -- Estatus 1: procesando
+('2023-01-25 14:00:00', 2, 1), -- Estatus 2: listo para entrega
+('2023-02-09 11:00:00', 3, 1); -- Estatus 3: entregado
 
 -- Historia para Compra con clave = 2 (Ciclo completo)
 INSERT INTO historico (fecha, fk_estatus, fk_compra) VALUES
-('2023-02-15 11:00:00', 1, 2), -- Estatus 1: Generada
-('2023-02-16 10:00:00', 2, 2), -- Estatus 2: Aprobada
-('2023-02-16 10:10:00', 3, 2), -- Estatus 3: Enviada a Proveedor
-('2023-03-02 16:30:00', 5, 2), -- Estatus 5: Recibida
-('2023-03-17 15:00:00', 6, 2); -- Estatus 6: Pagada (15 días después de la recepción del 02/03)
+('2023-02-15 11:00:00', 1, 2), -- Estatus 1: procesando
+('2023-03-02 16:30:00', 2, 2), -- Estatus 2: listo para entrega
+('2023-03-17 15:00:00', 3, 2); -- Estatus 3: entregado
 
--- Historia para Compra con clave = 3 (Quedará como 'Recibida' pero pendiente de pago)
+-- Historia para Compra con clave = 3 (Quedará como 'Listo para entrega' pero pendiente de entrega)
 INSERT INTO historico (fecha, fk_estatus, fk_compra) VALUES
-('2023-03-20 14:00:00', 1, 3), -- Estatus 1: Generada
-('2023-03-21 11:00:00', 2, 3), -- Estatus 2: Aprobada
-('2023-03-21 11:05:00', 3, 3), -- Estatus 3: Enviada a Proveedor
-('2023-04-05 12:00:00', 5, 3); -- Estatus 5: Recibida (el pago estaría pautado para el 20/04)
+('2023-03-20 14:00:00', 1, 3), -- Estatus 1: procesando
+('2023-04-05 12:00:00', 2, 3); -- Estatus 2: listo para entrega
 
--- Historia para Compra con clave = 4 (Quedará como 'Enviada' pero no recibida)
+-- Historia para Compra con clave = 4 (Quedará como 'Procesando')
 INSERT INTO historico (fecha, fk_estatus, fk_compra) VALUES
-('2023-04-05 15:00:00', 1, 4), -- Estatus 1: Generada
-('2023-04-06 16:00:00', 2, 4), -- Estatus 2: Aprobada
-('2023-04-06 16:05:00', 3, 4); -- Estatus 3: Enviada a Proveedor (aún en tránsito)
+('2023-04-05 15:00:00', 1, 4); -- Estatus 1: procesando
 
 -- Historia para Compra con clave = 5 (Ciclo completo)
 INSERT INTO historico (fecha, fk_estatus, fk_compra) VALUES
-('2023-05-12 09:00:00', 1, 5), -- Estatus 1: Generada
-('2023-05-15 10:30:00', 2, 5), -- Estatus 2: Aprobada (después del fin de semana)
-('2023-05-15 10:32:00', 3, 5), -- Estatus 3: Enviada a Proveedor
-('2023-05-30 11:45:00', 5, 5), -- Estatus 5: Recibida
-('2023-06-14 14:00:00', 6, 5); -- Estatus 6: Pagada (15 días después de la recepción del 30/05)
+('2023-05-12 09:00:00', 1, 5), -- Estatus 1: procesando
+('2023-05-30 11:45:00', 2, 5), -- Estatus 2: listo para entrega
+('2023-06-14 14:00:00', 3, 5); -- Estatus 3: entregado
 
 -- ===================================================================================
--- BLOQUE 1: HISTORIAL PARA 5 ÓRDENES DE REPOSICIÓN
--- Se simula el ciclo de vida de las órdenes de reposición para los anaqueles.
+-- BLOQUE 3: HISTORIAL PARA 5 ÓRDENES DE REPOSICIÓN
+-- Se simula el ciclo de vida de las órdenes de reposición usando los estados correctos
 -- ===================================================================================
 
 -- Historia para Reposición con clave = 1 (Ciclo completo y rápido)
 INSERT INTO historico (fecha, fk_estatus, fk_reposicion) VALUES
-('2025-06-10 09:00:00', 13, 1), -- Estatus 13: Reposición Requerida (notificación al jefe de pasillo)
-('2025-06-10 09:15:00', 14, 1), -- Estatus 14: En Proceso (el jefe aprueba y se inicia la tarea)
-('2025-06-10 10:00:00', 15, 1); -- Estatus 15: Completada (el producto ya está en el anaquel)
+('2025-06-10 09:00:00', 10, 1), -- Estatus 10: procesando
+('2025-06-10 09:15:00', 11, 1), -- Estatus 11: listo para entrega
+('2025-06-10 10:00:00', 12, 1); -- Estatus 12: entregado
 
 -- Historia para Reposición con clave = 2 (Ciclo completo, un poco más lento)
 INSERT INTO historico (fecha, fk_estatus, fk_reposicion) VALUES
-('2025-06-11 14:00:00', 13, 2), -- Estatus 13: Reposición Requerida
-('2025-06-11 16:30:00', 14, 2), -- Estatus 14: En Proceso
-('2025-06-11 17:15:00', 15, 2); -- Estatus 15: Completada
+('2025-06-11 14:00:00', 10, 2), -- Estatus 10: procesando
+('2025-06-11 16:30:00', 11, 2), -- Estatus 11: listo para entrega
+('2025-06-11 17:15:00', 12, 2); -- Estatus 12: entregado
 
--- Historia para Reposición con clave = 3 (Queda 'En Proceso')
+-- Historia para Reposición con clave = 3 (Queda 'Listo para entrega')
 INSERT INTO historico (fecha, fk_estatus, fk_reposicion) VALUES
-('2025-06-12 08:30:00', 13, 3), -- Estatus 13: Reposición Requerida
-('2025-06-12 08:40:00', 14, 3); -- Estatus 14: En Proceso (la tarea aún no ha finalizado)
+('2025-06-12 08:30:00', 10, 3), -- Estatus 10: procesando
+('2025-06-12 08:40:00', 11, 3); -- Estatus 11: listo para entrega
 
--- Historia para Reposición con clave = 4 (Queda 'Requerida', pendiente de acción)
+-- Historia para Reposición con clave = 4 (Queda 'Procesando', pendiente de acción)
 INSERT INTO historico (fecha, fk_estatus, fk_reposicion) VALUES
-('2025-06-13 11:00:00', 13, 4); -- Estatus 13: Reposición Requerida (el jefe de pasillo aún no ha aprobado)
+('2025-06-13 11:00:00', 10, 4); -- Estatus 10: procesando
 
 -- Historia para Reposición con clave = 5 (Ciclo completo)
 INSERT INTO historico (fecha, fk_estatus, fk_reposicion) VALUES
-('2025-06-14 13:00:00', 13, 5), -- Estatus 13: Reposición Requerida
-('2025-06-14 13:05:00', 14, 5), -- Estatus 14: En Proceso
-('2025-06-14 13:45:00', 15, 5); -- Estatus 15: Completada
-
+('2025-06-14 13:00:00', 10, 5), -- Estatus 10: procesando
+('2025-06-14 13:05:00', 11, 5), -- Estatus 11: listo para entrega
+('2025-06-14 13:45:00', 12, 5); -- Estatus 12: entregado
 
 -- ===================================================================================
--- BLOQUE 2: HISTORIAL PARA 5 CUOTAS DE AFILIACIÓN
+-- BLOQUE 4: HISTORIAL PARA 5 CUOTAS DE AFILIACIÓN
 -- Se simulan diferentes escenarios de pago para las cuotas de los miembros.
 -- Todas las cuotas se generan en Junio de 2025.
 -- ===================================================================================
 
 -- Historia para Cuota con clave = 1 (Pagada a tiempo)
 INSERT INTO historico (fecha, fk_estatus, fk_cuota) VALUES
-('2025-06-01 00:00:01', 7, 1), -- Estatus 7: Pendiente de Pago (al momento de generarse)
-('2025-06-05 10:30:00', 8, 1); -- Estatus 8: Pagada (dentro del mes)
+('2025-06-01 00:00:01', 4, 1), -- Estatus 4: por pagar (al momento de generarse)
+('2025-06-05 10:30:00', 5, 1); -- Estatus 5: pagado (dentro del mes)
 
 -- Historia para Cuota con clave = 2 (Pagada casi al final del mes)
 INSERT INTO historico (fecha, fk_estatus, fk_cuota) VALUES
-('2025-06-02 00:00:01', 7, 2), -- Estatus 7: Pendiente de Pago
-('2025-06-28 15:00:00', 8, 2); -- Estatus 8: Pagada
+('2025-06-02 00:00:01', 4, 2), -- Estatus 4: por pagar
+('2025-06-28 15:00:00', 5, 2); -- Estatus 5: pagado
 
 -- Historia para Cuota con clave = 3 (Cuota que se venció)
 INSERT INTO historico (fecha, fk_estatus, fk_cuota) VALUES
-('2025-06-03 00:00:01', 7, 3), -- Estatus 7: Pendiente de Pago
-('2025-07-01 00:00:01', 9, 3); -- Estatus 9: Vencida (al pasar al siguiente mes sin ser pagada)
+('2025-06-03 00:00:01', 4, 3), -- Estatus 4: por pagar
+('2025-07-01 00:00:01', 6, 3); -- Estatus 6: vencido (al pasar al siguiente mes sin ser pagada)
 
 -- Historia para Cuota con clave = 4 (Pagada a tiempo)
 INSERT INTO historico (fecha, fk_estatus, fk_cuota) VALUES
-('2025-06-04 00:00:01', 7, 4), -- Estatus 7: Pendiente de Pago
-('2025-06-10 11:45:00', 8, 4); -- Estatus 8: Pagada
+('2025-06-04 00:00:01', 4, 4), -- Estatus 4: por pagar
+('2025-06-10 11:45:00', 5, 4); -- Estatus 5: pagado
 
 -- Historia para Cuota con clave = 5 (Aún está pendiente de pago)
 INSERT INTO historico (fecha, fk_estatus, fk_cuota) VALUES
-('2025-06-05 00:00:01', 7, 5); -- Estatus 7: Pendiente de Pago (es el único estado que tiene hasta ahora)
-
+('2025-06-05 00:00:01', 4, 5); -- Estatus 4: por pagar (es el único estado que tiene hasta ahora)
 
 -- ===================================================================================
 -- BLOQUE 1: PAGOS PARA VENTAS ONLINE (5 registros)
@@ -202,10 +198,6 @@ INSERT INTO pago (fecha_pago, monto_total, fk_tasa_cambio, fk_metodo_de_pago, fk
 -- Se usan diversos métodos de pago.
 -- ===================================================================================
 
--- Pago para Venta Física 1 (Monto: 150.75) con Efectivo
-INSERT INTO pago (fecha_pago, monto_total, fk_tasa_cambio, fk_metodo_de_pago, fk_venta_tienda_fisica) VALUES
-('2025-06-17', 150.75, 1, 1, 1); -- Método 1: Efectivo
-
 -- Pago para Venta Física 3 (Monto: 85.50) con Tarjeta de Débito
 INSERT INTO pago (fecha_pago, monto_total, fk_tasa_cambio, fk_metodo_de_pago, fk_venta_tienda_fisica) VALUES
 ('2025-06-18', 85.50, 2, 4, 3); -- Método 4: Tarjeta de débito
@@ -214,9 +206,9 @@ INSERT INTO pago (fecha_pago, monto_total, fk_tasa_cambio, fk_metodo_de_pago, fk
 INSERT INTO pago (fecha_pago, monto_total, fk_tasa_cambio, fk_metodo_de_pago, fk_venta_tienda_fisica) VALUES
 ('2025-06-19', 190.00, 3, 3, 5); -- Método 3: Cheque
 
--- Pago para Venta Física 7 (Monto: 450.00) con Puntos
+-- Pago para Venta Física 7 (Monto: 450.00) con Efectivo (cambiado de Puntos porque el cliente no tiene suficientes puntos)
 INSERT INTO pago (fecha_pago, monto_total, fk_tasa_cambio, fk_metodo_de_pago, fk_venta_tienda_fisica) VALUES
-('2025-06-20', 450.00, 4, 5, 7); -- Método 5: Puntos
+('2025-06-20', 450.00, 4, 1, 7); -- Método 1: Efectivo (cambiado de 5: Puntos)
 
 -- Pago para Venta Física 10 (Monto: 200.00) con Tarjeta de Crédito
 INSERT INTO pago (fecha_pago, monto_total, fk_tasa_cambio, fk_metodo_de_pago, fk_venta_tienda_fisica) VALUES
@@ -299,85 +291,101 @@ INSERT INTO pago (fecha_pago, monto_total, fk_tasa_cambio, fk_metodo_de_pago, fk
 ('2025-06-21', 90.75, 5, 5, 5);
 
 -- ===================================================================================
--- Historico de ordenes de compra 
+-- Historico de ventas online (CORREGIDO: usando estatus correctos para ventas online)
+-- Estatus 7: procesando, Estatus 8: listo para entrega, Estatus 9: entregado
+-- ===================================================================================
+
+-- Historico para ventas online 11-90 (todas en estado 'procesando')
 INSERT INTO historico (fecha, fk_estatus, fk_venta_online) VALUES
-('2025-06-20 10:00:00', 10, 11),
-('2025-06-20 10:00:00', 10, 12),
-('2025-06-21 10:00:00', 10, 13),
-('2025-06-21 10:00:00', 10, 14),
-('2025-06-22 10:00:00', 10, 15),
-('2025-06-22 10:00:00', 10, 16),
-('2025-06-23 10:00:00', 10, 17),
-('2025-06-23 10:00:00', 10, 18),
-('2025-06-24 10:00:00', 10, 19),
-('2025-06-24 10:00:00', 10, 20),
-('2025-07-20 10:00:00', 10, 21),
-('2025-07-20 10:00:00', 10, 22),
-('2025-07-21 10:00:00', 10, 23),
-('2025-07-21 10:00:00', 10, 24),
-('2025-07-22 10:00:00', 10, 25),
-('2025-07-22 10:00:00', 10, 26),
-('2025-07-23 10:00:00', 10, 27),
-('2025-07-23 10:00:00', 10, 28),
-('2025-07-24 10:00:00', 10, 29),
-('2025-07-24 10:00:00', 10, 30),
-('2025-08-20 10:00:00', 10, 31),
-('2025-08-20 10:00:00', 10, 32),
-('2025-08-21 10:00:00', 10, 33),
-('2025-08-21 10:00:00', 10, 34),
-('2025-08-22 10:00:00', 10, 35),
-('2025-08-22 10:00:00', 10, 36),
-('2025-08-23 10:00:00', 10, 37),
-('2025-08-23 10:00:00', 10, 38),
-('2025-08-24 10:00:00', 10, 39),
-('2025-08-24 10:00:00', 10, 40),
-('2025-08-20 10:00:00', 10, 41),
-('2025-08-20 10:00:00', 10, 42),
-('2025-08-21 10:00:00', 10, 43),
-('2025-08-21 10:00:00', 10, 44),
-('2025-09-22 10:00:00', 10, 45),
-('2025-09-22 10:00:00', 10, 46),
-('2025-09-23 10:00:00', 10, 47),
-('2025-09-23 10:00:00', 10, 48),
-('2025-09-24 10:00:00', 10, 49),
-('2025-09-24 10:00:00', 10, 50),
-('2025-09-20 10:00:00', 10, 51),
-('2025-09-20 10:00:00', 10, 52),
-('2025-09-21 10:00:00', 10, 53),
-('2025-09-21 10:00:00', 10, 54),
-('2025-09-22 10:00:00', 10, 55),
-('2025-09-22 10:00:00', 10, 56),
-('2025-10-23 10:00:00', 10, 57),
-('2025-10-23 10:00:00', 10, 58),
-('2025-10-24 10:00:00', 10, 59),
-('2025-10-24 10:00:00', 10, 60),
-('2025-10-20 10:00:00', 10, 61),
-('2025-10-20 10:00:00', 10, 62),
-('2025-10-21 10:00:00', 10, 63),
-('2025-10-21 10:00:00', 10, 64),
-('2025-10-22 10:00:00', 10, 65),
-('2025-10-22 10:00:00', 10, 66),
-('2025-10-23 10:00:00', 10, 67),
-('2025-10-23 10:00:00', 10, 68),
-('2025-10-24 10:00:00', 10, 69),
-('2025-10-24 10:00:00', 10, 70),
-('2025-11-20 10:00:00', 10, 71),
-('2025-11-20 10:00:00', 10, 72),
-('2025-11-21 10:00:00', 10, 73),
-('2025-11-21 10:00:00', 10, 74),
-('2025-11-22 10:00:00', 10, 75),
-('2025-11-22 10:00:00', 10, 76),
-('2025-11-23 10:00:00', 10, 77),
-('2025-11-23 10:00:00', 10, 78),
-('2025-11-24 10:00:00', 10, 79),
-('2025-11-24 10:00:00', 10, 80),
-('2025-12-20 10:00:00', 10, 81),
-('2025-12-20 10:00:00', 10, 82),
-('2025-12-21 10:00:00', 10, 83),
-('2025-12-21 10:00:00', 10, 84),
-('2025-12-22 10:00:00', 10, 85),
-('2025-12-22 10:00:00', 10, 86),
-('2025-12-23 10:00:00', 10, 87),
-('2025-12-23 10:00:00', 10, 88),
-('2025-12-24 10:00:00', 10, 89),
-('2025-12-24 10:00:00', 10, 90);
+('2025-06-20 10:00:00', 7, 11), -- Estatus 7: procesando para venta online
+('2025-06-20 10:00:00', 7, 12), -- Estatus 7: procesando para venta online
+('2025-06-21 10:00:00', 7, 13), -- Estatus 7: procesando para venta online
+('2025-06-21 10:00:00', 7, 14), -- Estatus 7: procesando para venta online
+('2025-06-22 10:00:00', 7, 15), -- Estatus 7: procesando para venta online
+('2025-06-22 10:00:00', 7, 16), -- Estatus 7: procesando para venta online
+('2025-06-23 10:00:00', 7, 17), -- Estatus 7: procesando para venta online
+('2025-06-23 10:00:00', 7, 18), -- Estatus 7: procesando para venta online
+('2025-06-24 10:00:00', 7, 19), -- Estatus 7: procesando para venta online
+('2025-06-24 10:00:00', 7, 20), -- Estatus 7: procesando para venta online
+('2025-07-20 10:00:00', 7, 21), -- Estatus 7: procesando para venta online
+('2025-07-20 10:00:00', 7, 22), -- Estatus 7: procesando para venta online
+('2025-07-21 10:00:00', 7, 23), -- Estatus 7: procesando para venta online
+('2025-07-21 10:00:00', 7, 24), -- Estatus 7: procesando para venta online
+('2025-07-22 10:00:00', 7, 25), -- Estatus 7: procesando para venta online
+('2025-07-22 10:00:00', 7, 26), -- Estatus 7: procesando para venta online
+('2025-07-23 10:00:00', 7, 27), -- Estatus 7: procesando para venta online
+('2025-07-23 10:00:00', 7, 28), -- Estatus 7: procesando para venta online
+('2025-07-24 10:00:00', 7, 29), -- Estatus 7: procesando para venta online
+('2025-07-24 10:00:00', 7, 30), -- Estatus 7: procesando para venta online
+('2025-08-20 10:00:00', 7, 31), -- Estatus 7: procesando para venta online
+('2025-08-20 10:00:00', 7, 32), -- Estatus 7: procesando para venta online
+('2025-08-21 10:00:00', 7, 33), -- Estatus 7: procesando para venta online
+('2025-08-21 10:00:00', 7, 34), -- Estatus 7: procesando para venta online
+('2025-08-22 10:00:00', 7, 35), -- Estatus 7: procesando para venta online
+('2025-08-22 10:00:00', 7, 36), -- Estatus 7: procesando para venta online
+('2025-08-23 10:00:00', 7, 37), -- Estatus 7: procesando para venta online
+('2025-08-23 10:00:00', 7, 38), -- Estatus 7: procesando para venta online
+('2025-08-24 10:00:00', 7, 39), -- Estatus 7: procesando para venta online
+('2025-08-24 10:00:00', 7, 40), -- Estatus 7: procesando para venta online
+('2025-08-20 10:00:00', 7, 41), -- Estatus 7: procesando para venta online
+('2025-08-20 10:00:00', 7, 42), -- Estatus 7: procesando para venta online
+('2025-08-21 10:00:00', 7, 43), -- Estatus 7: procesando para venta online
+('2025-08-21 10:00:00', 7, 44), -- Estatus 7: procesando para venta online
+('2025-09-22 10:00:00', 7, 45), -- Estatus 7: procesando para venta online
+('2025-09-22 10:00:00', 7, 46), -- Estatus 7: procesando para venta online
+('2025-09-23 10:00:00', 7, 47), -- Estatus 7: procesando para venta online
+('2025-09-23 10:00:00', 7, 48), -- Estatus 7: procesando para venta online
+('2025-09-24 10:00:00', 7, 49), -- Estatus 7: procesando para venta online
+('2025-09-24 10:00:00', 7, 50), -- Estatus 7: procesando para venta online
+('2025-09-20 10:00:00', 7, 51), -- Estatus 7: procesando para venta online
+('2025-09-20 10:00:00', 7, 52), -- Estatus 7: procesando para venta online
+('2025-09-21 10:00:00', 7, 53), -- Estatus 7: procesando para venta online
+('2025-09-21 10:00:00', 7, 54), -- Estatus 7: procesando para venta online
+('2025-09-22 10:00:00', 7, 55), -- Estatus 7: procesando para venta online
+('2025-09-22 10:00:00', 7, 56), -- Estatus 7: procesando para venta online
+('2025-10-23 10:00:00', 7, 57), -- Estatus 7: procesando para venta online
+('2025-10-23 10:00:00', 7, 58), -- Estatus 7: procesando para venta online
+('2025-10-24 10:00:00', 7, 59), -- Estatus 7: procesando para venta online
+('2025-10-24 10:00:00', 7, 60), -- Estatus 7: procesando para venta online
+('2025-10-20 10:00:00', 7, 61), -- Estatus 7: procesando para venta online
+('2025-10-20 10:00:00', 7, 62), -- Estatus 7: procesando para venta online
+('2025-10-21 10:00:00', 7, 63), -- Estatus 7: procesando para venta online
+('2025-10-21 10:00:00', 7, 64), -- Estatus 7: procesando para venta online
+('2025-10-22 10:00:00', 7, 65), -- Estatus 7: procesando para venta online
+('2025-10-22 10:00:00', 7, 66), -- Estatus 7: procesando para venta online
+('2025-10-23 10:00:00', 7, 67), -- Estatus 7: procesando para venta online
+('2025-10-23 10:00:00', 7, 68), -- Estatus 7: procesando para venta online
+('2025-10-24 10:00:00', 7, 69), -- Estatus 7: procesando para venta online
+('2025-10-24 10:00:00', 7, 70), -- Estatus 7: procesando para venta online
+('2025-11-20 10:00:00', 7, 71), -- Estatus 7: procesando para venta online
+('2025-11-20 10:00:00', 7, 72), -- Estatus 7: procesando para venta online
+('2025-11-21 10:00:00', 7, 73), -- Estatus 7: procesando para venta online
+('2025-11-21 10:00:00', 7, 74), -- Estatus 7: procesando para venta online
+('2025-11-22 10:00:00', 7, 75), -- Estatus 7: procesando para venta online
+('2025-11-22 10:00:00', 7, 76), -- Estatus 7: procesando para venta online
+('2025-11-23 10:00:00', 7, 77), -- Estatus 7: procesando para venta online
+('2025-11-23 10:00:00', 7, 78), -- Estatus 7: procesando para venta online
+('2025-11-24 10:00:00', 7, 79), -- Estatus 7: procesando para venta online
+('2025-11-24 10:00:00', 7, 80), -- Estatus 7: procesando para venta online
+('2025-12-20 10:00:00', 7, 81), -- Estatus 7: procesando para venta online
+('2025-12-20 10:00:00', 7, 82), -- Estatus 7: procesando para venta online
+('2025-12-21 10:00:00', 7, 83), -- Estatus 7: procesando para venta online
+('2025-12-21 10:00:00', 7, 84), -- Estatus 7: procesando para venta online
+('2025-12-22 10:00:00', 7, 85), -- Estatus 7: procesando para venta online
+('2025-12-22 10:00:00', 7, 86), -- Estatus 7: procesando para venta online
+('2025-12-23 10:00:00', 7, 87), -- Estatus 7: procesando para venta online
+('2025-12-23 10:00:00', 7, 88), -- Estatus 7: procesando para venta online
+('2025-12-24 10:00:00', 7, 89), -- Estatus 7: procesando para venta online
+('2025-12-24 10:00:00', 7, 90); -- Estatus 7: procesando para venta online
+
+-- ===================================================================================
+-- PAGOS ADICIONALES CON PUNTOS (DESPUÉS DE ACTUALIZAR PUNTOS)
+-- ===================================================================================
+
+-- Pago para Venta Física 1 (Monto: 150.75) con Puntos (cliente 1 tiene 100 puntos, suficientes para 15 puntos)
+INSERT INTO pago (fecha_pago, monto_total, fk_tasa_cambio, fk_metodo_de_pago, fk_venta_tienda_fisica) VALUES
+('2025-06-17', 150.75, 11, 5, 1); -- Método 5: Puntos (usando tasa 11 que es PUNTOS: 10.00)
+
+-- Pago para Venta Física 7 (Monto: 450.00) con Efectivo (cambiado de Puntos porque el cliente no tiene suficientes puntos)
+INSERT INTO pago (fecha_pago, monto_total, fk_tasa_cambio, fk_metodo_de_pago, fk_venta_tienda_fisica) VALUES
+('2025-06-20', 250.00, 4, 1, 7); -- Método 1: Efectivo (cambiado de 5: Puntos)

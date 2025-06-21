@@ -602,6 +602,7 @@ INSERT INTO rol (clave, nombre) VALUES
 (6, 'Miembro'),            -- Acceso para productores afiliados
 (7, 'Cliente');  
 
+
 --Insertar privilegios por roles 
 --------------------------------------------------------------------------------
 -- Rol 1: Administrador (Control total del sistema)

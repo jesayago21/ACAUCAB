@@ -780,7 +780,7 @@ CREATE TABLE IF NOT EXISTS car_cer (
 
 CREATE TABLE IF NOT EXISTS historico (
     clave SERIAL,
-    fecha DATE NOT NULL,
+    fecha TIMESTAMP NOT NULL,
     comentario TEXT,
     fk_estatus INT NOT NULL,
     fk_reposicion INT,

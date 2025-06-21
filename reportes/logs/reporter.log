@@ -1,0 +1,160 @@
+2025-06-21T15:55:33.641Z - info: Initializing jsreport (version: 4.9.0, configuration file: jsreport.config.json, nodejs: 22.16.0)
+2025-06-21T15:55:33.644Z - info: Searching for available extensions in C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\
+2025-06-21T15:55:33.647Z - info: Extensions location cache not found, crawling directories
+2025-06-21T15:55:35.135Z - info: Found 35 extension(s)
+2025-06-21T15:55:35.217Z - info: Using extension base@4.0.0
+2025-06-21T15:55:35.223Z - info: Using extension child-templates@4.1.0
+2025-06-21T15:55:35.227Z - info: Using extension cli@4.1.1
+2025-06-21T15:55:35.229Z - info: Using extension components@4.0.2
+2025-06-21T15:55:35.233Z - info: Using extension data@4.1.0
+2025-06-21T15:55:35.235Z - info: Using extension express@4.2.0
+2025-06-21T15:55:35.655Z - info: Using extension freeze@4.0.0
+2025-06-21T15:55:35.657Z - info: Using extension fs-store@4.1.1
+2025-06-21T15:55:35.779Z - info: Using extension handlebars@4.0.1
+2025-06-21T15:55:35.781Z - info: Using extension import-export@4.0.7
+2025-06-21T15:55:35.792Z - info: Using extension jsrender@4.0.0
+2025-06-21T15:55:35.793Z - info: Using extension licensing@4.0.5
+2025-06-21T15:55:35.799Z - info: Using extension localization@4.0.1
+2025-06-21T15:55:35.802Z - info: Using extension npm@4.0.0
+2025-06-21T15:55:35.804Z - info: Using extension pdf-utils@4.3.0
+2025-06-21T15:55:35.806Z - info: Using extension reports@4.1.4
+2025-06-21T15:55:35.809Z - info: Using extension tags@4.0.1
+2025-06-21T15:55:35.811Z - info: Using extension text@4.0.2
+2025-06-21T15:55:35.812Z - info: Using extension version-control@4.1.1
+2025-06-21T15:55:35.823Z - info: Using extension assets@4.2.2
+2025-06-21T15:55:35.836Z - info: Using extension authorization@4.1.0
+2025-06-21T15:55:35.841Z - info: Using extension browser-client@4.1.0
+2025-06-21T15:55:35.843Z - info: Using extension chrome-pdf@4.2.0
+2025-06-21T15:55:35.850Z - info: Using extension docx@4.8.0
+2025-06-21T15:55:35.853Z - info: Using extension html-to-xlsx@4.2.1
+2025-06-21T15:55:36.161Z - info: html-to-xlsx detected chrome as available html engine
+2025-06-21T15:55:36.161Z - info: Using extension pptx@4.4.1
+2025-06-21T15:55:36.163Z - info: Using extension scheduling@4.1.0
+2025-06-21T15:55:36.191Z - info: Using extension scripts@4.2.0
+2025-06-21T15:55:36.192Z - info: Using extension static-pdf@4.1.0
+2025-06-21T15:55:36.193Z - info: Using extension studio@4.3.1
+2025-06-21T15:55:36.268Z - info: Using extension xlsx@4.4.1
+2025-06-21T15:55:36.270Z - info: Using extension public-templates@4.0.0
+2025-06-21T15:55:36.272Z - info: Using extension sample-template@4.0.1
+2025-06-21T15:55:36.274Z - info: Using extension studio-theme-dark@4.0.0
+2025-06-21T15:55:36.277Z - info: Using general timeout for rendering (reportTimeout: 60000)
+2025-06-21T15:55:36.277Z - info: Using fs provider for template store.
+2025-06-21T15:55:36.282Z - info: fs store is persisting using fs for C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\data
+2025-06-21T15:55:36.292Z - info: fs store is loading data
+2025-06-21T15:55:36.307Z - info: fs store is initialized successfully
+2025-06-21T15:55:36.318Z - info: Creating default express app.
+2025-06-21T15:55:36.338Z - info: jsreport server successfully started on http port: 5488
+2025-06-21T15:55:36.339Z - info: Verifying license key free
+2025-06-21T15:55:36.340Z - info: Using free license
+2025-06-21T15:55:36.362Z - info: Migrating templates chrome settings (waitForNetworkIddle -> waitForNetworkIdle)
+2025-06-21T15:55:36.371Z - info: Migration successful
+2025-06-21T15:55:36.634Z - info: Initializing worker threads
+2025-06-21T15:55:37.339Z - info: 2 worker threads initialized in 705ms
+2025-06-21T15:55:37.340Z - info: Starting temp files cleanup with 180000ms threshold
+2025-06-21T15:55:37.341Z - info: reporter initialized
+2025-06-21T16:07:02.583Z - info: Render request 1 queued for execution and waiting for available worker rootId=39aee431eb2nxx1, id=39aee431eb2nxx1
+2025-06-21T16:07:02.624Z - info: Starting rendering request 1 rootId=39aee431eb2nxx1, id=39aee431eb2nxx1
+2025-06-21T16:07:02.630Z - info: Rendering template { name: sales-main, recipe: html-to-xlsx, engine: handlebars, preview: true } rootId=39aee431eb2nxx1, id=39aee431eb2nxx1
+2025-06-21T16:07:03.477Z - warn: Error when processing render request 1
+(because) error when evaluating engine handlebars for template /samples/Sales/sales-main
+(because) require of "moment" module has been blocked. To be able to require custom modules you need to add to configuration { "trustUserCode": true } or enable just specific module using { sandbox: { allowedModules": ["moment"] }
+
+(sandbox.js line 1:165)
+
+> 1 | const moment = require('moment')
+    |                                 ^
+  2 | const rowOffset = 6
+  3 |
+  4 | function nowStr () {
+
+
+Error: require of "moment" module has been blocked. To be able to require custom modules you need to add to configuration { "trustUserCode": true } or enable just specific module using { sandbox: { allowedModules": ["moment"] }
+  at sandboxRequire (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\sandbox\requireSandbox.js:64:19)
+  at Object.require (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\sandbox\createSandbox.js:89:30)
+  at eval (sandbox.js:1:165)
+  at async run (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\sandbox\createSandbox.js:132:18)
+  at async WorkerReporter.runInSandbox [as _runInSandbox] (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\sandbox\runInSandbox.js:214:14)
+  at async executeEngine (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\render\executeEngine.js:354:16)
+  at async engine.engine (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\render\executeEngine.js:162:14)
+  at async invokeRender (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\render\render.js:61:23)
+  at async WorkerReporter._render (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\render\render.js:148:7)
+  at async C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\reporter.js:233:24
+  at async processAndResponse (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\advanced-workers\lib\workerHandler.js:42:17)
+wrapped by:
+Error: Error when evaluating engine handlebars for template /samples/Sales/sales-main
+(because) require of "moment" module has been blocked. To be able to require custom modules you need to add to configuration { "trustUserCode": true } or enable just specific module using { sandbox: { allowedModules": ["moment"] }
+  at module.exports (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\shared\createError.js:10:13)
+  at WorkerReporter.createError (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\shared\reporter.js:53:12)
+  at executeEngine (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\render\executeEngine.js:377:35)
+  at async engine.engine (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\render\executeEngine.js:162:14)
+  at async invokeRender (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\render\render.js:61:23)
+  at async WorkerReporter._render (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\render\render.js:148:7)
+  at async C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\reporter.js:233:24
+  at async processAndResponse (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\advanced-workers\lib\workerHandler.js:42:17) rootId=39aee431eb2nxx1, id=39aee431eb2nxx1
+2025-06-21T16:07:03.477Z - warn: Rendering request 1 finished with error in 900 ms rootId=39aee431eb2nxx1, id=39aee431eb2nxx1
+2025-06-21T16:07:13.275Z - info: Render request 2 queued for execution and waiting for available worker rootId=j6ofc8vf698jtyt, id=j6ofc8vf698jtyt
+2025-06-21T16:07:13.288Z - info: Starting rendering request 2 rootId=j6ofc8vf698jtyt, id=j6ofc8vf698jtyt
+2025-06-21T16:07:13.289Z - info: Rendering template { name: sales-main, recipe: html-to-xlsx, engine: handlebars, preview: true } rootId=j6ofc8vf698jtyt, id=j6ofc8vf698jtyt
+2025-06-21T16:07:13.967Z - warn: Error when processing render request 2
+(because) error when evaluating engine handlebars for template /samples/Sales/sales-main
+(because) require of "moment" module has been blocked. To be able to require custom modules you need to add to configuration { "trustUserCode": true } or enable just specific module using { sandbox: { allowedModules": ["moment"] }
+
+(sandbox.js line 1:165)
+
+> 1 | const moment = require('moment')
+    |                                 ^
+  2 | const rowOffset = 6
+  3 |
+  4 | function nowStr () {
+
+
+Error: require of "moment" module has been blocked. To be able to require custom modules you need to add to configuration { "trustUserCode": true } or enable just specific module using { sandbox: { allowedModules": ["moment"] }
+  at sandboxRequire (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\sandbox\requireSandbox.js:64:19)
+  at Object.require (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\sandbox\createSandbox.js:89:30)
+  at eval (sandbox.js:1:165)
+  at async run (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\sandbox\createSandbox.js:132:18)
+  at async WorkerReporter.runInSandbox [as _runInSandbox] (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\sandbox\runInSandbox.js:214:14)
+  at async executeEngine (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\render\executeEngine.js:354:16)
+  at async engine.engine (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\render\executeEngine.js:162:14)
+  at async invokeRender (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\render\render.js:61:23)
+  at async WorkerReporter._render (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\render\render.js:148:7)
+  at async C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\reporter.js:233:24
+  at async processAndResponse (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\advanced-workers\lib\workerHandler.js:42:17)
+wrapped by:
+Error: Error when evaluating engine handlebars for template /samples/Sales/sales-main
+(because) require of "moment" module has been blocked. To be able to require custom modules you need to add to configuration { "trustUserCode": true } or enable just specific module using { sandbox: { allowedModules": ["moment"] }
+  at module.exports (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\shared\createError.js:10:13)
+  at WorkerReporter.createError (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\shared\reporter.js:53:12)
+  at executeEngine (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\render\executeEngine.js:377:35)
+  at async engine.engine (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\render\executeEngine.js:162:14)
+  at async invokeRender (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\render\render.js:61:23)
+  at async WorkerReporter._render (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\render\render.js:148:7)
+  at async C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\reporter.js:233:24
+  at async processAndResponse (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\advanced-workers\lib\workerHandler.js:42:17) rootId=j6ofc8vf698jtyt, id=j6ofc8vf698jtyt
+2025-06-21T16:07:13.967Z - warn: Rendering request 2 finished with error in 694 ms rootId=j6ofc8vf698jtyt, id=j6ofc8vf698jtyt
+2025-06-21T16:07:22.427Z - info: Render request 3 queued for execution and waiting for available worker rootId=kddrs60j8kp1t25, id=kddrs60j8kp1t25
+2025-06-21T16:07:22.439Z - info: Starting rendering request 3 rootId=kddrs60j8kp1t25, id=kddrs60j8kp1t25
+2025-06-21T16:07:22.439Z - info: Rendering template { name: invoice-main, recipe: chrome-pdf, engine: handlebars, preview: true } rootId=kddrs60j8kp1t25, id=kddrs60j8kp1t25
+2025-06-21T16:07:22.668Z - error: Error when processing render request 3
+(because) could not find Chrome (ver. 136.0.7103.49). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome`) or
+ 2. your cache path is incorrectly configured (which is: C:\Users\Sebastián Cova\.cache\puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+Error: Could not find Chrome (ver. 136.0.7103.49). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome`) or
+ 2. your cache path is incorrectly configured (which is: C:\Users\Sebastián Cova\.cache\puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+  at ChromeLauncher.resolveExecutablePath (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\puppeteer-core\lib\cjs\puppeteer\node\BrowserLauncher.js:308:27)
+  at ChromeLauncher.computeLaunchArguments (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\puppeteer-core\lib\cjs\puppeteer\node\ChromeLauncher.js:93:24)
+  at async ChromeLauncher.launch (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\puppeteer-core\lib\cjs\puppeteer\node\BrowserLauncher.js:84:28)
+  at async createBrowser (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-chrome-pdf\lib\chromePoolStrategy.js:115:26)
+  at async allocateBrowser (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-chrome-pdf\lib\chromePoolStrategy.js:130:5)
+  at async getBrowser (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-chrome-pdf\lib\chromePoolStrategy.js:33:30)
+  at async module.exports (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-chrome-pdf\lib\conversion.js:11:19)
+  at async execute (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-chrome-pdf\lib\chromePoolStrategy.js:30:22)
+  at async C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-chrome-pdf\lib\lazyRecipe.js:58:20
+  at async invokeRender (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\render\render.js:93:5)
+  at async WorkerReporter._render (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\render\render.js:148:7)
+  at async C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\reporter.js:233:24
+  at async processAndResponse (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\advanced-workers\lib\workerHandler.js:42:17) rootId=kddrs60j8kp1t25, id=kddrs60j8kp1t25
+2025-06-21T16:07:22.668Z - error: Rendering request 3 finished with error in 243 ms rootId=kddrs60j8kp1t25, id=kddrs60j8kp1t25
