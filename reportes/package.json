@@ -1,6 +1,8 @@
 {
   "name": "jsreport-server",
   "dependencies": {
+    "@jsreport/jsreport-chrome-pdf": "^4.2.0",
+    "handlebars": "^4.7.8",
     "jsreport": "^4.9.0",
     "pg": "^8.16.2"
   }

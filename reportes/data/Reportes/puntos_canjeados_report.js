@@ -1,18 +1,11 @@
-const { Client } = require('pg');
+const pool = require('../../../backend/config/db');
 
 async function run() {
-  const client = new Client({
-      "connectionString": "postgres://grupo7:123456@localhost:5432/grupo7",
-    ssl: false
-  });
-
   try {
-    await client.connect();
-    
     // Parámetros del reporte (puedes modificar estas fechas)
     const fechaInicio = '2024-01-01';
     const fechaFin = '2024-12-31';
-    
+
     // Consulta principal - Detalle por cliente
     const queryDetalle = `
       SELECT
@@ -126,9 +119,9 @@ async function run() {
     `;
 
     // Ejecutar consultas
-    const detalleResult = await client.query(queryDetalle, [fechaInicio, fechaFin]);
-    const resumenResult = await client.query(queryResumen, [fechaInicio, fechaFin]);
-    const porTipoResult = await client.query(queryPorTipo, [fechaInicio, fechaFin]);
+    const detalleResult = await pool.query(queryDetalle, [fechaInicio, fechaFin]);
+    const resumenResult = await pool.query(queryResumen, [fechaInicio, fechaFin]);
+    const porTipoResult = await pool.query(queryPorTipo, [fechaInicio, fechaFin]);
 
     // Formatear datos para el reporte
     const detalle = detalleResult.rows.map(row => ({
@@ -151,7 +144,7 @@ async function run() {
       ...row,
       total_bolivares: parseFloat(row.total_bolivares || 0).toFixed(2),
       total_puntos_canjeados: parseInt(row.total_puntos_canjeados || 0),
-      tipo_cliente_formatted: row.tipo_cliente === 'natural' ? 'Cliente Natural' : 'Cliente Jurídico'
+      tipo_cliente_formatted: row.tipo_cliente === 'natural' ? 'cliente Natural' : 'cliente Jurídico'
     }));
 
     return {
@@ -167,9 +160,7 @@ async function run() {
   } catch (error) {
     console.error('Error ejecutando consulta:', error);
     throw error;
-  } finally {
-    await client.end();
   }
 }
 
-module.exports = { run }; 
+module.exports = { run };

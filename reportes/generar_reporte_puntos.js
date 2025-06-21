@@ -21,11 +21,11 @@ async function generarReporte() {
                 content: require('fs').readFileSync('./data/Reportes/puntos_canjeados_template.html', 'utf8'),
                 engine: 'handlebars',
                 recipe: 'html',
-                helpers: {
-                    eq: function(a, b) {
+                helpers: `
+                    function eq(a, b) {
                         return a === b;
-                    }
                 }
+                `
             },
             data: data
         });
@@ -89,11 +89,11 @@ async function generarReporteConFechas(fechaInicio, fechaFin) {
                 content: require('fs').readFileSync('./data/Reportes/puntos_canjeados_template.html', 'utf8'),
                 engine: 'handlebars',
                 recipe: 'html',
-                helpers: {
-                    eq: function(a, b) {
+                helpers: `
+                    function eq(a, b) {
                         return a === b;
-                    }
                 }
+                `,
             },
             data: data
         });
@@ -128,11 +128,11 @@ async function generarReportePDF() {
                 content: require('fs').readFileSync('./data/Reportes/puntos_canjeados_template.html', 'utf8'),
                 engine: 'handlebars',
                 recipe: 'chrome-pdf',
-                helpers: {
-                    eq: function(a, b) {
+                helpers: `
+                    function eq(a, b) {
                         return a === b;
-                    }
-                },
+                }
+                `,
                 chrome: {
                     format: 'A4',
                     marginTop: '1cm',

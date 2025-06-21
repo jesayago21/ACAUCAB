@@ -44,3 +44,14 @@ For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides
   at async C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\reporter.js:233:24
   at async processAndResponse (C:\Users\Sebastián Cova\Desktop\Program\BD\ACAUCAB\reportes\node_modules\@jsreport\advanced-workers\lib\workerHandler.js:42:17) rootId=ebogi45bsevewck, id=ebogi45bsevewck
 2025-06-21T17:59:58.515Z - error: Rendering request 2 finished with error in 1003 ms rootId=ebogi45bsevewck, id=ebogi45bsevewck
+2025-06-21T19:01:00.130Z - error: Error occurred during reporter init: Error: Error when loading extension chrome-pdf@1.10.0
+Error: Extension "chrome-pdf" is not compatible with "core" extension. Missing ".requires" information in "chrome-pdf" definition
+    at validateMinimalVersion (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\main\extensions\validateMinimalVersion.js:24:11)
+    at Object._useOne (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\main\extensions\extensionsManager.js:158:9)
+    at Object._useMany (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\main\extensions\extensionsManager.js:99:38)
+    at async MainReporter.init (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\main\reporter.js:207:7)
+    at async generarReportePDF (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\generar_reporte_puntos.js:120:9)
+    at Object._useOne (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\main\extensions\extensionsManager.js:248:15)
+    at Object._useMany (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\main\extensions\extensionsManager.js:99:38)
+    at async MainReporter.init (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\main\reporter.js:207:7)
+    at async generarReportePDF (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\generar_reporte_puntos.js:120:9)
