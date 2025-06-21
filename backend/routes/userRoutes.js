@@ -56,6 +56,19 @@ const userController = require('../controllers/userController');
  *       500:
  *         description: Error interno del servidor
  */
+// Listar usuarios
+router.get('/', userController.getAllUsers);
+
+// Crear usuario
+router.post('/', userController.createUser);
+
+// Actualizar usuario
+router.put('/:clave', userController.updateUser);
+
+// Eliminar usuario
+router.delete('/:clave', userController.deleteUser);
+
+// Asignar rol a usuario
 router.put('/:userId/rol', userController.assignRoleToUser);
 
 module.exports = router;

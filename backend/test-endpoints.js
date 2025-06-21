@@ -130,6 +130,51 @@ async function testRolesEndpoint(){
   await makeRequest(`${BASE_URL}/api/roles/`);
 }
 
+async function testUsersEndpoint() {
+  console.log('👤 PROBANDO ENDPOINTS DE USUARIOS');
+  console.log('='.repeat(40));
+
+  // 1. Obtener todos los usuarios
+  await makeRequest(`${BASE_URL}/api/users/`);
+
+  // 2. Crear usuario de ejemplo (como cliente, por ejemplo)
+  const newUser = {
+    username: "prueba_usuario",
+    contrasena: "1234",
+    fk_rol: 4,
+    fk_cliente: 1 // Cambia el ID por uno válido en tu base de datos
+  };
+  const created = await makeRequest(`${BASE_URL}/api/users`, {
+    method: 'POST',
+    body: JSON.stringify(newUser)
+  });
+
+  // 3. Actualizar usuario (si se creó)
+  if (created && created.clave) {
+    await makeRequest(`${BASE_URL}/api/users/${created.clave}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        username: "usuario_actualizado",
+        contrasena: "5678",
+        fk_rol: 3,
+        fk_cliente: 1 // Debe seguir enviando solo uno de los campos de relación
+      })
+    });
+
+    // 4. Asignar rol al usuario (ruta correcta: /rol)
+    await makeRequest(`${BASE_URL}/api/users/${created.clave}/rol`, {
+      method: 'PUT',
+      body: JSON.stringify({ roleId: 2 })
+    });
+
+    // 5. Eliminar usuario
+    await makeRequest(`${BASE_URL}/api/users/${created.clave}`, {
+      method: 'DELETE'
+    });
+  }
+}
+
+
 /** Ejecutar las pruebas según el argumento pasado */
 if (require.main === module) {
   const testType = process.argv[2];
@@ -138,6 +183,8 @@ if (require.main === module) {
     testProductsEndpoint();
   } else if (testType === 'roles') {
     testRolesEndpoint();
+  } else if(testType === 'users'){
+    testUsersEndpoint();
   } else {
     testEndpoints();
   }
@@ -147,5 +194,6 @@ module.exports = {
   makeRequest,
   testEndpoints,
   testProductsEndpoint,
-  testRolesEndpoint
+  testRolesEndpoint,
+  testUsersEndpoint
 }; 
