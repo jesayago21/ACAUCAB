@@ -3,6 +3,7 @@ const cors = require('cors');
 const shopRoutes = require('./routes/shopRoutes');
 const clientRoutes = require('./routes/clientRoutes');
 const roleRoutes = require('./routes/roleRoutes'); 
+const authRoutes = require('./routes/authRoutes');
 // const privilegeRoutes = require('./routes/privilegeRoutes'); // Comentado temporalmente - archivo no existe
 const { specs, swaggerUi } = require('./config/swagger');
 require('dotenv').config();
@@ -34,7 +35,9 @@ app.get('/', (req, res) => {
       createOrder: '/api/shop/order',
       clientIdentify: '/api/clientes/identificar',
       clientCreate: '/api/clientes/crear',
-      clientPlaces: '/api/clientes/lugares'
+      clientPlaces: '/api/clientes/lugares',
+      login: '/api/auth/login',
+      verifyPermission: '/api/auth/verificar-permiso'
     }
   });
 });
@@ -42,6 +45,7 @@ app.get('/', (req, res) => {
 /** Rutas de la API */
 app.use('/api/shop', shopRoutes);
 app.use('/api/roles', roleRoutes);
+app.use('/api/auth', authRoutes);
 // app.use('/api/privileges', privilegeRoutes); // Comentado temporalmente - archivo no existe 
 app.use('/api/clientes', clientRoutes);
 

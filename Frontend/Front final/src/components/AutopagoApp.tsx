@@ -8,6 +8,10 @@ import MetodosPago from './MetodosPago';
 import PantallaExito from './PantallaExito';
 
 import type { ClienteNatural, ClienteJuridico } from '../types/api';
+import type { Usuario, LoginResponse } from '../types/auth';
+import LoginForm from './admin/LoginForm';
+import AdminDashboard from './admin/AdminDashboard';
+import { authStorage } from '../services/authService';
 
 /** Estados posibles de la aplicación */
 type EstadoApp = 
@@ -16,12 +20,25 @@ type EstadoApp =
   | 'registro' 
   | 'compra' 
   | 'pago' 
-  | 'exitoso';
+  | 'exitoso'
+  | 'login'
+  | 'admin';
 
 /** Componente de pantalla de bienvenida */
-function PantallaBienvenida({ onIniciar }: { onIniciar: () => void }) {
+function PantallaBienvenida({ onIniciar, onMostrarLogin }: { onIniciar: () => void; onMostrarLogin: () => void }) {
   return (
-    <div className="min-h-screen bg-[#F4EFE6] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#F4EFE6] flex items-center justify-center p-4 relative">
+      {/* Botón de login discreto en esquina superior derecha */}
+      <button
+        onClick={onMostrarLogin}
+        className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200 opacity-50 hover:opacity-100"
+        title="Acceso administrativo"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+      </button>
+
       <div className="max-w-lg w-full bg-white rounded-lg shadow-lg p-8 text-center">
         {/* Logo/Marca */}
         <div className="mb-8">
@@ -81,7 +98,17 @@ export default function AutopagoApp() {
   const [estado, setEstado] = useState<EstadoApp>('bienvenida');
   const [cliente, setCliente] = useState<ClienteNatural | ClienteJuridico | null>(null);
   const [documentoRegistro, setDocumentoRegistro] = useState<{numero: string, tipo: 'V' | 'J'} | null>(null);
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
   const carrito = useCarrito();
+
+  /** Verificar sesión activa al cargar */
+  React.useEffect(() => {
+    const usuarioGuardado = authStorage.getUser();
+    if (usuarioGuardado) {
+      setUsuario(usuarioGuardado);
+      setEstado('admin');
+    }
+  }, []);
 
   /** Manejar inicio de la aplicación */
   const handleIniciarApp = () => {
@@ -133,6 +160,32 @@ export default function AutopagoApp() {
     setEstado('bienvenida');
   };
 
+  /** Manejar mostrar login */
+  const handleMostrarLogin = () => {
+    setEstado('login');
+  };
+
+  /** Manejar login exitoso */
+  const handleLoginExitoso = (response: LoginResponse) => {
+    if (response.user) {
+      setUsuario(response.user);
+      authStorage.saveUser(response.user);
+      setEstado('admin');
+    }
+  };
+
+  /** Manejar logout */
+  const handleLogout = () => {
+    setUsuario(null);
+    authStorage.removeUser();
+    setEstado('bienvenida');
+  };
+
+  /** Manejar volver desde login */
+  const handleVolverDesdeLogin = () => {
+    setEstado('bienvenida');
+  };
+
   /** Manejar volver a pantalla anterior */
   const handleVolver = () => {
     switch (estado) {
@@ -160,7 +213,10 @@ export default function AutopagoApp() {
     switch (estado) {
       case 'bienvenida':
         return (
-          <PantallaBienvenida onIniciar={handleIniciarApp} />
+          <PantallaBienvenida 
+            onIniciar={handleIniciarApp} 
+            onMostrarLogin={handleMostrarLogin}
+          />
         );
 
       case 'identificacion':
@@ -222,8 +278,33 @@ export default function AutopagoApp() {
           />
         );
 
+      case 'login':
+        return (
+          <LoginForm
+            onLoginSuccess={handleLoginExitoso}
+            onVolver={handleVolverDesdeLogin}
+          />
+        );
+
+      case 'admin':
+        if (!usuario) {
+          setEstado('bienvenida');
+          return null;
+        }
+        return (
+          <AdminDashboard
+            usuario={usuario}
+            onLogout={handleLogout}
+          />
+        );
+
       default:
-        return <PantallaBienvenida onIniciar={handleIniciarApp} />;
+        return (
+          <PantallaBienvenida 
+            onIniciar={handleIniciarApp} 
+            onMostrarLogin={handleMostrarLogin}
+          />
+        );
     }
   };
 

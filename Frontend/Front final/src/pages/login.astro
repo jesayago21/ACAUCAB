@@ -1,0 +1,23 @@
+---
+/** Página de login administrativo */
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Login - ACAUCAB">
+  <div id="login-app"></div>
+</Layout>
+
+<script>
+  import React from "react";
+  import { createRoot } from "react-dom/client";
+  import LoginPage from "../components/admin/LoginPage.tsx";
+
+  /** Renderizar la aplicación cuando el DOM esté listo */
+  document.addEventListener("DOMContentLoaded", () => {
+    const container = document.getElementById("login-app");
+    if (container) {
+      const root = createRoot(container);
+      root.render(React.createElement(LoginPage));
+    }
+  });
+</script>
