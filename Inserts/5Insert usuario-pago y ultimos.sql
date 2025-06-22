@@ -8,128 +8,7 @@ INSERT INTO usuario (clave, username, contrasena, fk_rol, fk_empleado, fk_miembr
 (7, 'miembro1', 'miembro123', 7, NULL, 234567890, NULL),
 (8, 'empleado1', 'empleado123', 5, 123456789, NULL, NULL),
 (9, 'repartidor1', 'repartidor123', 5, 456789012, NULL, NULL),
-(10, 'vendedor1', 'vendedor123', 5, 789012345, NULL, NULL);
-
-INSERT INTO venta_entrada (fecha, monto_total, fk_evento, fk_cliente, fk_usuario) VALUES
-('2025-06-17', 50.00, 1, 1, NULL),
-('2025-06-18', 75.50, 2, NULL, 1),
-('2025-06-19', 120.00, 3, 2, NULL),
-('2025-06-20', 30.00, 4, NULL, 2),
-('2025-06-21', 90.75, 5, 3, NULL),
-('2025-06-22', 60.00, 1, NULL, 3),
-('2025-06-23', 150.25, 2, 4, NULL),
-('2025-06-24', 45.00, 3, NULL, 4),
-('2025-06-25', 80.00, 4, 5, NULL),
-('2025-06-26', 100.00, 5, NULL, 5);
-
-INSERT INTO venta_tienda_fisica (clave, fecha, total_venta, fk_tienda_fisica, fk_cliente) VALUES
-(1,'2025-06-17', 150.75, 1, 1),
-(2,'2025-06-17', 230.00, 2, 2),
-(3,'2025-06-18', 85.50, 3, 3),
-(4,'2025-06-18', 310.20, 1, 4),
-(5,'2025-06-19', 190.00, 2, 5),
-(6,'2025-06-19', 65.40, 3, 1),
-(7,'2025-06-20', 450.00, 1, 2),
-(8,'2025-06-20', 120.00, 2, 3),
-(9,'2025-06-21', 75.80, 3, 4),
-(10,'2025-06-21', 200.00, 1, 5);
-
-INSERT INTO tienda_online (clave, nombre, url_web) VALUES
-(1,'Cervezas Venezuela Online', 'https://www.cervezasvenezuela.com');
-
-INSERT INTO venta_online (clave, fecha, monto_total, direccion_envio, fk_lugar, fk_tienda_online, fk_usuario) VALUES
-(1, '2025-06-17', 250.50, 'Avenida Libertador, Edificio Sol, Apto 5A', 1013, 1, 6),
-(2, '2025-06-17', 120.00, 'Calle Real de Sabana Grande, Quinta La Pradera', 1297, 1, 6),
-(3, '2025-06-18', 300.75, 'Plaza Venezuela, Residencias Estudiantes, Piso 10', 470, 1, 6),
-(4, '2025-06-18', 80.25, 'Urbanización El Cafetal, Callejon Miranda, Casa 12', 1004, 1, 6),
-(5, '2025-06-19', 450.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local B', 548, 1, 6),
-(6, '2025-06-19', 180.90, 'El Paraíso, Calle Principal, Edificio Estrella', 715, 1, 6),
-(7, '2025-06-20', 95.00, 'La Candelaria, Esquina El Horno, Apartamento 3', 649, 1, 6),
-(8, '2025-06-20', 350.40, 'Chacao, Avenida Principal, Centro Comercial', 1004, 1, 6),
-(9, '2025-06-21', 500.00, 'Altamira, Calle Sur, Residencia El Ávila, PH', 548, 1, 6),
-(10, '2025-06-21', 65.70, 'San Bernardino, Av. La Estrella, Quinta Azul', 649, 1, 6);
-
-INSERT INTO inventario_tienda (clave, fk_lugar_tienda, fk_presentacion, fk_tienda_fisica, cantidad) VALUES
-(1, 1, 1, 1, 150),
-(2, 2, 2, 1, 200),
-(3, 3, 3, 2, 80),
-(4, 4, 4, 2, 120),
-(5, 5, 5, 1, 250),
-(6, 6, 1, 3, 90),
-(7, 7, 2, 4, 180),
-(8, 8, 3, 1, 70),
-(9, 9, 4, 1, 300),
-(10, 10, 5, 1, 110);
-
-INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario) VALUES
-(1, 1, 2, 12000),
-(2, 2, 1, 50000),
-(3, 3, 3, 8000),
-(4, 1, 4, 15000),
-(5, 2, 2, 25000),
-(6, 3, 1, 75000),
-(7, 1, 5, 10000),
-(8, 2, 2, 30000),
-(9, 3, 1, 60000),
-(10, 1, 3, 18000);
-
-INSERT INTO detalle_venta_fisica (cantidad, precio_unitario, fk_venta_tienda_fisica, fk_inventario_tienda) VALUES
-(1, 15075, 1, 1),
-(2, 11500, 2, 3),
-(3, 2850, 3, 5),
-(1, 31020, 4, 2),
-(2, 9500, 5, 4),
-(1, 6540, 6, 6),
-(3, 15000, 7, 7),
-(1, 12000, 8, 9),
-(2, 3790, 9, 8),
-(1, 20000, 10, 10);
-
-INSERT INTO reposicion (fk_almacen, fk_inventario_tienda, fk_usuario, cantidad, fecha) VALUES
-(1, 1, 1, 50, '2025-06-10'),
-(2, 3, 2, 30, '2025-06-11'),
-(3, 5, 3, 100, '2025-06-12'),
-(1, 2, 1, 75, '2025-06-13'),
-(2, 4, 4, 40, '2025-06-14'),
-(3, 6, 5, 60, '2025-06-15'),
-(1, 7, 1, 25, '2025-06-16'),
-(2, 9, 2, 90, '2025-06-17'),
-(3, 8, 3, 35, '2025-06-17'),
-(1, 10, 4, 55, '2025-06-17');
-
-
-INSERT INTO tasa_cambio (moneda, monto_equivalencia, fecha_inicio, fecha_fin) VALUES
-('VES', 1.00, '2024-01-01', '2024-01-31'),
-('USD', 36.50, '2024-01-01', '2024-01-31'),
-('EUR', 39.20, '2024-01-01', '2024-01-31'),
-('USD', 37.00, '2024-02-01', '2024-02-29'),
-('EUR', 40.50, '2024-02-01', '2024-02-29'),
-('USD', 38.10, '2024-03-01', '2024-03-31'),
-('EUR', 41.80, '2024-03-01', '2024-03-31'),
-('USD', 38.90, '2024-04-01', '2025-06-16'),
-('EUR', 42.50, '2024-04-01', '2025-06-16'), 
-('USD', 39.50, '2025-06-17', NULL); 
--- Insertar tasa de cambio para puntos (ejemplo: 1 punto = 10 Bs)
-INSERT INTO tasa_cambio (moneda, monto_equivalencia, fecha_inicio) 
-VALUES ('PUNTOS', 10.00, CURRENT_DATE)
-ON CONFLICT DO NOTHING;
-
-
-INSERT INTO metodo_de_pago (moneda, metodo_preferido, fk_usuario, valor, numero_cheque, fecha_vencimiento, banco, numero_tarjeta, tipo) VALUES
-('VES', FALSE, NULL, 50000, NULL, NULL, NULL, NULL, 'Efectivo'), -- Efectivo, no preferido, sin usuario
-('USD', TRUE, 1, NULL, NULL, '2027-12-31', 'Banco Mercantil', 4111222233334444, 'Tarjeta de credito'), -- Tarjeta de crédito preferida para el usuario 1
-('VES', FALSE, NULL, NULL, 10001, NULL, 'Banco de Venezuela', NULL, 'Cheque'), -- Cheque, no preferido, sin usuario
-('EUR', FALSE, NULL, NULL, NULL, '2026-08-30', 'BBVA Banco Provincial', 4555666677778888, 'Tarjeta de debito'), -- Tarjeta de débito, no preferida, **sin usuario** para cumplir la restricción
-('VES', FALSE, NULL, NULL, NULL, NULL, NULL, NULL, 'Puntos'), -- Puntos, no preferido, sin usuario
-('USD', TRUE, 3, NULL, NULL, '2028-04-15', 'Banco Exterior', 4999000011112222, 'Tarjeta de credito'), -- Tarjeta de crédito preferida para el usuario 3
-('VES', FALSE, NULL, 10000, NULL, NULL, NULL, NULL, 'Efectivo'), -- Otro efectivo, no preferido, sin usuario
-('VES', FALSE, NULL, NULL, 10002, NULL, 'Banco Nacional de Crédito', NULL, 'Cheque'), -- Otro cheque, no preferido, sin usuario
-('USD', FALSE, NULL, NULL, NULL, '2026-11-20', 'Banesco', 5111222233334444, 'Tarjeta de debito'), -- Tarjeta de débito, no preferida, **sin usuario**
-('EUR', TRUE, 5, NULL, NULL, '2029-01-01', 'BOD', 5222333344445555, 'Tarjeta de credito'); -- Tarjeta de crédito preferida para el usuario 5
-
---Insertar ordenes de compra 
---Ventas online 
-INSERT INTO usuario (clave, username, contrasena, fk_rol, fk_empleado, fk_miembro, fk_cliente) VALUES
+(10, 'vendedor1', 'vendedor123', 5, 789012345, NULL, NULL),
 (12, 'cliente2', 'cliente2', 6, NULL, NULL, 2),
 (13, 'cliente3', 'cliente3', 6, NULL, NULL, 3),
 (14, 'cliente4', 'cliente4', 6, NULL, NULL, 4),
@@ -170,193 +49,536 @@ INSERT INTO usuario (clave, username, contrasena, fk_rol, fk_empleado, fk_miembr
 (49, 'cliente39', 'cliente39', 6, NULL, NULL, 39),
 (50, 'cliente40', 'cliente40', 6, NULL, NULL, 40);
 
+INSERT INTO venta_entrada (fecha, monto_total, fk_evento, fk_cliente, fk_usuario) VALUES
+('2025-06-17', 50.00, 1, 1, NULL),
+('2025-06-18', 75.50, 2, NULL, 1),
+('2025-06-19', 120.00, 3, 2, NULL),
+('2025-06-20', 30.00, 4, NULL, 2),
+('2025-06-21', 90.75, 5, 3, NULL),
+('2025-06-22', 60.00, 1, NULL, 3),
+('2025-06-23', 150.25, 2, 4, NULL),
+('2025-06-24', 45.00, 3, NULL, 4),
+('2025-06-25', 80.00, 4, 5, NULL),
+('2025-06-26', 100.00, 5, NULL, 5);
 
+INSERT INTO venta_tienda_fisica (clave, fecha, total_venta, fk_tienda_fisica, fk_cliente) VALUES
+(1, '2025-06-17', 150.75, 1, 1),
+(2, '2025-06-17', 230.00, 2, 2),
+(3, '2025-06-18', 85.50, 3, 3),
+(4, '2025-06-18', 310.20, 1, 4),
+(5, '2025-06-19', 190.00, 2, 5),
+(6, '2025-06-19', 65.40, 3, 1),
+(7, '2025-06-20', 450.00, 1, 2),
+(8, '2025-06-20', 120.00, 2, 3),
+(9, '2025-06-21', 75.80, 3, 4),
+(10, '2025-06-21', 200.00, 1, 5);
 
+INSERT INTO tienda_online (clave, nombre, url_web) VALUES
+(1,'Cervezas Venezuela Online', 'https://www.cervezasvenezuela.com');
 
+-- PRIMERA PARTE: Insertar solo las ventas online (sin detalles)
 INSERT INTO venta_online (clave, fecha, monto_total, direccion_envio, fk_lugar, fk_tienda_online, fk_usuario) VALUES
-(11, '2025-06-20', 50.00, 'Avenida Libertador, Edificio Sol, Apto 5A', 706, 1, 6),
-(12, '2025-06-20', 48.00, 'Avenida Libertador, Edificio Sol, Apto 5A', 706, 1, 6),
-(13, '2025-06-21', 58.00, 'Calle Real de Sabana Grande, Quinta La Pradera', 706, 1, 12),
-(14, '2025-06-21', 40.00, 'Calle Real de Sabana Grande, Quinta La Pradera', 706, 1, 12),
-(15, '2025-06-22', 76.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 2, Apto 4-i', 714, 1, 13),
-(16, '2025-06-22', 40.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 2, Apto 4-i', 714, 1, 13),
-(17, '2025-06-23', 70.00,'Urbanización El Cafetal, Callejon Miranda, Casa 12', 204, 1, 14),
-(18, '2025-06-23', 50.00,'Urbanización El Cafetal, Callejon Miranda, Casa 12', 204, 1, 14),
-(19, '2025-06-24', 60.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local B', 209, 1, 15),
-(20, '2025-06-24', 50.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local B', 209, 1, 15),
-(21, '2025-07-20', 50.00, 'Avenida Libertador, Edificio Sol, Apto 5B', 706, 1, 16),
-(22, '2025-07-20', 48.00, 'Avenida Libertador, Edificio Sol, Apto 5B', 706, 1, 16),
-(23, '2025-07-21', 58.00, 'Calle Real de Sabana Grande, Quinta Simja', 706, 1, 17),
-(24, '2025-07-21', 40.00, 'Calle Real de Sabana Grande, Quinta Simja', 706, 1, 17),
-(25, '2025-07-22', 76.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 1, Apto 4-i', 714, 1, 18),
-(26, '2025-07-22', 40.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 1, Apto 4-i', 714, 1, 18),
-(27, '2025-07-23', 70.00,'Urbanización El Cafetal, Callejon Miranda, Casa 11', 204, 1, 19),
-(28, '2025-07-23', 50.00,'Urbanización El Cafetal, Callejon Miranda, Casa 11', 204, 1, 19),
-(29, '2025-07-24', 60.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local A', 209, 1, 20),
-(30, '2025-07-24', 50.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local A', 209, 1, 20),
-(31, '2025-07-20', 50.00, 'Avenida Libertador, Edificio Sol, Apto 5C', 706, 1, 21),
-(32, '2025-07-20', 48.00, 'Avenida Libertador, Edificio Sol, Apto 5C', 706, 1, 21),
-(33, '2025-08-21', 58.00, 'Calle Real de Sabana Grande, Quinta Yaheli', 706, 1, 22),
-(34, '2025-08-21', 40.00, 'Calle Real de Sabana Grande, Quinta Yaheli', 706, 1, 22),
-(35, '2025-08-22', 76.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 2, Apto 5-i', 714, 1, 23),
-(36, '2025-08-22', 40.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 2, Apto 5-i', 714, 1, 23),
-(37, '2025-08-23', 70.00,'Urbanización El Cafetal, Callejon Miranda, Casa 10', 204, 1, 24),
-(38, '2025-08-23', 50.00,'Urbanización El Cafetal, Callejon Miranda, Casa 10', 204, 1, 24),
-(39, '2025-08-24', 60.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local C', 209, 1, 25),
-(40, '2025-08-24', 50.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local C', 209, 1, 25),
-(41, '2025-08-20', 50.00, 'Avenida Libertador, Edificio Sol, Apto 5D', 706, 1, 26),
-(42, '2025-08-20', 48.00, 'Avenida Libertador, Edificio Sol, Apto 5D', 706, 1, 26),
-(43, '2025-08-21', 58.00, 'Calle Real de Sabana Grande, Quinta Josefina', 706, 1, 27),
-(44, '2025-08-21', 40.00, 'Calle Real de Sabana Grande, Quinta Josefina', 706, 1, 27),
-(45, '2025-09-22', 76.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 2, Apto 6-i', 714, 1, 28),
-(46, '2025-09-22', 40.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 2, Apto 6-i', 714, 1, 28),
-(47, '2025-09-23', 70.00,'Urbanización El Cafetal, Callejon Miranda, Casa 9', 204, 1, 29),
-(48, '2025-09-23', 50.00,'Urbanización El Cafetal, Callejon Miranda, Casa 9', 204, 1, 29),
-(49, '2025-09-24', 60.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local D', 209, 1, 30),
-(50, '2025-09-24', 50.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local D', 209, 1, 30),
-(51, '2025-09-20', 50.00, 'Avenida Libertador, Edificio Sol, Apto 5E', 706, 1, 31),
-(52, '2025-09-20', 48.00, 'Avenida Libertador, Edificio Sol, Apto 5E', 706, 1, 31),
-(53, '2025-09-21', 58.00, 'Calle Real de Sabana Grande, Quinta Horacio', 706, 1, 32),
-(54, '2025-09-21', 40.00, 'Calle Real de Sabana Grande, Quinta Horacio', 706, 1, 32),
-(55, '2025-09-22', 76.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 2, Apto 7-i', 714, 1, 33),
-(56, '2025-09-22', 40.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 2, Apto 7-i', 714, 1, 33),
-(57, '2025-10-23', 70.00,'Urbanización El Cafetal, Callejon Miranda, Casa 8', 204, 1, 34),
-(58, '2025-10-23', 50.00,'Urbanización El Cafetal, Callejon Miranda, Casa 8', 204, 1, 34),
-(59, '2025-10-24', 60.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local E', 209, 1, 35),
-(60, '2025-10-24', 50.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local E', 209, 1, 35),
-(61, '2025-10-20', 50.00, 'Avenida Libertador, Edificio Sol, Apto 5F', 706, 1, 36),
-(62, '2025-10-20', 48.00, 'Avenida Libertador, Edificio Sol, Apto 5F', 706, 1, 36),
-(63, '2025-10-21', 58.00, 'Calle Real de Sabana Grande, Quinta Rodriguez', 706, 1, 37),
-(64, '2025-10-21', 40.00, 'Calle Real de Sabana Grande, Quinta Rodriguez', 706, 1, 37),
-(65, '2025-10-22', 76.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 2, Apto 8-i', 714, 1, 38),
-(66, '2025-10-22', 40.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 2, Apto 8-i', 714, 1, 38),
-(67, '2025-10-23', 70.00,'Urbanización El Cafetal, Callejon Miranda, Casa 7', 204, 1, 39),
-(68, '2025-10-23', 50.00,'Urbanización El Cafetal, Callejon Miranda, Casa 7', 204, 1, 39),
-(69, '2025-11-24', 60.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local F', 209, 1, 40),
-(70, '2025-11-24', 50.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local F', 209, 1, 40),
-(71, '2025-11-20', 50.00, 'Avenida Libertador, Edificio Sol, Apto 5G', 706, 1, 41),
-(72, '2025-11-20', 48.00, 'Avenida Libertador, Edificio Sol, Apto 5G', 706, 1, 41),
-(73, '2025-11-21', 58.00, 'Calle Real de Sabana Grande, Quinta Hisens', 706, 1, 42),
-(74, '2025-11-21', 40.00, 'Calle Real de Sabana Grande, Quinta Hisens', 706, 1, 42),
-(75, '2025-11-22', 76.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 2, Apto 9-i', 714, 1, 43),
-(76, '2025-11-22', 40.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 2, Apto 9-i', 714, 1, 43),
-(77, '2025-11-23', 70.00,'Urbanización El Cafetal, Callejon Miranda, Casa 6', 204, 1, 44),
-(78, '2025-11-23', 50.00,'Urbanización El Cafetal, Callejon Miranda, Casa 6', 204, 1, 44),
-(79, '2025-11-24', 60.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local G', 209, 1, 45),
-(80, '2025-11-24', 50.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local G', 209, 1, 45),
-(81, '2025-12-20', 50.00, 'Avenida Libertador, Edificio Sol, Apto 5H', 706, 1, 46),
-(82, '2025-12-20', 48.00, 'Avenida Libertador, Edificio Sol, Apto 5H', 706, 1, 46),
-(83, '2025-12-21', 58.00, 'Calle Real de Sabana Grande, Quinta Club', 706, 1, 47),
-(84, '2025-12-21', 40.00, 'Calle Real de Sabana Grande, Quinta Club', 706, 1, 47),
-(85, '2025-12-22', 76.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 1, Apto 5-i', 714, 1, 48),
-(86, '2025-12-22', 40.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 1, Apto 5-i', 714, 1, 48),
-(87, '2025-12-23', 70.00,'Urbanización El Cafetal, Callejon Miranda, Casa 5', 204, 1, 49),
-(88, '2025-12-23', 50.00,'Urbanización El Cafetal, Callejon Miranda, Casa 5', 204, 1, 49),
-(89, '2025-12-24', 60.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local H', 209, 1, 50),
-(90, '2025-12-24', 50.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local H', 209, 1, 50);
---Insertar 12etalles de ordenes de compra
-INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario) VALUES
-(11, 1, 10, 5),--Orden 1, Venta 11
-(12, 2, 12, 4),--Orden 2, Venta 12
-(13, 3, 3, 10),--Orden 3 Venta 13
-(13, 1, 7, 4),
-(14, 5, 10, 4),--Orden 4, Venta 14
-(15, 1, 8, 5),--Orden 5, Venta 15
-(15, 6, 2, 18),
-(16, 2, 10, 4),--Orden 6, Venta 16
-(17, 1, 14, 5),--Orden 7, Venta 17
-(18, 3, 10, 5),--Orden 8, Venta 18
-(19, 8, 1, 10),--Orden 9, Venta 19
-(19, 4, 10, 5),
-(20, 1, 10, 5),--Orden 10, Venta 20
-(21, 1, 10, 5),--Orden 11, Venta 21
-(22, 2, 12, 4),--Orden 12, Venta 22
-(23, 3, 3, 10),--Orden 13 Venta 23
-(23, 1, 7, 4),
-(24, 5, 10, 4),--Orden 14, Venta 24
-(25, 1, 8, 5),--Orden 15, Venta 25
-(25, 6, 2, 18),
-(26, 2, 10, 4),--Orden 16, Venta 26
-(27, 1, 14, 5),--Orden 17, Venta 27
-(28, 3, 10, 5),--Orden 18, Venta 28
-(29, 8, 1, 10),--Orden 19, Venta 29
-(29, 4, 10, 5),
-(30, 1, 10, 5),--Orden 20, Venta 30
-(31, 1, 10, 5),--Orden 21, Venta 31
-(32, 2, 12, 4),--Orden 22, Venta 32
-(33, 3, 3, 10),--Orden 23 Venta 33
-(33, 1, 7, 4),
-(34, 5, 10, 4),--Orden 24, Venta 34
-(35, 1, 8, 5),--Orden 25, Venta 35
-(35, 6, 2, 18),
-(36, 2, 10, 4),--Orden 26, Venta 36
-(37, 1, 14, 5),--Orden 27, Venta 37
-(38, 3, 10, 5),--Orden 28, Venta 38
-(39, 8, 1, 10),--Orden 29, Venta 39
-(39, 4, 10, 5),
-(40, 1, 10, 5),--Orden 30, Venta 40
-(41, 1, 10, 5),--Orden 31, Venta 41
-(42, 2, 12, 4),--Orden 32, Venta 42
-(43, 3, 3, 10),--Orden 33 Venta 43
-(43, 1, 7, 4),
-(44, 5, 10, 4),--Orden 34, Venta 44
-(45, 1, 8, 5),--Orden 35, Venta 45
-(45, 6, 2, 18),
-(46, 2, 10, 4),--Orden 36, Venta 46
-(47, 1, 14, 5),--Orden 37, Venta 47
-(48, 3, 10, 5),--Orden 38, Venta 48
-(49, 8, 1, 10),--Orden 39, Venta 49
-(49, 4, 10, 5),
-(50, 1, 10, 5),--Orden 40, Venta 50
-(51, 1, 10, 5),--Orden 41, Venta 51
-(52, 2, 12, 4),--Orden 42, Venta 52
-(53, 3, 3, 10),--Orden 43 Venta 53
-(53, 1, 7, 4),
-(54, 5, 10, 4),--Orden 44, Venta 54
-(55, 1, 8, 5),--Orden 45, Venta 55
-(55, 6, 2, 18),
-(56, 2, 10, 4),--Orden 46, Venta 56
-(57, 1, 14, 5),--Orden 47, Venta 57
-(58, 3, 10, 5),--Orden 48, Venta 58
-(59, 8, 1, 10),--Orden 49, Venta 59
-(59, 4, 10, 5),
-(60, 1, 10, 5),--Orden 50, Venta 60
-(61, 1, 10, 5),--Orden 51, Venta 61
-(62, 2, 12, 4),--Orden 52, Venta 62
-(63, 3, 3, 10),--Orden 53 Venta 63
-(63, 1, 7, 4),
-(64, 5, 10, 4),--Orden 54, Venta 64
-(65, 1, 8, 5),--Orden 55, Venta 65
-(65, 6, 2, 18),
-(66, 2, 10, 4),--Orden 56, Venta 66
-(67, 1, 14, 5),--Orden 57, Venta 67
-(68, 3, 10, 5),--Orden 58, Venta 68
-(69, 8, 1, 10),--Orden 59, Venta 69
-(69, 4, 10, 5),
-(70, 1, 10, 5),--Orden 60, Venta 70
-(71, 1, 10, 5),--Orden 61, Venta 71
-(72, 2, 12, 4),--Orden 62, Venta 72
-(73, 3, 3, 10),--Orden 63 Venta 73
-(73, 1, 7, 4),
-(74, 5, 10, 4),--Orden 64, Venta 74
-(75, 1, 8, 5),--Orden 65, Venta 75
-(75, 6, 2, 18),
-(76, 2, 10, 4),--Orden 66, Venta 76
-(77, 1, 14, 5),--Orden 67, Venta 77
-(78, 3, 10, 5),--Orden 68, Venta 78
-(79, 8, 1, 10),--Orden 69, Venta 79
-(79, 4, 10, 5),
-(80, 1, 10, 5),--Orden 70, Venta 80
-(81, 1, 10, 5),--Orden 71, Venta 81
-(82, 2, 12, 4),--Orden 72, Venta 82
-(83, 3, 3, 10),--Orden 73 Venta 83
-(83, 1, 7, 4),
-(84, 5, 10, 4),--Orden 74, Venta 84
-(85, 1, 8, 5),--Orden 75, Venta 85
-(85, 6, 2, 18),
-(86, 2, 10, 4),--Orden 76, Venta 86
-(87, 1, 14, 5),--Orden 77, Venta 87
-(88, 3, 10, 5),--Orden 78, Venta 88
-(89, 8, 1, 10),--Orden 79, Venta 89
-(89, 4, 10, 5),
-(90, 1, 10, 5);--Orden 80, Venta 90
+(1, '2025-06-17', 250.50, 'Avenida Libertador, Edificio Sol, Apto 5A', 1013, 1, 12),
+(2, '2025-06-17', 120.00, 'Calle Real de Sabana Grande, Quinta La Pradera', 1297, 1, 12),
+(3, '2025-06-18', 300.75, 'Plaza Venezuela, Residencias Estudiantes, Piso 10', 470, 1, 13),
+(4, '2025-06-18', 80.25, 'Urbanización El Cafetal, Callejon Miranda, Casa 12', 1004, 1, 13),
+(5, '2025-06-19', 450.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local B', 548, 1, 14),
+(6, '2025-06-19', 180.90, 'El Paraíso, Calle Principal, Edificio Estrella', 715, 1, 14),
+(7, '2025-06-20', 95.00, 'La Candelaria, Esquina El Horno, Apartamento 3', 649, 1, 15),
+(8, '2025-06-20', 350.40, 'Chacao, Avenida Principal, Centro Comercial', 1004, 1, 15),
+(9, '2025-06-21', 500.00, 'Altamira, Calle Sur, Residencia El Ávila, PH', 548, 1, 16),
+(10, '2025-06-21', 65.70, 'San Bernardino, Av. La Estrella, Quinta Azul', 649, 1, 16),
+(11, '2025-06-20', 50.00, 'Avenida Libertador, Edificio Sol, Apto 5A', 706, 1, 17),
+(12, '2025-06-20', 48.00, 'Avenida Libertador, Edificio Sol, Apto 5A', 706, 1, 17),
+(13, '2025-06-21', 58.00, 'Calle Real de Sabana Grande, Quinta La Pradera', 706, 1, 18),
+(14, '2025-06-21', 40.00, 'Calle Real de Sabana Grande, Quinta La Pradera', 706, 1, 18),
+(15, '2025-06-22', 76.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 2, Apto 4-i', 714, 1, 19),
+(16, '2025-06-22', 40.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 2, Apto 4-i', 714, 1, 19),
+(17, '2025-06-23', 70.00,'Urbanización El Cafetal, Callejon Miranda, Casa 12', 204, 1, 20),
+(18, '2025-06-23', 50.00,'Urbanización El Cafetal, Callejon Miranda, Casa 12', 204, 1, 20),
+(19, '2025-06-24', 60.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local B', 209, 1, 21),
+(20, '2025-06-24', 50.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local B', 209, 1, 21),
+(21, '2025-07-20', 50.00, 'Avenida Libertador, Edificio Sol, Apto 5B', 706, 1, 22),
+(22, '2025-07-20', 48.00, 'Avenida Libertador, Edificio Sol, Apto 5B', 706, 1, 22),
+(23, '2025-07-21', 58.00, 'Calle Real de Sabana Grande, Quinta Simja', 706, 1, 23),
+(24, '2025-07-21', 40.00, 'Calle Real de Sabana Grande, Quinta Simja', 706, 1, 23),
+(25, '2025-07-22', 76.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 1, Apto 4-i', 714, 1, 24),
+(26, '2025-07-22', 40.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 1, Apto 4-i', 714, 1, 24),
+(27, '2025-07-23', 70.00,'Urbanización El Cafetal, Callejon Miranda, Casa 11', 204, 1, 25),
+(28, '2025-07-23', 50.00,'Urbanización El Cafetal, Callejon Miranda, Casa 11', 204, 1, 25),
+(29, '2025-07-24', 60.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local A', 209, 1, 26),
+(30, '2025-07-24', 50.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local A', 209, 1, 26),
+(31, '2025-07-20', 50.00, 'Avenida Libertador, Edificio Sol, Apto 5C', 706, 1, 27),
+(32, '2025-07-20', 48.00, 'Avenida Libertador, Edificio Sol, Apto 5C', 706, 1, 27),
+(33, '2025-08-21', 58.00, 'Calle Real de Sabana Grande, Quinta Yaheli', 706, 1, 28),
+(34, '2025-08-21', 40.00, 'Calle Real de Sabana Grande, Quinta Yaheli', 706, 1, 28),
+(35, '2025-08-22', 76.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 2, Apto 5-i', 714, 1, 29),
+(36, '2025-08-22', 40.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 2, Apto 5-i', 714, 1, 29),
+(37, '2025-08-23', 70.00,'Urbanización El Cafetal, Callejon Miranda, Casa 10', 204, 1, 30),
+(38, '2025-08-23', 50.00,'Urbanización El Cafetal, Callejon Miranda, Casa 10', 204, 1, 30),
+(39, '2025-08-24', 60.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local C', 209, 1, 31),
+(40, '2025-08-24', 50.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local C', 209, 1, 31),
+(41, '2025-08-20', 50.00, 'Avenida Libertador, Edificio Sol, Apto 5D', 706, 1, 32),
+(42, '2025-08-20', 48.00, 'Avenida Libertador, Edificio Sol, Apto 5D', 706, 1, 32),
+(43, '2025-08-21', 58.00, 'Calle Real de Sabana Grande, Quinta Josefina', 706, 1, 33),
+(44, '2025-08-21', 40.00, 'Calle Real de Sabana Grande, Quinta Josefina', 706, 1, 33),
+(45, '2025-09-22', 76.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 2, Apto 6-i', 714, 1, 34),
+(46, '2025-09-22', 40.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 2, Apto 6-i', 714, 1, 34),
+(47, '2025-09-23', 70.00,'Urbanización El Cafetal, Callejon Miranda, Casa 9', 204, 1, 35),
+(48, '2025-09-23', 50.00,'Urbanización El Cafetal, Callejon Miranda, Casa 9', 204, 1, 35),
+(49, '2025-09-24', 60.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local D', 209, 1, 36),
+(50, '2025-09-24', 50.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local D', 209, 1, 36),
+(51, '2025-09-20', 50.00, 'Avenida Libertador, Edificio Sol, Apto 5E', 706, 1, 37),
+(52, '2025-09-20', 48.00, 'Avenida Libertador, Edificio Sol, Apto 5E', 706, 1, 37),
+(53, '2025-09-21', 58.00, 'Calle Real de Sabana Grande, Quinta Horacio', 706, 1, 38),
+(54, '2025-09-22', 76.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 2, Apto 7-i', 714, 1, 39),
+(55, '2025-09-22', 40.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 2, Apto 7-i', 714, 1, 39),
+(56, '2025-09-23', 70.00,'Urbanización El Cafetal, Callejon Miranda, Casa 8', 204, 1, 40),
+(57, '2025-09-23', 50.00,'Urbanización El Cafetal, Callejon Miranda, Casa 8', 204, 1, 40),
+(58, '2025-09-24', 60.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local E', 209, 1, 41),
+(59, '2025-09-24', 50.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local E', 209, 1, 41),
+(60, '2025-09-20', 50.00, 'Avenida Libertador, Edificio Sol, Apto 5F', 706, 1, 42),
+(61, '2025-09-20', 48.00, 'Avenida Libertador, Edificio Sol, Apto 5F', 706, 1, 42),
+(62, '2025-09-21', 58.00, 'Calle Real de Sabana Grande, Quinta Isabel', 706, 1, 43),
+(63, '2025-09-21', 40.00, 'Calle Real de Sabana Grande, Quinta Isabel', 706, 1, 43),
+(64, '2025-09-22', 76.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 2, Apto 8-i', 714, 1, 44),
+(65, '2025-09-22', 40.00, 'Avenida Cristobal Mendoza, Edificio STAJAK, Torre 2, Apto 8-i', 714, 1, 44),
+(66, '2025-09-23', 70.00,'Urbanización El Cafetal, Callejon Miranda, Casa 7', 204, 1, 45),
+(67, '2025-09-23', 50.00,'Urbanización El Cafetal, Callejon Miranda, Casa 7', 204, 1, 45),
+(68, '2025-09-24', 60.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local F', 209, 1, 46),
+(69, '2025-09-24', 50.00, 'Los Palos Grandes, Av. Francisco de Miranda, Local F', 209, 1, 46),
+(70, '2025-09-20', 50.00, 'Avenida Libertador, Edificio Sol, Apto 5G', 706, 1, 47);
+
+INSERT INTO inventario_tienda (clave, fk_lugar_tienda, fk_presentacion, fk_tienda_fisica, cantidad) VALUES
+(1, 1, 1, 1, 150),
+(2, 2, 2, 1, 200),
+(3, 3, 3, 2, 80),
+(4, 4, 4, 2, 120),
+(5, 5, 5, 1, 250),
+(6, 6, 1, 3, 90),
+(7, 7, 2, 4, 180),
+(8, 8, 3, 1, 70),
+(9, 9, 4, 1, 300),
+(10, 10, 5, 1, 110);
+
+-- Insertar detalles de venta física usando las claves reales generadas
+-- Primera venta física (clave 1)
+INSERT INTO detalle_venta_fisica (cantidad, precio_unitario, fk_venta_tienda_fisica, fk_inventario_tienda)
+SELECT 1, 15075, 1, 1;
+
+-- Segunda venta física (clave 2)
+INSERT INTO detalle_venta_fisica (cantidad, precio_unitario, fk_venta_tienda_fisica, fk_inventario_tienda)
+SELECT 2, 11500, 2, 3;
+
+-- Tercera venta física (clave 3)
+INSERT INTO detalle_venta_fisica (cantidad, precio_unitario, fk_venta_tienda_fisica, fk_inventario_tienda)
+SELECT 3, 2850, 3, 5;
+
+-- Cuarta venta física (clave 4)
+INSERT INTO detalle_venta_fisica (cantidad, precio_unitario, fk_venta_tienda_fisica, fk_inventario_tienda)
+SELECT 1, 31020, 4, 2;
+
+-- Quinta venta física (clave 5)
+INSERT INTO detalle_venta_fisica (cantidad, precio_unitario, fk_venta_tienda_fisica, fk_inventario_tienda)
+SELECT 2, 9500, 5, 4;
+
+-- Sexta venta física (clave 6)
+INSERT INTO detalle_venta_fisica (cantidad, precio_unitario, fk_venta_tienda_fisica, fk_inventario_tienda)
+SELECT 1, 6540, 6, 6;
+
+-- Séptima venta física (clave 7)
+INSERT INTO detalle_venta_fisica (cantidad, precio_unitario, fk_venta_tienda_fisica, fk_inventario_tienda)
+SELECT 3, 15000, 7, 7;
+
+-- Octava venta física (clave 8)
+INSERT INTO detalle_venta_fisica (cantidad, precio_unitario, fk_venta_tienda_fisica, fk_inventario_tienda)
+SELECT 1, 12000, 8, 9;
+
+-- Novena venta física (clave 9)
+INSERT INTO detalle_venta_fisica (cantidad, precio_unitario, fk_venta_tienda_fisica, fk_inventario_tienda)
+SELECT 2, 3790, 9, 8;
+
+-- Décima venta física (clave 10)
+INSERT INTO detalle_venta_fisica (cantidad, precio_unitario, fk_venta_tienda_fisica, fk_inventario_tienda)
+SELECT 1, 20000, 10, 10;
+
+INSERT INTO reposicion (fk_almacen, fk_inventario_tienda, fk_usuario, cantidad, fecha) VALUES
+(1, 1, 1, 50, '2025-06-10'),
+(2, 3, 2, 30, '2025-06-11'),
+(3, 5, 3, 100, '2025-06-12'),
+(1, 2, 1, 75, '2025-06-13'),
+(2, 4, 4, 40, '2025-06-14'),
+(3, 6, 5, 60, '2025-06-15'),
+(1, 7, 1, 25, '2025-06-16'),
+(2, 9, 2, 90, '2025-06-17'),
+(3, 8, 3, 35, '2025-06-17'),
+(1, 10, 4, 55, '2025-06-17');
+
+INSERT INTO tasa_cambio (moneda, monto_equivalencia, fecha_inicio, fecha_fin) VALUES
+('VES', 1.00, '2024-01-01', '2024-01-31'),
+('USD', 36.50, '2024-01-01', '2024-01-31'),
+('EUR', 39.20, '2024-01-01', '2024-01-31'),
+('USD', 37.00, '2024-02-01', '2024-02-29'),
+('EUR', 40.50, '2024-02-01', '2024-02-29'),
+('USD', 38.10, '2024-03-01', '2024-03-31'),
+('EUR', 41.80, '2024-03-01', '2024-03-31'),
+('USD', 38.90, '2024-04-01', '2025-06-16'),
+('EUR', 42.50, '2024-04-01', '2025-06-16'), 
+('USD', 39.50, '2025-06-17', NULL); 
+-- Insertar tasa de cambio para puntos (ejemplo: 1 punto = 10 Bs)
+INSERT INTO tasa_cambio (moneda, monto_equivalencia, fecha_inicio) 
+VALUES ('PUNTOS', 10.00, CURRENT_DATE)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO metodo_de_pago (moneda, metodo_preferido, fk_usuario, valor, numero_cheque, fecha_vencimiento, banco, numero_tarjeta, tipo) VALUES
+('VES', FALSE, NULL, 50000, NULL, NULL, NULL, NULL, 'Efectivo'), -- Efectivo, no preferido, sin usuario
+('USD', TRUE, 1, NULL, NULL, '2027-12-31', 'Banco Mercantil', 4111222233334444, 'Tarjeta de credito'), -- Tarjeta de crédito preferida para el usuario 1
+('VES', FALSE, NULL, NULL, 10001, NULL, 'Banco de Venezuela', NULL, 'Cheque'), -- Cheque, no preferido, sin usuario
+('EUR', FALSE, NULL, NULL, NULL, '2026-08-30', 'BBVA Banco Provincial', 4555666677778888, 'Tarjeta de debito'), -- Tarjeta de débito, no preferida, **sin usuario** para cumplir la restricción
+('VES', FALSE, NULL, NULL, NULL, NULL, NULL, NULL, 'Puntos'), -- Puntos, no preferido, sin usuario
+('USD', TRUE, 3, NULL, NULL, '2028-04-15', 'Banco Exterior', 4999000011112222, 'Tarjeta de credito'), -- Tarjeta de crédito preferida para el usuario 3
+('VES', FALSE, NULL, 10000, NULL, NULL, NULL, NULL, 'Efectivo'), -- Otro efectivo, no preferido, sin usuario
+('VES', FALSE, NULL, NULL, 10002, NULL, 'Banco Nacional de Crédito', NULL, 'Cheque'), -- Otro cheque, no preferido, sin usuario
+('USD', FALSE, NULL, NULL, NULL, '2026-11-20', 'Banesco', 5111222233334444, 'Tarjeta de debito'), -- Tarjeta de débito, no preferida, **sin usuario**
+('EUR', TRUE, 5, NULL, NULL, '2029-01-01', 'BOD', 5222333344445555, 'Tarjeta de credito'); -- Tarjeta de crédito preferida para el usuario 5
+
+--Insertar ordenes de compra 
+--Ventas online 
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 1, 1, 10, 5;
+
+-- Segunda venta online (clave 2) 
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 2, 2, 12, 4;
+
+-- Tercera venta online (clave 3)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 3, 3, 3, 10;
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 3, 1, 7, 4;
+
+-- Cuarta venta online (clave 4)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 4, 5, 10, 4;
+
+-- Quinta venta online (clave 5)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 5, 1, 8, 5;
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 5, 6, 2, 18;
+
+-- Sexta venta online (clave 6)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 6, 2, 10, 4;
+
+-- Séptima venta online (clave 7)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 7, 1, 14, 5;
+
+-- Octava venta online (clave 8)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 8, 3, 10, 5;
+
+-- Novena venta online (clave 9)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 9, 8, 1, 10;
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 9, 4, 10, 5;
+
+-- Décima venta online (clave 10)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 10, 1, 10, 5;
+
+-- Venta 11 (clave 11)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 11, 1, 10, 5;
+
+-- Venta 12 (clave 12)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 12, 2, 12, 4;
+
+-- Venta 13 (clave 13)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 13, 3, 3, 10;
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 13, 1, 7, 4;
+
+-- Venta 14 (clave 14)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 14, 5, 10, 4;
+
+-- Venta 15 (clave 15)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 15, 1, 8, 5;
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 15, 6, 2, 18;
+
+-- Venta 16 (clave 16)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 16, 2, 10, 4;
+
+-- Venta 17 (clave 17)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 17, 1, 14, 5;
+
+-- Venta 18 (clave 18)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 18, 3, 10, 5;
+
+-- Venta 19 (clave 19)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 19, 8, 1, 10;
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 19, 4, 10, 5;
+
+-- Venta 20 (clave 20)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 20, 1, 10, 5;
+
+-- Venta 21 (clave 21)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 21, 1, 10, 5;
+
+-- Venta 22 (clave 22)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 22, 2, 12, 4;
+
+-- Venta 23 (clave 23)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 23, 3, 3, 10;
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 23, 1, 7, 4;
+
+-- Venta 24 (clave 24)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 24, 5, 10, 4;
+
+-- Venta 25 (clave 25)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 25, 1, 8, 5;
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 25, 6, 2, 18;
+
+-- Venta 26 (clave 26)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 26, 2, 10, 4;
+
+-- Venta 27 (clave 27)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 27, 1, 14, 5;
+
+-- Venta 28 (clave 28)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 28, 3, 10, 5;
+
+-- Venta 29 (clave 29)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 29, 8, 1, 10;
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 29, 4, 10, 5;
+
+-- Venta 30 (clave 30)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 30, 1, 10, 5;
+
+-- Venta 31 (clave 31)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 31, 1, 10, 5;
+
+-- Venta 32 (clave 32)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 32, 2, 12, 4;
+
+-- Venta 33 (clave 33)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 33, 3, 3, 10;
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 33, 1, 7, 4;
+
+-- Venta 34 (clave 34)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 34, 5, 10, 4;
+
+-- Venta 35 (clave 35)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 35, 1, 8, 5;
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 35, 6, 2, 18;
+
+-- Venta 36 (clave 36)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 36, 2, 10, 4;
+
+-- Venta 37 (clave 37)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 37, 1, 14, 5;
+
+-- Venta 38 (clave 38)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 38, 3, 10, 5;
+
+-- Venta 39 (clave 39)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 39, 8, 1, 10;
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 39, 4, 10, 5;
+
+-- Venta 40 (clave 40)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 40, 1, 10, 5;
+
+-- Venta 41 (clave 41)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 41, 1, 10, 5;
+
+-- Venta 42 (clave 42)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 42, 2, 12, 4;
+
+-- Venta 43 (clave 43)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 43, 3, 3, 10;
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 43, 1, 7, 4;
+
+-- Venta 44 (clave 44)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 44, 5, 10, 4;
+
+-- Venta 45 (clave 45)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 45, 1, 8, 5;
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 45, 6, 2, 18;
+
+-- Venta 46 (clave 46)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 46, 2, 10, 4;
+
+-- Venta 47 (clave 47)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 47, 1, 14, 5;
+
+-- Venta 48 (clave 48)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 48, 3, 10, 5;
+
+-- Venta 49 (clave 49)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 49, 8, 1, 10;
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 49, 4, 10, 5;
+
+-- Venta 50 (clave 50)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 50, 1, 10, 5;
+
+-- Venta 51 (clave 51)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 51, 1, 10, 5;
+
+-- Venta 52 (clave 52)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 52, 2, 12, 4;
+
+-- Venta 53 (clave 53)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 53, 3, 3, 10;
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 53, 1, 7, 4;
+
+-- Venta 54 (clave 54)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 54, 5, 10, 4;
+
+-- Venta 55 (clave 55)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 55, 1, 8, 5;
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 55, 6, 2, 18;
+
+-- Venta 56 (clave 56)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 56, 2, 10, 4;
+
+-- Venta 57 (clave 57)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 57, 1, 14, 5;
+
+-- Venta 58 (clave 58)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 58, 3, 10, 5;
+
+-- Venta 59 (clave 59)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 59, 8, 1, 10;
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 59, 4, 10, 5;
+
+-- Venta 60 (clave 60)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 60, 1, 10, 5;
+
+-- Venta 61 (clave 61)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 61, 1, 10, 5;
+
+-- Venta 62 (clave 62)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 62, 2, 12, 4;
+
+-- Venta 63 (clave 63)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 63, 3, 3, 10;
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 63, 1, 7, 4;
+
+-- Venta 64 (clave 64)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 64, 5, 10, 4;
+
+-- Venta 65 (clave 65)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 65, 1, 8, 5;
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 65, 6, 2, 18;
+
+-- Venta 66 (clave 66)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 66, 2, 10, 4;
+
+-- Venta 67 (clave 67)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 67, 1, 14, 5;
+
+-- Venta 68 (clave 68)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 68, 3, 10, 5;
+
+-- Venta 69 (clave 69)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 69, 8, 1, 10;
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 69, 4, 10, 5;
+
+-- Venta 70 (clave 70)
+INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+SELECT 70, 1, 10, 5;
+
+-- SINCRONIZAR SECUENCIAS DESPUÉS DE INSERTAR DATOS CON CLAVES EXPLÍCITAS
+-- Esto evita errores de clave duplicada en futuros inserts automáticos
+
+-- Sincronizar secuencia de venta_online
+SELECT setval('venta_online_clave_seq', (SELECT MAX(clave) FROM venta_online));
+
+-- Sincronizar secuencia de venta_tienda_fisica
+SELECT setval('venta_tienda_fisica_clave_seq', (SELECT MAX(clave) FROM venta_tienda_fisica));
+
+-- Sincronizar secuencia de usuario
+SELECT setval('usuario_clave_seq', (SELECT MAX(clave) FROM usuario));
+
+-- Sincronizar secuencia de detalle_venta_online
+SELECT setval('detalle_venta_online_clave_seq', (SELECT MAX(clave) FROM detalle_venta_online));
+
+-- Sincronizar secuencia de detalle_venta_fisica
+SELECT setval('detalle_venta_fisica_clave_seq', (SELECT MAX(clave) FROM detalle_venta_fisica));
