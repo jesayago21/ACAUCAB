@@ -31,7 +31,7 @@ async function generarReporte() {
         });
         
         // Guardar el reporte
-        const outputPath = `./reporte_puntos_canjeados_${new Date().toISOString().split('T')[0]}.html`;
+        const outputPath = `./ReportesPdf/puntos_canjeados/reporte_puntos_canjeados_${new Date().toISOString().split('T')[0]}.html`;
         require('fs').writeFileSync(outputPath, result.content);
         
         console.log('✅ Reporte generado exitosamente!');
@@ -98,7 +98,7 @@ async function generarReporteConFechas(fechaInicio, fechaFin) {
             data: data
         });
         
-        const outputPath = `./reporte_puntos_canjeados_${fechaInicio}_${fechaFin}.html`;
+        const outputPath = `./ReportesPdf/puntos_canjeados/reporte_puntos_canjeados_${fechaInicio}_${fechaFin}.html`;
         require('fs').writeFileSync(outputPath, result.content);
         
         console.log('✅ Reporte generado exitosamente!');
@@ -144,7 +144,7 @@ async function generarReportePDF() {
             data: data
         });
         
-        const outputPath = `./reporte_puntos_canjeados_${new Date().toISOString().split('T')[0]}.pdf`;
+        const outputPath = `./ReportesPdf/puntos_canjeados/reporte_puntos_canjeados_${new Date().toISOString().split('T')[0]}.pdf`;
         require('fs').writeFileSync(outputPath, result.content);
         
         console.log('✅ Reporte PDF generado exitosamente!');

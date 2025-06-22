@@ -55,3 +55,26 @@ Error: Extension "chrome-pdf" is not compatible with "core" extension. Missing "
     at Object._useMany (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\main\extensions\extensionsManager.js:99:38)
     at async MainReporter.init (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\main\reporter.js:207:7)
     at async generarReportePDF (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\generar_reporte_puntos.js:120:9)
+2025-06-22T21:09:14.466Z - error: Error when processing render request 1
+(because) could not find Chrome (ver. 136.0.7103.49). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome`) or
+ 2. your cache path is incorrectly configured (which is: C:\Users\sayag\.cache\puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+Error: Could not find Chrome (ver. 136.0.7103.49). This can occur if either
+ 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome`) or
+ 2. your cache path is incorrectly configured (which is: C:\Users\sayag\.cache\puppeteer).
+For (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.
+  at ChromeLauncher.resolveExecutablePath (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\node_modules\puppeteer-core\lib\cjs\puppeteer\node\BrowserLauncher.js:308:27)
+  at ChromeLauncher.computeLaunchArguments (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\node_modules\puppeteer-core\lib\cjs\puppeteer\node\ChromeLauncher.js:93:24)
+  at async ChromeLauncher.launch (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\node_modules\puppeteer-core\lib\cjs\puppeteer\node\BrowserLauncher.js:84:28)
+  at async createBrowser (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\node_modules\@jsreport\jsreport-chrome-pdf\lib\chromePoolStrategy.js:115:26)
+  at async allocateBrowser (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\node_modules\@jsreport\jsreport-chrome-pdf\lib\chromePoolStrategy.js:130:5)
+  at async getBrowser (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\node_modules\@jsreport\jsreport-chrome-pdf\lib\chromePoolStrategy.js:33:30)
+  at async module.exports (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\node_modules\@jsreport\jsreport-chrome-pdf\lib\conversion.js:11:19)
+  at async execute (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\node_modules\@jsreport\jsreport-chrome-pdf\lib\chromePoolStrategy.js:30:22)
+  at async C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\node_modules\@jsreport\jsreport-chrome-pdf\lib\lazyRecipe.js:58:20
+  at async invokeRender (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\render\render.js:93:5)
+  at async WorkerReporter._render (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\render\render.js:148:7)
+  at async C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\worker\reporter.js:233:24
+  at async processAndResponse (C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB\reportes\node_modules\@jsreport\advanced-workers\lib\workerHandler.js:42:17) rootId=g7mnzdqs1teyz19, id=g7mnzdqs1teyz19
+2025-06-22T21:09:14.467Z - error: Rendering request 1 finished with error in 1325 ms rootId=g7mnzdqs1teyz19, id=g7mnzdqs1teyz19
