@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Ingresos por Evento - ACAUCAB</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f8f9fa; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; background-color: white; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        .header { text-align: center; border-bottom: 3px solid #17a2b8; padding-bottom: 20px; margin-bottom: 30px; }
+        .header h1 { color: #17a2b8; font-size: 2.5em; margin-bottom: 10px; }
+        .header .subtitle { color: #6c757d; font-size: 1.2em; }
+        .report-info { background-color: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .info-item { text-align: center; }
+        .info-label { font-weight: bold; color: #495057; font-size: 0.9em; text-transform: uppercase; }
+        .info-value { font-size: 1.1em; color: #17a2b8; margin-top: 5px; }
+        .summary-section { background: linear-gradient(135deg, #17a2b8, #106c7a); color: white; padding: 25px; border-radius: 10px; margin-bottom: 30px; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .summary-item { text-align: center; padding: 15px; background-color: rgba(255,255,255,0.1); border-radius: 8px; }
+        .summary-value { font-size: 2em; font-weight: bold; margin-bottom: 5px; }
+        .summary-label { font-size: 0.9em; opacity: 0.9; }
+        .section-title { color: #17a2b8; font-size: 1.5em; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #dee2e6; }
+        .table-container { overflow-x: auto; margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; background-color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
+        th { background-color: #17a2b8; color: white; padding: 15px; text-align: left; font-weight: 600; }
+        td { padding: 12px 15px; border-bottom: 1px solid #dee2e6; }
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        tr:hover { background-color: #e2f7fa; }
+        .amount { text-align: right; font-weight: 600; font-family: 'Courier New', Courier, monospace; }
+        .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #dee2e6; color: #6c757d; font-size: 0.9em; }
+        .no-data { text-align: center; padding: 40px; color: #6c757d; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>ACAUCAB</h1>
+            <div class="subtitle">Comparación de Ingresos por Evento</div>
+        </div>
+
+        <!-- Información del Reporte -->
+        <div class="report-info">
+            <div class="info-item">
+                <div class="info-label">Período</div>
+                <div class="info-value">{{fechaInicio}} - {{fechaFin}}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Fecha de Generación</div>
+                <div class="info-value">{{fechaGeneracion}}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Hora de Generación</div>
+                <div class="info-value">{{horaGeneracion}}</div>
+            </div>
+        </div>
+
+        <!-- Resumen General -->
+        {{#if resumen}}
+        <div class="summary-section">
+            <h2 class="section-title" style="color: white; border-bottom-color: rgba(255,255,255,0.3);">Resumen General del Período</h2>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-value">{{resumen.numero_eventos}}</div>
+                    <div class="summary-label">Eventos Analizados</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value">Bs. {{formatCurrency resumen.gran_total_entradas}}</div>
+                    <div class="summary-label">Total Ingresos (Entradas)</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value">Bs. {{formatCurrency resumen.gran_total_productos}}</div>
+                    <div class="summary-label">Total Ingresos (Productos)</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value">Bs. {{formatCurrency resumen.gran_total_general}}</div>
+                    <div class="summary-label">Ingresos Totales</div>
+                </div>
+            </div>
+        </div>
+        {{/if}}
+
+        <!-- Detalle por Evento -->
+        <h2 class="section-title">Detalle por Evento</h2>
+        {{#if detalle.length}}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Evento</th>
+                        <th>Fecha</th>
+                        <th class="amount">Ingresos Entradas</th>
+                        <th class="amount">Ingresos Productos (Cervezas)</th>
+                        <th class="amount">Total por Evento</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each detalle}}
+                    <tr>
+                        <td>{{nombre_evento}}</td>
+                        <td>{{fecha_evento}}</td>
+                        <td class="amount">Bs. {{formatCurrency total_ingresos_entradas}}</td>
+                        <td class="amount">Bs. {{formatCurrency total_ingresos_productos}}</td>
+                        <td class="amount"><b>Bs. {{formatCurrency total_ingresos_evento}}</b></td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+        {{else}}
+        <div class="no-data">
+            <h3>No se encontraron eventos</h3>
+            <p>No hay registros de eventos con ingresos para el período especificado.</p>
+        </div>
+        {{/if}}
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>Reporte generado automáticamente por el sistema ACAUCAB</p>
+            <p>© 2024 ACAUCAB - Todos los derechos reservados</p>
+        </div>
+    </div>
+</body>
+</html>
