@@ -36,10 +36,6 @@ INSERT INTO empleado (ci, primer_nombre, segundo_nombre, primer_apellido, segund
 (87654321, 'María', 'Elena', 'Rodríguez', 'López', '1990-07-22', 'Vendedora principal'),
 (11223344, 'Pedro', 'Antonio', 'Martínez', 'Silva', '1988-11-10', 'Supervisor de tienda');
 
--- Insertar cliente de prueba (tipo natural)
-INSERT INTO cliente (rif, puntos_acumulados, tipo, ci, primer_nombre, segundo_nombre, primer_apellido, segundo_apellido, direccion_habitacion, fk_direccion_habitacion) VALUES
-(123456789, 150, 'natural', 55667788, 'Ana', 'Sofía', 'García', 'Mendoza', 'Av. Principal #123', 1);
-
 -- Insertar usuarios de prueba
 -- Usuario administrador (empleado)
 INSERT INTO usuario (username, contrasena, fk_rol, fk_empleado, fk_miembro, fk_cliente) VALUES
@@ -58,10 +54,10 @@ INSERT INTO usuario (username, contrasena, fk_rol, fk_empleado, fk_miembro, fk_c
 ('cliente', 'cliente123', 4, NULL, NULL, 1);
 
 -- Insertar contratos para los empleados (necesario para obtener cargo y departamento)
-INSERT INTO contrato (fecha_inicio, fecha_fin, monto_salario, fk_empleado, fk_cargo, fk_departamento) VALUES
-(CURRENT_DATE - INTERVAL '1 year', NULL, 50000, 12345678, 1, 1), -- admin
-(CURRENT_DATE - INTERVAL '6 months', NULL, 35000, 87654321, 2, 2), -- vendedor
-(CURRENT_DATE - INTERVAL '8 months', NULL, 45000, 11223344, 3, 2); -- supervisor
+INSERT INTO contrato (clave, fecha_inicio, fecha_fin, monto_salario, fk_empleado, fk_cargo, fk_departamento) VALUES
+(11, CURRENT_DATE - INTERVAL '1 year', NULL, 50000, 12345678, 1, 1), -- admin
+(12, CURRENT_DATE - INTERVAL '6 months', NULL, 35000, 87654321, 2, 2), -- vendedor
+(13, CURRENT_DATE - INTERVAL '8 months', NULL, 45000, 11223344, 3, 2); -- supervisor
 
 /** 
 CREDENCIALES DE PRUEBA:

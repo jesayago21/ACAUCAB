@@ -293,9 +293,10 @@ INSERT INTO pago (fecha_pago, monto_total, fk_tasa_cambio, fk_metodo_de_pago, fk
 -- ===================================================================================
 -- Historico de ventas online (CORREGIDO: usando estatus correctos para ventas online)
 -- Estatus 7: procesando, Estatus 8: listo para entrega, Estatus 9: entregado
+-- SOLO para ventas online que existen (del 11 al 70)
 -- ===================================================================================
 
--- Historico para ventas online 11-90 (todas en estado 'procesando')
+-- Historico para ventas online 11-70 (todas en estado 'procesando')
 INSERT INTO historico (fecha, fk_estatus, fk_venta_online) VALUES
 ('2025-06-20 10:00:00', 7, 11), -- Estatus 7: procesando para venta online
 ('2025-06-20 10:00:00', 7, 12), -- Estatus 7: procesando para venta online
@@ -356,27 +357,7 @@ INSERT INTO historico (fecha, fk_estatus, fk_venta_online) VALUES
 ('2025-10-23 10:00:00', 7, 67), -- Estatus 7: procesando para venta online
 ('2025-10-23 10:00:00', 7, 68), -- Estatus 7: procesando para venta online
 ('2025-10-24 10:00:00', 7, 69), -- Estatus 7: procesando para venta online
-('2025-10-24 10:00:00', 7, 70), -- Estatus 7: procesando para venta online
-('2025-11-20 10:00:00', 7, 71), -- Estatus 7: procesando para venta online
-('2025-11-20 10:00:00', 7, 72), -- Estatus 7: procesando para venta online
-('2025-11-21 10:00:00', 7, 73), -- Estatus 7: procesando para venta online
-('2025-11-21 10:00:00', 7, 74), -- Estatus 7: procesando para venta online
-('2025-11-22 10:00:00', 7, 75), -- Estatus 7: procesando para venta online
-('2025-11-22 10:00:00', 7, 76), -- Estatus 7: procesando para venta online
-('2025-11-23 10:00:00', 7, 77), -- Estatus 7: procesando para venta online
-('2025-11-23 10:00:00', 7, 78), -- Estatus 7: procesando para venta online
-('2025-11-24 10:00:00', 7, 79), -- Estatus 7: procesando para venta online
-('2025-11-24 10:00:00', 7, 80), -- Estatus 7: procesando para venta online
-('2025-12-20 10:00:00', 7, 81), -- Estatus 7: procesando para venta online
-('2025-12-20 10:00:00', 7, 82), -- Estatus 7: procesando para venta online
-('2025-12-21 10:00:00', 7, 83), -- Estatus 7: procesando para venta online
-('2025-12-21 10:00:00', 7, 84), -- Estatus 7: procesando para venta online
-('2025-12-22 10:00:00', 7, 85), -- Estatus 7: procesando para venta online
-('2025-12-22 10:00:00', 7, 86), -- Estatus 7: procesando para venta online
-('2025-12-23 10:00:00', 7, 87), -- Estatus 7: procesando para venta online
-('2025-12-23 10:00:00', 7, 88), -- Estatus 7: procesando para venta online
-('2025-12-24 10:00:00', 7, 89), -- Estatus 7: procesando para venta online
-('2025-12-24 10:00:00', 7, 90); -- Estatus 7: procesando para venta online
+('2025-10-24 10:00:00', 7, 70); -- Estatus 7: procesando para venta online
 
 -- ===================================================================================
 -- PAGOS ADICIONALES CON PUNTOS (DESPUÉS DE ACTUALIZAR PUNTOS)
