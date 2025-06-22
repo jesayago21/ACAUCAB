@@ -3,8 +3,8 @@ const pool = require('../../../backend/config/db');
 async function run() {
   try {
     // Parámetros del reporte (puedes modificar estas fechas)
-    const fechaInicio = '2024-01-01';
-    const fechaFin = '2024-12-31';
+    const fechaInicio = '2025-06-17';
+    const fechaFin = '2025-06-21';
 
     // Consulta principal - Detalle por cliente
     const queryDetalle = `

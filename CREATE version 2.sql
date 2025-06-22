@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS privilegio (
     clave SERIAL,
     nombre VARCHAR (50) NOT NULL,
     descripcion TEXT,
-    CONSTRAINT pk_nombre PRIMARY KEY (clave)
+    CONSTRAINT pk_privilegio PRIMARY KEY (clave)
 );
 
 CREATE TABLE IF NOT EXISTS tipo_beneficio (

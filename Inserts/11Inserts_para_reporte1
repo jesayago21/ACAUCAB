@@ -1,0 +1,26 @@
+UPDATE cliente SET puntos_acumulados = 100000
+WHERE id = 1;
+
+INSERT INTO metodo_de_pago (moneda, tipo)
+VALUES ('PUNTOS', 'Puntos');
+
+-- VENTA ONLINE
+INSERT INTO venta_online ( fecha, monto_total, direccion_envio, fk_lugar, fk_tienda_online, fk_usuario)
+VALUES ('2025-06-17', 200.00, 'Av. Principal #1', 1, 1, 6);
+
+INSERT INTO pago (fecha_pago, monto_total, fk_tasa_cambio, fk_metodo_de_pago, fk_venta_online)
+VALUES ('2025-06-17', 200.00, 11, 11, 91);
+
+-- VENTA TIENDA FISICA
+INSERT INTO venta_tienda_fisica (fecha, total_venta, fk_tienda_fisica, fk_cliente)
+VALUES ( '2025-06-18', 150.00, 1, 1);
+
+INSERT INTO pago (fecha_pago, monto_total, fk_tasa_cambio, fk_metodo_de_pago, fk_venta_tienda_fisica)
+VALUES ('2025-06-18', 150.00, 11, 11, 11);
+
+-- VENTA EVENTO
+INSERT INTO venta_evento (fecha, monto_total, fk_evento, fk_cliente)
+VALUES ('2025-06-19', 300.00, 1, 1);
+
+INSERT INTO pago (fecha_pago, monto_total, fk_tasa_cambio, fk_metodo_de_pago, fk_venta_evento)
+VALUES ('2025-06-19', 300.00, 11, 11, 11);

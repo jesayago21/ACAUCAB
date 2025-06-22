@@ -290,7 +290,7 @@ BEGIN
         SELECT 1 
         FROM metodo_de_pago 
         WHERE clave = NEW.fk_metodo_de_pago 
-        AND tipo = 'Tarjeta de credito'
+        AND tipo = 'Tarjeta de credito' OR tipo = 'Puntos'
     ) THEN
         RAISE EXCEPTION 'Las ventas online solo pueden pagarse con tarjeta de crédito';
     END IF;
