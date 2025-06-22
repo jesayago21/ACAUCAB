@@ -42,14 +42,30 @@ const canAccessModule = (user: User, module: string): boolean => {
             return true;
 
         // Gestión de usuarios - requiere permisos de usuario o dashboard admin
+        case 'usuarios':
         case 'usuarios-lista':
-            return hasPermission(user, 'consultar usuario') || hasPermission(user, 'ver dashboard admin');
+            return hasPermission(user, 'Consultar usuario') || 
+                   hasPermission(user, 'Consultar empleado') ||
+                   hasPermission(user, 'Consultar miembro') ||
+                   hasPermission(user, 'Consultar cliente') ||
+                   hasPermission(user, 'ver dashboard admin') ||
+                   hasPermission(user, 'Crear usuario') ||
+                   hasPermission(user, 'Modificar usuario') ||
+                   hasPermission(user, 'Eliminar usuario');
         case 'usuarios-crear':
-            return hasPermission(user, 'crear usuario');
+            return hasPermission(user, 'Crear usuario') ||
+                   hasPermission(user, 'Crear empleado') ||
+                   hasPermission(user, 'Crear miembro') ||
+                   hasPermission(user, 'Crear cliente');
         case 'roles':
-            return hasPermission(user, 'consultar rol') || hasPermission(user, 'gestionar roles privilegios');
+            return hasPermission(user, 'Consultar rol') || 
+                   hasPermission(user, 'Crear rol') ||
+                   hasPermission(user, 'Modificar rol') ||
+                   hasPermission(user, 'Eliminar rol') ||
+                   hasPermission(user, 'gestionar roles privilegios');
         case 'privilegios':
-            return hasPermission(user, 'consultar privilegio') || hasPermission(user, 'gestionar roles privilegios');
+            return hasPermission(user, 'Consultar privilegio') || 
+                   hasPermission(user, 'gestionar roles privilegios');
 
         // Gestión de productos
         case 'cervezas':
@@ -87,17 +103,18 @@ const canAccessModule = (user: User, module: string): boolean => {
 
         // Gestión de compras
         case 'compras':
-            return hasPermission(user, 'consultar compra');
+            return hasPermission(user, 'Consultar compra');
         case 'estados-compra':
             return hasPermission(user, 'gestionar estados compra');
 
         // Gestión de clientes y miembros
+        case 'personas':
         case 'clientes':
-            return hasPermission(user, 'consultar cliente');
+            return hasPermission(user, 'Consultar cliente');
         case 'empleados':
-            return hasPermission(user, 'consultar empleado');
+            return hasPermission(user, 'Consultar empleado');
         case 'miembros':
-            return hasPermission(user, 'consultar miembro');
+            return hasPermission(user, 'Consultar miembro');
 
         // Gestión de eventos y ofertas
         case 'eventos':

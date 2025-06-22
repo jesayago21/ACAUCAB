@@ -4,6 +4,7 @@ import RoleManagement from './RoleManagement';
 import UserManagement from './UserManagement';
 import PrivilegeManagement from './PrivilegeManagement';
 import StatusManagement from './StatusManagement';
+import type { Usuario } from '../../types/auth';
 
 /** Interfaz para los permisos del usuario */
 interface Permission {
@@ -27,7 +28,7 @@ interface User {
 
 /** Props del componente */
 interface AdminDashboardMainProps {
-    user: User;
+    user: Usuario;
     onLogout: () => void;
 }
 
@@ -233,7 +234,7 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
 };
 
 /** Componente de overview del dashboard */
-const DashboardOverview: React.FC<{ user: User }> = ({ user }) => {
+const DashboardOverview: React.FC<{ user: Usuario }> = ({ user }) => {
     const [stats, setStats] = useState({
         totalUsuarios: 0,
         totalRoles: 0,

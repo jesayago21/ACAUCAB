@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import type { Usuario } from '../../types/auth';
 
 /** Interfaz para los permisos del usuario */
 interface Permission {
@@ -22,142 +23,257 @@ interface User {
 
 /** Props del componente */
 interface RoleManagementProps {
-    user: User;
+    user: Usuario;
 }
 
 /** Interfaz para los roles */
-interface Role {
+interface Rol {
     clave: number;
     nombre: string;
 }
 
 /** Interfaz para los privilegios */
-interface Privilege {
+interface Privilegio {
     clave: number;
     nombre: string;
     descripcion?: string;
 }
 
+/** Interfaz para los módulos de privilegios */
+interface PrivilegioModulo {
+    module: string;
+    displayName: string;
+    privileges: Privilegio[];
+}
+
 /** Componente de gestión de roles */
 const RoleManagement: React.FC<RoleManagementProps> = ({ user }) => {
-    const [roles, setRoles] = useState<Role[]>([]);
-    const [privileges, setPrivileges] = useState<Privilege[]>([]);
+    const [roles, setRoles] = useState<Rol[]>([]);
+    const [privilegios, setPrivilegios] = useState<Privilegio[]>([]);
+    const [privilegiosModulos, setPrivilegiosModulos] = useState<PrivilegioModulo[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [showCreateModal, setShowCreateModal] = useState(false);
-    const [selectedRole, setSelectedRole] = useState<Role | null>(null);
-    const [rolePrivileges, setRolePrivileges] = useState<Privilege[]>([]);
+    const [error, setError] = useState<string>('');
 
-    /** Verificar si el usuario tiene un permiso específico */
-    const hasPermission = (permissionName: string): boolean => {
-        return user.permisos.some(permiso => permiso.nombre === permissionName);
+    // Estados para formularios
+    const [showCreateForm, setShowCreateForm] = useState(false);
+    const [editingRole, setEditingRole] = useState<Rol | null>(null);
+    const [showPrivilegeModal, setShowPrivilegeModal] = useState(false);
+    const [selectedRoleForPrivileges, setSelectedRoleForPrivileges] = useState<Rol | null>(null);
+    const [rolePrivileges, setRolePrivileges] = useState<number[]>([]);
+    const [newRole, setNewRole] = useState({
+        nombre: ''
+    });
+
+    /** Verificar permisos */
+    const hasPermission = (permission: string): boolean => {
+        return user.permisos.some(p => p.nombre === permission);
     };
 
-    /** Cargar roles desde la API */
-    const loadRoles = async () => {
-        try {
-            const response = await fetch('/api/roles');
-            if (response.ok) {
-                const data = await response.json();
-                setRoles(data);
-            } else {
-                setError('Error al cargar los roles');
-            }
-        } catch (err) {
-            setError('Error de conexión al cargar roles');
-        }
-    };
+    const canCreate = hasPermission('Crear rol');
+    const canUpdate = hasPermission('Modificar rol');
+    const canDelete = hasPermission('Eliminar rol');
+    const canView = hasPermission('Consultar rol');
+    const canManagePrivileges = hasPermission('Consultar privilegio') && canUpdate;
 
-    /** Cargar privilegios desde la API */
-    const loadPrivileges = async () => {
-        try {
-            const response = await fetch('/api/privileges');
-            if (response.ok) {
-                const data = await response.json();
-                setPrivileges(data);
-            } else {
-                setError('Error al cargar los privilegios');
-            }
-        } catch (err) {
-            setError('Error de conexión al cargar privilegios');
-        }
-    };
-
-    /** Cargar privilegios de un rol específico */
-    const loadRolePrivileges = async (roleId: number) => {
-        try {
-            const response = await fetch(`/api/roles/${roleId}/privileges`);
-            if (response.ok) {
-                const data = await response.json();
-                setRolePrivileges(data);
-            } else {
-                setRolePrivileges([]);
-            }
-        } catch (err) {
-            setRolePrivileges([]);
-        }
-    };
-
-    /** Efecto inicial para cargar datos */
+    /** Cargar datos iniciales */
     useEffect(() => {
-        const loadData = async () => {
-            setLoading(true);
-            await Promise.all([loadRoles(), loadPrivileges()]);
-            setLoading(false);
-        };
-
         loadData();
     }, []);
 
-    /** Efecto para cargar privilegios cuando se selecciona un rol */
-    useEffect(() => {
-        if (selectedRole) {
-            loadRolePrivileges(selectedRole.clave);
-        } else {
-            setRolePrivileges([]);
-        }
-    }, [selectedRole]);
-
-    /** Crear un nuevo rol */
-    const handleCreateRole = async (roleName: string) => {
+    const loadData = async () => {
         try {
-            const response = await fetch('/api/roles', {
+            setLoading(true);
+            await Promise.all([
+                loadRoles(),
+                loadPrivilegios()
+            ]);
+        } catch (error) {
+            console.error('Error cargando datos:', error);
+            setError('Error al cargar los datos');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loadRoles = async () => {
+        const response = await fetch('http://localhost:5000/api/roles');
+        if (!response.ok) throw new Error('Error al cargar roles');
+        const data = await response.json();
+        setRoles(data);
+    };
+
+    const loadPrivilegios = async () => {
+        const response = await fetch('http://localhost:5000/api/privileges');
+        if (!response.ok) throw new Error('Error al cargar privilegios');
+        const data = await response.json();
+        setPrivilegios(data);
+        
+        // Agrupar privilegios por módulo
+        groupPrivilegesByModule(data);
+    };
+
+    /** Agrupar privilegios por módulo */
+    const groupPrivilegesByModule = (privileges: Privilegio[]) => {
+        const modules: { [key: string]: PrivilegioModulo } = {};
+        
+        privileges.forEach(privilege => {
+            // Extraer el módulo del nombre del privilegio
+            const parts = privilege.nombre.split(' ');
+            const action = parts[0]; // crear, consultar, modificar, eliminar
+            const module = parts.slice(1).join(' '); // nombre del módulo
+            
+            if (!modules[module]) {
+                modules[module] = {
+                    module: module,
+                    displayName: module.replace(/\b\w/g, l => l.toUpperCase()),
+                    privileges: []
+                };
+            }
+            
+            modules[module].privileges.push({
+                ...privilege,
+                action: action
+            } as any);
+        });
+        
+        const moduleArray = Object.values(modules).sort((a, b) => 
+            a.displayName.localeCompare(b.displayName)
+        );
+        
+        setPrivilegiosModulos(moduleArray);
+    };
+
+    /** Crear rol */
+    const handleCreateRole = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        try {
+            const response = await fetch('http://localhost:5000/api/roles', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ nombre: roleName }),
+                body: JSON.stringify(newRole)
             });
 
-            if (response.ok) {
-                await loadRoles();
-                setShowCreateModal(false);
-            } else {
-                setError('Error al crear el rol');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error al crear rol');
             }
-        } catch (err) {
-            setError('Error de conexión al crear rol');
+
+            await loadRoles();
+            setShowCreateForm(false);
+            setNewRole({ nombre: '' });
+
+        } catch (error: any) {
+            setError(error.message);
         }
     };
 
-    /** Verificar permisos de acceso */
-    if (!hasPermission('consultar rol') && !hasPermission('gestionar roles privilegios')) {
-        return (
-            <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 text-center">
-                <div className="text-6xl mb-4">🚫</div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Acceso Denegado</h2>
-                <p className="text-gray-600">No tienes permisos para acceder a la gestión de roles</p>
-            </div>
-        );
-    }
+    /** Eliminar rol */
+    const handleDeleteRole = async (roleId: number) => {
+        if (!window.confirm('¿Está seguro de que desea eliminar este rol?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:5000/api/roles/${roleId}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error al eliminar rol');
+            }
+
+            await loadRoles();
+        } catch (error: any) {
+            setError(error.message);
+        }
+    };
+
+    /** Abrir modal de gestión de privilegios */
+    const handleManagePrivileges = async (role: Rol) => {
+        try {
+            setSelectedRoleForPrivileges(role);
+            
+            // Cargar privilegios actuales del rol
+            const response = await fetch(`http://localhost:5000/api/roles/${role.clave}/privileges`);
+            if (!response.ok) throw new Error('Error al cargar privilegios del rol');
+            
+            const rolePrivilegesData = await response.json();
+            const privilegeIds = rolePrivilegesData.map((p: Privilegio) => p.clave);
+            setRolePrivileges(privilegeIds);
+            setShowPrivilegeModal(true);
+            
+        } catch (error: any) {
+            setError(error.message);
+        }
+    };
+
+    /** Guardar privilegios del rol */
+    const handleSaveRolePrivileges = async () => {
+        if (!selectedRoleForPrivileges) return;
+
+        try {
+            const response = await fetch(`http://localhost:5000/api/roles/${selectedRoleForPrivileges.clave}/assign-privileges`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    privilegiosClave: rolePrivileges
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error al asignar privilegios');
+            }
+
+            setShowPrivilegeModal(false);
+            setSelectedRoleForPrivileges(null);
+            setRolePrivileges([]);
+
+        } catch (error: any) {
+            setError(error.message);
+        }
+    };
+
+    /** Manejar cambio de privilegio */
+    const handlePrivilegeChange = (privilegeId: number, checked: boolean) => {
+        if (checked) {
+            setRolePrivileges([...rolePrivileges, privilegeId]);
+        } else {
+            setRolePrivileges(rolePrivileges.filter(id => id !== privilegeId));
+        }
+    };
+
+    /** Seleccionar/deseleccionar todos los privilegios de un módulo */
+    const handleModuleToggle = (module: PrivilegioModulo, selectAll: boolean) => {
+        const modulePrivilegeIds = module.privileges.map(p => p.clave);
+        
+        if (selectAll) {
+            const newIds = [...rolePrivileges, ...modulePrivilegeIds.filter(id => !rolePrivileges.includes(id))];
+            setRolePrivileges(newIds);
+        } else {
+            setRolePrivileges(rolePrivileges.filter(id => !modulePrivilegeIds.includes(id)));
+        }
+    };
 
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Cargando roles...</p>
-                </div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
+
+    if (!canView) {
+        return (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                <h2 className="text-xl font-bold text-red-900 mb-2">Acceso Denegado</h2>
+                <p className="text-red-700">No tiene permisos para ver la gestión de roles.</p>
             </div>
         );
     }
@@ -168,185 +284,214 @@ const RoleManagement: React.FC<RoleManagementProps> = ({ user }) => {
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900">Gestión de Roles</h2>
-                    <p className="text-gray-600">Administra los roles del sistema y sus privilegios</p>
+                    <p className="text-gray-600">Administrar roles y sus privilegios</p>
                 </div>
-                {hasPermission('crear rol') && (
+                {canCreate && (
                     <button
-                        onClick={() => setShowCreateModal(true)}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                        onClick={() => setShowCreateForm(true)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
                     >
-                        + Crear Rol
+                        <span className="mr-2">+</span>
+                        Crear Rol
                     </button>
                 )}
             </div>
 
-            {/* Error message */}
+            {/* Mensaje de error */}
             {error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                    {error}
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <p className="text-red-700">{error}</p>
+                    <button
+                        onClick={() => setError('')}
+                        className="mt-2 text-red-600 hover:text-red-800 underline"
+                    >
+                        Cerrar
+                    </button>
                 </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Lista de roles */}
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Roles del Sistema</h3>
-                    <div className="space-y-2">
-                        {roles.map((role) => (
-                            <div
-                                key={role.clave}
-                                className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                                    selectedRole?.clave === role.clave
-                                        ? 'bg-blue-50 border-blue-200'
-                                        : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
-                                }`}
-                                onClick={() => setSelectedRole(role)}
+            {/* Formulario de creación */}
+            {showCreateForm && (
+                <div className="bg-white p-6 rounded-lg shadow-md border">
+                    <h3 className="text-lg font-semibold mb-4">Crear Nuevo Rol</h3>
+                    <form onSubmit={handleCreateRole} className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                                Nombre del Rol
+                            </label>
+                            <input
+                                type="text"
+                                value={newRole.nombre}
+                                onChange={(e) => setNewRole({...newRole, nombre: e.target.value})}
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                placeholder="Ej: Supervisor de Ventas"
+                                required
+                            />
+                        </div>
+
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowCreateForm(false)}
+                                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                             >
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <h4 className="font-medium text-gray-900">{role.nombre}</h4>
-                                        <p className="text-sm text-gray-500">ID: {role.clave}</p>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        {selectedRole?.clave === role.clave && (
-                                            <span className="text-blue-600">✓</span>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Privilegios del rol seleccionado */}
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
-                        Privilegios del Rol
-                        {selectedRole && (
-                            <span className="text-blue-600 ml-2">({selectedRole.nombre})</span>
-                        )}
-                    </h3>
-                    
-                    {selectedRole ? (
-                        <div className="space-y-3">
-                            {rolePrivileges.length > 0 ? (
-                                <div className="space-y-2">
-                                    <p className="text-sm text-gray-600 mb-3">
-                                        Este rol tiene {rolePrivileges.length} privilegios asignados:
-                                    </p>
-                                    {rolePrivileges.map((privilege) => (
-                                        <div
-                                            key={privilege.clave}
-                                            className="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded"
-                                        >
-                                            <div>
-                                                <span className="font-medium text-green-800">
-                                                    {privilege.nombre}
-                                                </span>
-                                                {privilege.descripcion && (
-                                                    <p className="text-xs text-green-600 mt-1">
-                                                        {privilege.descripcion}
-                                                    </p>
-                                                )}
-                                            </div>
-                                            <span className="text-green-600">✓</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-center py-8">
-                                    <div className="text-4xl mb-2">📝</div>
-                                    <p className="text-gray-500">Este rol no tiene privilegios asignados</p>
-                                </div>
-                            )}
-                            
-                            {hasPermission('gestionar roles privilegios') && (
-                                <div className="mt-4 pt-4 border-t border-gray-200">
-                                    <button
-                                        className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
-                                        onClick={() => {
-                                            // TODO: Implementar modal de asignación de privilegios
-                                            alert('Funcionalidad de asignación de privilegios en desarrollo');
-                                        }}
-                                    >
-                                        🔧 Gestionar Privilegios
-                                    </button>
-                                </div>
-                            )}
+                                Cancelar
+                            </button>
+                            <button
+                                type="submit"
+                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                            >
+                                Crear Rol
+                            </button>
                         </div>
-                    ) : (
-                        <div className="text-center py-8">
-                            <div className="text-4xl mb-2">👈</div>
-                            <p className="text-gray-500">Selecciona un rol para ver sus privilegios</p>
-                        </div>
-                    )}
+                    </form>
                 </div>
-            </div>
-
-            {/* Modal de creación de rol */}
-            {showCreateModal && (
-                <CreateRoleModal
-                    onClose={() => setShowCreateModal(false)}
-                    onSubmit={handleCreateRole}
-                />
             )}
-        </div>
-    );
-};
 
-/** Modal para crear un nuevo rol */
-const CreateRoleModal: React.FC<{
-    onClose: () => void;
-    onSubmit: (roleName: string) => void;
-}> = ({ onClose, onSubmit }) => {
-    const [roleName, setRoleName] = useState('');
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (roleName.trim()) {
-            onSubmit(roleName.trim());
-            setRoleName('');
-        }
-    };
-
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Crear Nuevo Rol</h3>
-                
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-4">
-                        <label htmlFor="roleName" className="block text-sm font-medium text-gray-700 mb-2">
-                            Nombre del Rol
-                        </label>
-                        <input
-                            type="text"
-                            id="roleName"
-                            value={roleName}
-                            onChange={(e) => setRoleName(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Ej: Supervisor de Ventas"
-                            required
-                        />
-                    </div>
-                    
-                    <div className="flex justify-end space-x-3">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            type="submit"
-                            className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md transition-colors"
-                        >
-                            Crear Rol
-                        </button>
-                    </div>
-                </form>
+            {/* Tabla de roles */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    ID
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Nombre del Rol
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Acciones
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {roles.map((rol) => (
+                                <tr key={rol.clave} className="hover:bg-gray-50">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {rol.clave}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        {rol.nombre}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                        {canManagePrivileges && (
+                                            <button 
+                                                className="text-green-600 hover:text-green-900"
+                                                onClick={() => handleManagePrivileges(rol)}
+                                            >
+                                                Privilegios
+                                            </button>
+                                        )}
+                                        {canUpdate && (
+                                            <button 
+                                                className="text-blue-600 hover:text-blue-900"
+                                                onClick={() => setEditingRole(rol)}
+                                            >
+                                                Editar
+                                            </button>
+                                        )}
+                                        {canDelete && (
+                                            <button 
+                                                className="text-red-600 hover:text-red-900"
+                                                onClick={() => handleDeleteRole(rol.clave)}
+                                            >
+                                                Eliminar
+                                            </button>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
+
+            {roles.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                    No hay roles registrados
+                </div>
+            )}
+
+            {/* Modal de gestión de privilegios */}
+            {showPrivilegeModal && selectedRoleForPrivileges && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-semibold">
+                                Privilegios para: {selectedRoleForPrivileges.nombre}
+                            </h3>
+                            <button
+                                onClick={() => setShowPrivilegeModal(false)}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <span className="text-2xl">&times;</span>
+                            </button>
+                        </div>
+
+                        <div className="space-y-6">
+                            {privilegiosModulos.map((module) => {
+                                const modulePrivilegeIds = module.privileges.map(p => p.clave);
+                                const selectedCount = modulePrivilegeIds.filter(id => rolePrivileges.includes(id)).length;
+                                const isAllSelected = selectedCount === modulePrivilegeIds.length;
+                                const isPartiallySelected = selectedCount > 0 && selectedCount < modulePrivilegeIds.length;
+
+                                return (
+                                    <div key={module.module} className="border rounded-lg p-4">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h4 className="font-medium text-gray-900">{module.displayName}</h4>
+                                            <div className="flex items-center space-x-2">
+                                                <button
+                                                    onClick={() => handleModuleToggle(module, !isAllSelected)}
+                                                    className={`px-3 py-1 text-sm rounded ${
+                                                        isAllSelected 
+                                                            ? 'bg-red-100 text-red-700 hover:bg-red-200' 
+                                                            : 'bg-green-100 text-green-700 hover:bg-green-200'
+                                                    }`}
+                                                >
+                                                    {isAllSelected ? 'Deseleccionar Todo' : 'Seleccionar Todo'}
+                                                </button>
+                                                <span className="text-sm text-gray-500">
+                                                    ({selectedCount}/{modulePrivilegeIds.length})
+                                                </span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                            {module.privileges.map((privilege) => (
+                                                <label key={privilege.clave} className="flex items-center space-x-2 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={rolePrivileges.includes(privilege.clave)}
+                                                        onChange={(e) => handlePrivilegeChange(privilege.clave, e.target.checked)}
+                                                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                    />
+                                                    <span className="text-sm text-gray-700">{privilege.nombre}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="flex justify-end space-x-3 mt-6">
+                            <button
+                                onClick={() => setShowPrivilegeModal(false)}
+                                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleSaveRolePrivileges}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                            >
+                                Guardar Privilegios
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

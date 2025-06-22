@@ -1,128 +1,165 @@
 import React, { useState, useEffect } from 'react';
-
-/** Interfaz para los permisos del usuario */
-interface Permission {
-    clave?: number;
-    nombre: string;
-    descripcion?: string;
-}
-
-/** Interfaz para el usuario */
-interface User {
-    id: number;
-    username: string;
-    tipo_entidad: string;
-    rol: {
-        id: number;
-        nombre: string;
-    };
-    permisos: Permission[];
-    entidad?: any;
-}
-
-/** Props del componente */
-interface PrivilegeManagementProps {
-    user: User;
-}
-
-/** Interfaz para los privilegios del sistema */
-interface SystemPrivilege {
-    clave: number;
-    nombre: string;
-    descripcion?: string;
-}
+import type { Usuario } from '../../types/auth';
 
 /** Componente de gestión de privilegios */
-const PrivilegeManagement: React.FC<PrivilegeManagementProps> = ({ user }) => {
-    const [privileges, setPrivileges] = useState<SystemPrivilege[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState<string>('all');
+interface PrivilegeManagementProps {
+  user: Usuario;
+}
 
-    /** Verificar si el usuario tiene un permiso específico */
-    const hasPermission = (permissionName: string): boolean => {
-        return user.permisos.some(permiso => permiso.nombre === permissionName);
+interface Privilegio {
+  clave: number;
+  nombre: string;
+  descripcion?: string;
+}
+
+interface PrivilegioModulo {
+  module: string;
+  displayName: string;
+  privileges: Privilegio[];
+}
+
+const PrivilegeManagement: React.FC<PrivilegeManagementProps> = ({ user }) => {
+    const [privilegios, setPrivilegios] = useState<Privilegio[]>([]);
+    const [privilegiosModulos, setPrivilegiosModulos] = useState<PrivilegioModulo[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string>('');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedModule, setSelectedModule] = useState<string>('all');
+
+    /** Verificar permisos */
+    const hasPermission = (permission: string): boolean => {
+        return user.permisos.some((p: any) => p.nombre === permission);
     };
 
-    /** Cargar privilegios desde la API */
-    const loadPrivileges = async () => {
+    const canView = hasPermission('Consultar privilegio');
+
+    /** Cargar datos iniciales */
+    useEffect(() => {
+        loadPrivilegios();
+    }, []);
+
+    const loadPrivilegios = async () => {
         try {
-            const response = await fetch('/api/privileges');
-            if (response.ok) {
-                const data = await response.json();
-                setPrivileges(data);
-            } else {
-                setError('Error al cargar los privilegios');
-            }
-        } catch (err) {
-            setError('Error de conexión al cargar privilegios');
+            setLoading(true);
+            const response = await fetch('http://localhost:5000/api/privileges');
+            if (!response.ok) throw new Error('Error al cargar privilegios');
+            
+            const data = await response.json();
+            setPrivilegios(data);
+            
+            // Agrupar privilegios por módulo
+            groupPrivilegesByModule(data);
+        } catch (error) {
+            console.error('Error cargando privilegios:', error);
+            setError('Error al cargar los privilegios');
         } finally {
             setLoading(false);
         }
     };
 
-    /** Efecto inicial para cargar datos */
-    useEffect(() => {
-        loadPrivileges();
-    }, []);
-
-    /** Filtrar privilegios según búsqueda y categoría */
-    const filteredPrivileges = privileges.filter(privilege => {
-        const matchesSearch = privilege.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                             (privilege.descripcion && privilege.descripcion.toLowerCase().includes(searchTerm.toLowerCase()));
+    /** Agrupar privilegios por módulo */
+    const groupPrivilegesByModule = (privileges: Privilegio[]) => {
+        const modules: { [key: string]: PrivilegioModulo } = {};
         
-        if (selectedCategory === 'all') return matchesSearch;
+        privileges.forEach(privilege => {
+            // Extraer el módulo del nombre del privilegio
+            const parts = privilege.nombre.split(' ');
+            const action = parts[0]; // crear, consultar, modificar, eliminar
+            const module = parts.slice(1).join(' '); // nombre del módulo
+            
+            if (!modules[module]) {
+                modules[module] = {
+                    module: module,
+                    displayName: module.replace(/\b\w/g, l => l.toUpperCase()),
+                    privileges: []
+                };
+            }
+            
+            modules[module].privileges.push({
+                ...privilege,
+                action: action
+            } as any);
+        });
         
-        // Categorizar privilegios por tipo de operación
-        const categories = {
-            'crear': privilege.nombre.startsWith('crear'),
-            'consultar': privilege.nombre.startsWith('consultar'),
-            'modificar': privilege.nombre.startsWith('modificar'),
-            'eliminar': privilege.nombre.startsWith('eliminar'),
-            'especiales': !privilege.nombre.startsWith('crear') && 
-                         !privilege.nombre.startsWith('consultar') && 
-                         !privilege.nombre.startsWith('modificar') && 
-                         !privilege.nombre.startsWith('eliminar')
-        };
+        const moduleArray = Object.values(modules).sort((a, b) => 
+            a.displayName.localeCompare(b.displayName)
+        );
         
-        return matchesSearch && categories[selectedCategory as keyof typeof categories];
-    });
-
-    /** Obtener categorías de privilegios */
-    const getPrivilegeCategories = () => {
-        const categories = {
-            'all': 'Todos',
-            'crear': 'Crear',
-            'consultar': 'Consultar',
-            'modificar': 'Modificar',
-            'eliminar': 'Eliminar',
-            'especiales': 'Especiales'
-        };
-        return categories;
+        setPrivilegiosModulos(moduleArray);
     };
 
-    /** Verificar permisos de acceso */
-    if (!hasPermission('consultar privilegio') && !hasPermission('gestionar roles privilegios')) {
-        return (
-            <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 text-center">
-                <div className="text-6xl mb-4">🚫</div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Acceso Denegado</h2>
-                <p className="text-gray-600">No tienes permisos para acceder a la gestión de privilegios</p>
-            </div>
-        );
-    }
+    /** Filtrar privilegios según búsqueda y módulo seleccionado */
+    const getFilteredPrivileges = () => {
+        let filtered = privilegios;
+
+        // Filtrar por término de búsqueda
+        if (searchTerm) {
+            filtered = filtered.filter(p => 
+                p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (p.descripcion && p.descripcion.toLowerCase().includes(searchTerm.toLowerCase()))
+            );
+        }
+
+        // Filtrar por módulo
+        if (selectedModule !== 'all') {
+            filtered = filtered.filter(p => 
+                p.nombre.toLowerCase().includes(selectedModule.toLowerCase())
+            );
+        }
+
+        return filtered;
+    };
+
+    /** Obtener color del badge según la acción */
+    const getActionColor = (action: string) => {
+        switch (action.toLowerCase()) {
+            case 'crear':
+                return 'bg-green-100 text-green-800';
+            case 'consultar':
+                return 'bg-blue-100 text-blue-800';
+            case 'modificar':
+                return 'bg-yellow-100 text-yellow-800';
+            case 'eliminar':
+                return 'bg-red-100 text-red-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
+    };
+
+    /** Obtener ícono según la acción */
+    const getActionIcon = (action: string) => {
+        switch (action.toLowerCase()) {
+            case 'crear':
+                return '➕';
+            case 'consultar':
+                return '👁️';
+            case 'modificar':
+                return '✏️';
+            case 'eliminar':
+                return '🗑️';
+            default:
+                return '🔧';
+        }
+    };
 
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Cargando privilegios...</p>
-                </div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
         );
     }
+
+    if (!canView) {
+        return (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                <h2 className="text-xl font-bold text-red-900 mb-2">Acceso Denegado</h2>
+                <p className="text-red-700">No tiene permisos para ver la gestión de privilegios.</p>
+            </div>
+        );
+    }
+
+    const filteredPrivileges = getFilteredPrivileges();
 
     return (
         <div className="space-y-6">
@@ -130,183 +167,217 @@ const PrivilegeManagement: React.FC<PrivilegeManagementProps> = ({ user }) => {
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900">Gestión de Privilegios</h2>
-                    <p className="text-gray-600">Consulta los privilegios disponibles en el sistema</p>
+                    <p className="text-gray-600">Consultar privilegios disponibles en el sistema</p>
                 </div>
-                {hasPermission('crear privilegio') && (
-                    <button
-                        onClick={() => {
-                            // TODO: Implementar creación de privilegios
-                            alert('Creación de privilegios en desarrollo');
-                        }}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                        + Crear Privilegio
-                    </button>
-                )}
+                <div className="bg-blue-50 px-4 py-2 rounded-lg">
+                    <p className="text-sm text-blue-700">
+                        <span className="font-semibold">{privilegios.length}</span> privilegios totales
+                    </p>
+                </div>
             </div>
 
-            {/* Error message */}
+            {/* Mensaje de error */}
             {error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                    {error}
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <p className="text-red-700">{error}</p>
+                    <button
+                        onClick={() => setError('')}
+                        className="mt-2 text-red-600 hover:text-red-800 underline"
+                    >
+                        Cerrar
+                    </button>
                 </div>
             )}
 
             {/* Filtros */}
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="bg-white p-6 rounded-lg shadow-md border">
+                <h3 className="text-lg font-semibold mb-4">Filtros de Búsqueda</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Búsqueda */}
                     <div>
-                        <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
-                            Buscar Privilegios
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Buscar por nombre o descripción
                         </label>
                         <input
                             type="text"
-                            id="search"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Buscar por nombre o descripción..."
+                            placeholder="Ej: usuario, crear, consultar..."
                         />
                     </div>
-
-                    {/* Categorías */}
                     <div>
-                        <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
-                            Categoría
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Filtrar por módulo
                         </label>
                         <select
-                            id="category"
-                            value={selectedCategory}
-                            onChange={(e) => setSelectedCategory(e.target.value)}
+                            value={selectedModule}
+                            onChange={(e) => setSelectedModule(e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
-                            {Object.entries(getPrivilegeCategories()).map(([key, label]) => (
-                                <option key={key} value={key}>{label}</option>
+                            <option value="all">Todos los módulos</option>
+                            {privilegiosModulos.map(module => (
+                                <option key={module.module} value={module.module}>
+                                    {module.displayName} ({module.privileges.length})
+                                </option>
                             ))}
                         </select>
                     </div>
                 </div>
-            </div>
-
-            {/* Estadísticas */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 text-center">
-                    <div className="text-2xl font-bold text-blue-600">{privileges.length}</div>
-                    <div className="text-sm text-gray-600">Total Privilegios</div>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 text-center">
-                    <div className="text-2xl font-bold text-green-600">{filteredPrivileges.length}</div>
-                    <div className="text-sm text-gray-600">Filtrados</div>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 text-center">
-                    <div className="text-2xl font-bold text-purple-600">{user.permisos.length}</div>
-                    <div className="text-sm text-gray-600">Mis Privilegios</div>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 text-center">
-                    <div className="text-2xl font-bold text-orange-600">
-                        {privileges.filter(p => !p.nombre.startsWith('crear') && 
-                                                !p.nombre.startsWith('consultar') && 
-                                                !p.nombre.startsWith('modificar') && 
-                                                !p.nombre.startsWith('eliminar')).length}
-                    </div>
-                    <div className="text-sm text-gray-600">Especiales</div>
+                
+                {/* Estadísticas de filtro */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                    <p className="text-sm text-gray-600">
+                        Mostrando <span className="font-semibold">{filteredPrivileges.length}</span> de{' '}
+                        <span className="font-semibold">{privilegios.length}</span> privilegios
+                        {searchTerm && (
+                            <button
+                                onClick={() => setSearchTerm('')}
+                                className="ml-2 text-blue-600 hover:text-blue-800 underline"
+                            >
+                                Limpiar búsqueda
+                            </button>
+                        )}
+                    </p>
                 </div>
             </div>
 
-            {/* Lista de privilegios */}
-            <div className="bg-white shadow-sm border border-gray-200 rounded-lg overflow-hidden">
-                <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900">
-                        Privilegios del Sistema ({filteredPrivileges.length})
-                    </h3>
-                </div>
+            {/* Vista por módulos */}
+            <div className="space-y-6">
+                {selectedModule === 'all' ? (
+                    // Mostrar todos los módulos
+                    privilegiosModulos.map((module) => {
+                        const modulePrivileges = module.privileges.filter(p => 
+                            !searchTerm || 
+                            p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            (p.descripcion && p.descripcion.toLowerCase().includes(searchTerm.toLowerCase()))
+                        );
 
-                {filteredPrivileges.length > 0 ? (
-                    <div className="divide-y divide-gray-200">
-                        {filteredPrivileges.map((privilege) => {
-                            const isUserPrivilege = user.permisos.some(p => p.nombre === privilege.nombre);
-                            return (
-                                <div key={privilege.clave} className={`p-6 ${isUserPrivilege ? 'bg-green-50' : 'hover:bg-gray-50'}`}>
+                        if (modulePrivileges.length === 0) return null;
+
+                        return (
+                            <div key={module.module} className="bg-white rounded-lg shadow-md border">
+                                <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
                                     <div className="flex items-center justify-between">
-                                        <div className="flex-1">
-                                            <div className="flex items-center space-x-3">
-                                                <h4 className="text-lg font-medium text-gray-900">
-                                                    {privilege.nombre}
-                                                </h4>
-                                                {isUserPrivilege && (
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                        ✓ Tienes este privilegio
-                                                    </span>
-                                                )}
-                                            </div>
-                                            {privilege.descripcion && (
-                                                <p className="mt-1 text-sm text-gray-600">
-                                                    {privilege.descripcion}
-                                                </p>
-                                            )}
-                                            <div className="mt-2 flex items-center space-x-4 text-xs text-gray-500">
-                                                <span>ID: {privilege.clave}</span>
-                                                <span>
-                                                    Tipo: {
-                                                        privilege.nombre.startsWith('crear') ? 'Crear' :
-                                                        privilege.nombre.startsWith('consultar') ? 'Consultar' :
-                                                        privilege.nombre.startsWith('modificar') ? 'Modificar' :
-                                                        privilege.nombre.startsWith('eliminar') ? 'Eliminar' :
-                                                        'Especial'
-                                                    }
-                                                </span>
-                                            </div>
-                                        </div>
-                                        
-                                        {hasPermission('modificar privilegio') && (
-                                            <div className="flex space-x-2">
-                                                <button
-                                                    onClick={() => {
-                                                        // TODO: Implementar edición de privilegio
-                                                        alert(`Editar privilegio: ${privilege.nombre}`);
-                                                    }}
-                                                    className="text-blue-600 hover:text-blue-900 transition-colors"
-                                                >
-                                                    ✏️ Editar
-                                                </button>
-                                            </div>
-                                        )}
+                                        <h3 className="text-lg font-semibold text-gray-900">
+                                            {module.displayName}
+                                        </h3>
+                                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">
+                                            {modulePrivileges.length} privilegios
+                                        </span>
                                     </div>
                                 </div>
-                            );
-                        })}
-                    </div>
+                                <div className="p-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {modulePrivileges.map((privilege) => {
+                                            const action = privilege.nombre.split(' ')[0];
+                                            return (
+                                                <div key={privilege.clave} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                                    <div className="flex items-start justify-between mb-2">
+                                                        <div className="flex items-center space-x-2">
+                                                            <span className="text-lg">{getActionIcon(action)}</span>
+                                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getActionColor(action)}`}>
+                                                                {action}
+                                                            </span>
+                                                        </div>
+                                                        <span className="text-xs text-gray-500">#{privilege.clave}</span>
+                                                    </div>
+                                                    <h4 className="font-medium text-gray-900 mb-1">
+                                                        {privilege.nombre}
+                                                    </h4>
+                                                    {privilege.descripcion && (
+                                                        <p className="text-sm text-gray-600">
+                                                            {privilege.descripcion}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })
                 ) : (
-                    <div className="text-center py-12">
-                        <div className="text-4xl mb-4">🔍</div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No se encontraron privilegios</h3>
-                        <p className="text-gray-500">
-                            {searchTerm || selectedCategory !== 'all' 
-                                ? 'Intenta ajustar los filtros de búsqueda'
-                                : 'No hay privilegios disponibles'}
-                        </p>
+                    // Mostrar tabla de privilegios filtrados
+                    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            ID
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Acción
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Nombre
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Descripción
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {filteredPrivileges.map((privilege) => {
+                                        const action = privilege.nombre.split(' ')[0];
+                                        return (
+                                            <tr key={privilege.clave} className="hover:bg-gray-50">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {privilege.clave}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="flex items-center space-x-2">
+                                                        <span className="text-lg">{getActionIcon(action)}</span>
+                                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getActionColor(action)}`}>
+                                                            {action}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                    {privilege.nombre}
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-gray-600">
+                                                    {privilege.descripcion || 'Sin descripción'}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 )}
             </div>
 
+            {filteredPrivileges.length === 0 && (
+                <div className="text-center py-12">
+                    <div className="text-4xl mb-4">🔍</div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No se encontraron privilegios</h3>
+                    <p className="text-gray-500">
+                        {searchTerm || selectedModule !== 'all' 
+                            ? 'Prueba con otros términos de búsqueda o filtros'
+                            : 'No hay privilegios registrados en el sistema'
+                        }
+                    </p>
+                </div>
+            )}
+
             {/* Información adicional */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0">
                         <span className="text-blue-600 text-xl">ℹ️</span>
                     </div>
-                    <div className="ml-3">
-                        <h3 className="text-sm font-medium text-blue-800">
+                    <div>
+                        <h3 className="text-sm font-medium text-blue-800 mb-2">
                             Información sobre Privilegios
                         </h3>
-                        <div className="mt-2 text-sm text-blue-700">
-                            <ul className="list-disc list-inside space-y-1">
-                                <li><strong>Atómicos:</strong> Privilegios básicos por tabla (crear, consultar, modificar, eliminar)</li>
-                                <li><strong>Especiales:</strong> Privilegios derivados automáticamente de combinaciones de atómicos</li>
-                                <li><strong>Roles:</strong> Los privilegios se asignan a través de roles</li>
-                                <li><strong>Dinámicos:</strong> Los permisos especiales se calculan en tiempo real</li>
-                            </ul>
+                        <div className="text-sm text-blue-700 space-y-1">
+                            <p>• Los privilegios definen las acciones que pueden realizar los usuarios</p>
+                            <p>• Cada privilegio está asociado a un módulo específico del sistema</p>
+                            <p>• Los privilegios se asignan a roles, no directamente a usuarios</p>
+                            <p>• Existen 4 tipos principales de acciones: Crear, Consultar, Modificar, Eliminar</p>
                         </div>
                     </div>
                 </div>
