@@ -198,12 +198,126 @@ router.delete('/:clave', userController.deleteUser);
  *                     fk_rol:
  *                       type: integer
  *       400:
- *         description: Datos inválidos o rol no existe
+ *         description: Rol no válido
  *       404:
  *         description: Usuario no encontrado
  *       500:
  *         description: Error interno del servidor
  */
 router.put('/:userId/rol', userController.assignRoleToUser);
+
+/**
+ * @swagger
+ * /api/users/available/employees:
+ *   get:
+ *     summary: Obtiene empleados disponibles para asignar a usuarios
+ *     tags: [Usuarios]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de empleados disponibles
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   ci:
+ *                     type: integer
+ *                     description: Cédula del empleado
+ *                   primer_nombre:
+ *                     type: string
+ *                     description: Primer nombre del empleado
+ *                   segundo_nombre:
+ *                     type: string
+ *                     description: Segundo nombre del empleado
+ *                   primer_apellido:
+ *                     type: string
+ *                     description: Primer apellido del empleado
+ *                   segundo_apellido:
+ *                     type: string
+ *                     description: Segundo apellido del empleado
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get('/available/employees', userController.getAvailableEmployees);
+
+/**
+ * @swagger
+ * /api/users/available/members:
+ *   get:
+ *     summary: Obtiene miembros disponibles para asignar a usuarios
+ *     tags: [Usuarios]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de miembros disponibles
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   rif:
+ *                     type: string
+ *                     description: RIF del miembro
+ *                   razon_social:
+ *                     type: string
+ *                     description: Razón social del miembro
+ *                   email:
+ *                     type: string
+ *                     description: Email del miembro
+ *                   telefono:
+ *                     type: string
+ *                     description: Teléfono del miembro
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get('/available/members', userController.getAvailableMembers);
+
+/**
+ * @swagger
+ * /api/users/available/clients:
+ *   get:
+ *     summary: Obtiene clientes disponibles para asignar a usuarios
+ *     tags: [Usuarios]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de clientes disponibles
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   clave:
+ *                     type: integer
+ *                     description: ID del cliente
+ *                   primer_nombre:
+ *                     type: string
+ *                     description: Primer nombre del cliente
+ *                   segundo_nombre:
+ *                     type: string
+ *                     description: Segundo nombre del cliente
+ *                   primer_apellido:
+ *                     type: string
+ *                     description: Primer apellido del cliente
+ *                   segundo_apellido:
+ *                     type: string
+ *                     description: Segundo apellido del cliente
+ *                   ci:
+ *                     type: integer
+ *                     description: Cédula del cliente
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get('/available/clients', userController.getAvailableClients);
 
 module.exports = router;

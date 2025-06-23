@@ -43,7 +43,6 @@ const canAccessModule = (user: User, module: string): boolean => {
 
         // Gestión de usuarios - requiere permisos de usuario o dashboard admin
         case 'usuarios':
-        case 'usuarios-lista':
             return hasPermission(user, 'Consultar usuario') || 
                    hasPermission(user, 'Consultar empleado') ||
                    hasPermission(user, 'Consultar miembro') ||
@@ -52,11 +51,6 @@ const canAccessModule = (user: User, module: string): boolean => {
                    hasPermission(user, 'Crear usuario') ||
                    hasPermission(user, 'Modificar usuario') ||
                    hasPermission(user, 'Eliminar usuario');
-        case 'usuarios-crear':
-            return hasPermission(user, 'Crear usuario') ||
-                   hasPermission(user, 'Crear empleado') ||
-                   hasPermission(user, 'Crear miembro') ||
-                   hasPermission(user, 'Crear cliente');
         case 'roles':
             return hasPermission(user, 'Consultar rol') || 
                    hasPermission(user, 'Crear rol') ||
@@ -160,8 +154,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
             name: 'Gestión de Usuarios',
             icon: '👥',
             children: [
-                { id: 'usuarios-lista', name: 'Lista de Usuarios', icon: '📋' },
-                { id: 'usuarios-crear', name: 'Crear Usuario', icon: '➕' },
                 { id: 'roles', name: 'Roles', icon: '🔑' },
                 { id: 'privilegios', name: 'Privilegios', icon: '🛡️' }
             ]
@@ -308,6 +300,16 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                     {visibleModules.map(module => (
                         <div key={module.id} className="mb-2">
                             {/* Módulo principal */}
+                            {module.children.length > 0 && (module.id === 'personas' || module.id === 'productos' || module.id === 'inventario' || module.id === 'ventas' || module.id === 'compras' || module.id === 'eventos-ofertas') ? (
+                                // Módulos padre que no son clickeables
+                                <div className={`w-full flex items-center p-3 rounded-lg text-gray-400 cursor-default ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
+                                    <span className="text-lg">{module.icon}</span>
+                                    {!isCollapsed && (
+                                        <span className="ml-3 font-medium">{module.name}</span>
+                                    )}
+                                </div>
+                            ) : (
+                                // Módulos clickeables (dashboard, usuarios, reportes, pagos, etc.)
                             <button
                                 onClick={() => onModuleChange(module.id)}
                                 className={`w-full flex items-center p-3 rounded-lg transition-colors ${
@@ -322,6 +324,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                                     <span className="ml-3 font-medium">{module.name}</span>
                                 )}
                             </button>
+                            )}
 
                             {/* Submódulos */}
                             {!isCollapsed && module.children.length > 0 && (
