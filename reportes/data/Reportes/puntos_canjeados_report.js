@@ -1,5 +1,15 @@
 const pool = require('../../../backend/config/db');
 
+// Con fechas que vienen del front
+/**
+ * async function run(fechaInicio, fechaFin) {
+  try {
+    // Si no se pasan fechas, usa valores por defecto
+    fechaInicio = fechaInicio || '2025-06-17';
+    fechaFin = fechaFin || '2025-06-21';
+
+ */
+
 async function run() {
   try {
     // Parámetros del reporte (puedes modificar estas fechas)

@@ -66,24 +66,13 @@ async function generarReporte() {
 async function generarReporteConFechas(fechaInicio, fechaFin) {
     try {
         await jsreport.init();
-        
+
         console.log(`🔄 Generando reporte para el período: ${fechaInicio} - ${fechaFin}`);
-        
-        // Modificar las fechas en el script de datos
-        const dataScript = require('fs').readFileSync('./data/Reportes/puntos_canjeados_report.js', 'utf8');
-        const modifiedScript = dataScript
-            .replace(/const fechaInicio = '.*?';/, `const fechaInicio = '${fechaInicio}';`)
-            .replace(/const fechaFin = '.*?';/, `const fechaFin = '${fechaFin}';`);
-        
-        // Guardar temporalmente el script modificado
-        require('fs').writeFileSync('./data/Reportes/puntos_canjeados_report_temp.js', modifiedScript);
-        
-        // Importar el script modificado
-        delete require.cache[require.resolve('./data/Reportes/puntos_canjeados_report_temp.js')];
-        const { run: runModified } = require('./data/Reportes/puntos_canjeados_report_temp.js');
-        
-        const data = await runModified();
-        
+
+        // Llama directamente a run con las fechas recibidas
+        const { run } = require('./data/Reportes/puntos_canjeados_report.js');
+        const data = await run(fechaInicio, fechaFin);
+
         const result = await jsreport.render({
             template: {
                 content: require('fs').readFileSync('./data/Reportes/puntos_canjeados_template.html', 'utf8'),
@@ -92,21 +81,18 @@ async function generarReporteConFechas(fechaInicio, fechaFin) {
                 helpers: `
                     function eq(a, b) {
                         return a === b;
-                }
+                    }
                 `,
             },
             data: data
         });
-        
+
         const outputPath = `./ReportesPdf/puntos_canjeados/reporte_puntos_canjeados_${fechaInicio}_${fechaFin}.html`;
         require('fs').writeFileSync(outputPath, result.content);
-        
+
         console.log('✅ Reporte generado exitosamente!');
         console.log(`📁 Archivo guardado en: ${outputPath}`);
-        
-        // Limpiar archivo temporal
-        require('fs').unlinkSync('./data/Reportes/puntos_canjeados_report_temp.js');
-        
+
     } catch (error) {
         console.error('❌ Error generando el reporte:', error.message);
     } finally {

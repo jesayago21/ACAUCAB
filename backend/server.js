@@ -51,6 +51,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/privileges', privilegeRoutes);
 app.use('/api/clientes', clientRoutes);
 
+/** rutas para los reportes */
+const reportRoutes = require('./routes/reportRoutes');
+app.use('/api/reportes', reportRoutes);
+
 /** Manejo de rutas no encontradas */
 app.use('*', (req, res) => {
   res.status(404).json({

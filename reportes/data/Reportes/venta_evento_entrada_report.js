@@ -4,6 +4,17 @@ const pool = require('../../../backend/config/db');
 /**
  * Función principal que ejecuta las consultas y estructura los datos para el reporte de ingresos.
  */
+
+/**
+ * Prueba para pasar la fecha desde el front
+ * async function run(fechaInicio, fechaFin) {
+      try {
+        // Si no se pasan fechas, usa valores por defecto
+        fechaInicio = fechaInicio || '2025-06-01';
+        fechaFin = fechaFin || '2025-07-01'; 
+ */
+
+
 async function run() {
   try {
     // --- PARÁMETROS DEL REPORTE ---

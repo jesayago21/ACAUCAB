@@ -10,3 +10,4 @@ storage/
 # jsreport files
 data/fs.journal
 data/fs.version
+data/profiles
