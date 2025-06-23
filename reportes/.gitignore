@@ -1,6 +1,7 @@
 # dependencies
 node_modules/
 
+<<<<<<< HEAD
 #logs
 logs/
 
@@ -8,5 +9,14 @@ logs/
 ata/storage/
 
 #jsreport files
+=======
+# logs
+logs/
+
+# storage
+storage/
+
+# jsreport files
+>>>>>>> 815c7b5696177c0119824b1cb364e4449ad05e56
 data/fs.journal
 data/fs.version

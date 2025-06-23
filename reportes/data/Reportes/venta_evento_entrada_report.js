@@ -13,37 +13,54 @@ async function run() {
 
     console.log('🔄 Ejecutando consulta de ingresos por evento...');
 
-    // --- ¡IMPORTANTE! ADAPTA ESTA CONSULTA A TU ESQUEMA DE BASE DE DATOS ---
-    // Suposiciones del esquema:
-    // - Tabla 'evento': Contiene información de los eventos (clave, nombre, fecha_evento).
-    // - Tabla 'entrada': Registra cada entrada vendida (fk_evento, precio).
-    // - Tabla 'venta_fisica': Registra ventas en un evento (fk_evento).
-    // - Tabla 'detalle_venta_fisica': Detalle de productos vendidos (fk_venta_fisica, fk_producto, cantidad, precio).
-    // - Tabla 'producto': Contiene los detalles de los productos (clave, nombre).
+    // --- CONSULTA CORREGIDA PARA MOSTRAR EVENTOS CON VENTAS EN EL RANGO ---
     const queryDetalle = `
-      SELECT
+      SELECT DISTINCT
         e.clave AS id_evento,
         e.nombre AS nombre_evento,
         e.fecha_inicio,
+        e.precio_entrada,
 
-        -- Ingresos por entradas
+        -- Ingresos por entradas (venta_entrada)
         COALESCE((
             SELECT SUM(ve.monto_total)
             FROM venta_entrada ve
             WHERE ve.fk_evento = e.clave
+              AND ve.fecha BETWEEN $1 AND $2
         ), 0) AS total_ingresos_entradas,
 
-        -- Ingresos por cervezas (inventario_evento y presentacion)
+        -- Ingresos por productos vendidos en eventos (venta_evento + detalle_venta_evento)
         COALESCE((
-            SELECT SUM(ie.cantidad_unidades * p.precio)
-            FROM inventario_evento ie
-            JOIN presentacion p ON p.clave = ie.fk_presentacion
-            WHERE ie.fk_evento = e.clave
-          ), 0) AS total_ingresos_productos
+            SELECT SUM(ve.monto_total)
+            FROM venta_evento ve
+            WHERE ve.fk_evento = e.clave
+              AND ve.fecha BETWEEN $1 AND $2
+        ), 0) AS total_ingresos_productos,
+
+        -- Cantidad de entradas vendidas
+        COALESCE((
+            SELECT COUNT(*)
+            FROM venta_entrada ve
+            WHERE ve.fk_evento = e.clave
+              AND ve.fecha BETWEEN $1 AND $2
+        ), 0) AS cantidad_entradas_vendidas,
+
+        -- Cantidad de ventas de productos
+        COALESCE((
+            SELECT COUNT(*)
+            FROM venta_evento ve
+            WHERE ve.fk_evento = e.clave
+              AND ve.fecha BETWEEN $1 AND $2
+        ), 0) AS cantidad_ventas_productos
 
       FROM evento e
-      WHERE e.fecha_inicio BETWEEN $1 AND $2
-      GROUP BY e.clave, e.nombre, e.fecha_inicio
+      WHERE EXISTS (
+          SELECT 1 FROM venta_entrada ve 
+          WHERE ve.fk_evento = e.clave AND ve.fecha BETWEEN $1 AND $2
+      ) OR EXISTS (
+          SELECT 1 FROM venta_evento ve 
+          WHERE ve.fk_evento = e.clave AND ve.fecha BETWEEN $1 AND $2
+      )
       ORDER BY e.fecha_inicio DESC;
     `;
 
@@ -54,21 +71,28 @@ async function run() {
     const detalle = detalleResult.rows.map(row => ({
       ...row,
       fecha_evento: new Date(row.fecha_inicio).toLocaleDateString('es-ES'),
-      total_ingresos_entradas: parseFloat(row.total_ingresos_entradas),
-      total_ingresos_productos: parseFloat(row.total_ingresos_productos),
-      total_ingresos_evento: parseFloat(row.total_ingresos_entradas) + parseFloat(row.total_ingresos_productos)
+      total_ingresos_entradas: parseFloat(row.total_ingresos_entradas || 0),
+      total_ingresos_productos: parseFloat(row.total_ingresos_productos || 0),
+      total_ingresos_evento: parseFloat(row.total_ingresos_entradas || 0) + parseFloat(row.total_ingresos_productos || 0),
+      cantidad_entradas_vendidas: parseInt(row.cantidad_entradas_vendidas || 0),
+      cantidad_ventas_productos: parseInt(row.cantidad_ventas_productos || 0),
+      precio_entrada_formatted: row.precio_entrada ? `Bs. ${row.precio_entrada}` : 'Gratis'
     }));
 
-    // Calcular el resumen general a partir de los detalles (más eficiente que otra query)
+    // Calcular el resumen general a partir de los detalles
     const resumen = detalle.reduce((acc, evento) => {
       acc.gran_total_entradas += evento.total_ingresos_entradas;
       acc.gran_total_productos += evento.total_ingresos_productos;
       acc.gran_total_general += evento.total_ingresos_evento;
+      acc.total_entradas_vendidas += evento.cantidad_entradas_vendidas;
+      acc.total_ventas_productos += evento.cantidad_ventas_productos;
       return acc;
     }, {
       gran_total_entradas: 0,
       gran_total_productos: 0,
       gran_total_general: 0,
+      total_entradas_vendidas: 0,
+      total_ventas_productos: 0,
       numero_eventos: detalle.length
     });
 

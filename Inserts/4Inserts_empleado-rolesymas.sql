@@ -1032,3 +1032,53 @@ INSERT INTO detalle_compra (fk_almacen, fk_compra, cantidad, precio_unitario) VA
 (8, 8, 60, 2000),
 (9, 9, 15, 25000),
 (10, 10, 80, 1000);
+
+-- =================================================================
+-- VENTAS DE EVENTOS ADICIONALES PARA EL REPORTE (JUNIO-JULIO 2025)
+-- =================================================================
+
+-- Insertar ventas de eventos adicionales en el período correcto (usando claves automáticas)
+INSERT INTO venta_evento (fecha, monto_total, fk_evento, fk_cliente) VALUES
+('2025-06-15', 180.25, 1, 1),
+('2025-06-16', 220.75, 2, 2),
+('2025-06-17', 195.50, 3, 3),
+('2025-06-18', 280.00, 4, 4),
+('2025-06-19', 165.80, 5, 5),
+('2025-06-20', 310.45, 1, 6),
+('2025-06-21', 140.30, 2, 7),
+('2025-06-22', 290.90, 3, 8),
+('2025-06-23', 175.60, 4, 9),
+('2025-06-24', 320.75, 5, 10),
+('2025-06-25', 185.40, 1, 1),
+('2025-06-26', 240.20, 2, 2),
+('2025-06-27', 155.90, 3, 3),
+('2025-06-28', 295.30, 4, 4),
+('2025-06-29', 170.85, 5, 5),
+('2025-06-30', 330.50, 1, 6),
+('2025-07-01', 160.75, 2, 7),
+('2025-07-02', 285.20, 3, 8),
+('2025-07-03', 190.45, 4, 9),
+('2025-07-04', 315.80, 5, 10);
+
+-- Insertar detalles de venta de eventos para los nuevos registros (usando las últimas claves generadas)
+INSERT INTO detalle_venta_evento (cantidad, precio_unitario, fk_venta_evento, fk_inventario_evento) VALUES
+(1, 18025, (SELECT MAX(clave) FROM venta_evento WHERE fecha = '2025-06-15'), 1),
+(2, 11037, (SELECT MAX(clave) FROM venta_evento WHERE fecha = '2025-06-16'), 2),
+(3, 6516, (SELECT MAX(clave) FROM venta_evento WHERE fecha = '2025-06-17'), 3),
+(1, 28000, (SELECT MAX(clave) FROM venta_evento WHERE fecha = '2025-06-18'), 4),
+(4, 4145, (SELECT MAX(clave) FROM venta_evento WHERE fecha = '2025-06-19'), 5),
+(2, 15522, (SELECT MAX(clave) FROM venta_evento WHERE fecha = '2025-06-20'), 1),
+(1, 14030, (SELECT MAX(clave) FROM venta_evento WHERE fecha = '2025-06-21'), 2),
+(3, 9696, (SELECT MAX(clave) FROM venta_evento WHERE fecha = '2025-06-22'), 3),
+(2, 8780, (SELECT MAX(clave) FROM venta_evento WHERE fecha = '2025-06-23'), 4),
+(3, 10691, (SELECT MAX(clave) FROM venta_evento WHERE fecha = '2025-06-24'), 5),
+(1, 18540, (SELECT MAX(clave) FROM venta_evento WHERE fecha = '2025-06-25'), 1),
+(2, 12010, (SELECT MAX(clave) FROM venta_evento WHERE fecha = '2025-06-26'), 2),
+(3, 5196, (SELECT MAX(clave) FROM venta_evento WHERE fecha = '2025-06-27'), 3),
+(1, 29530, (SELECT MAX(clave) FROM venta_evento WHERE fecha = '2025-06-28'), 4),
+(4, 4271, (SELECT MAX(clave) FROM venta_evento WHERE fecha = '2025-06-29'), 5),
+(2, 16525, (SELECT MAX(clave) FROM venta_evento WHERE fecha = '2025-06-30'), 1),
+(1, 16075, (SELECT MAX(clave) FROM venta_evento WHERE fecha = '2025-07-01'), 2),
+(3, 9506, (SELECT MAX(clave) FROM venta_evento WHERE fecha = '2025-07-02'), 3),
+(2, 9522, (SELECT MAX(clave) FROM venta_evento WHERE fecha = '2025-07-03'), 4),
+(3, 10526, (SELECT MAX(clave) FROM venta_evento WHERE fecha = '2025-07-04'), 5);

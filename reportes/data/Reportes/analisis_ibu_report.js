@@ -2,7 +2,7 @@ const pool = require('../../../backend/config/db');
 
 async function run() {
     try {
-        // Consulta para obtener cervezas American Amber Ale y American Pale Ale
+        // Consulta corregida para obtener cervezas American Amber Ale (clave 39) y American Pale Ale (clave 26)
         const query = `
             SELECT 
                 m.denominacion_comercial AS productor,
@@ -17,7 +17,7 @@ async function run() {
             JOIN tipo_cerveza tc ON c.fk_tipo_cerveza = tc.clave
             LEFT JOIN car_cer cc ON cc.fk_cerveza = c.clave
             LEFT JOIN caracteristica ca ON cc.fk_caracteristica = ca.clave
-            WHERE tc.nombre IN ('American Amber Ale', 'American Pale Ale')
+            WHERE tc.clave IN (26, 39)  -- American Pale Ale (26) y American Amber Ale (39)
                 AND (ca.nombre = 'Amargor (IBU)' OR ca.nombre IS NULL)
             ORDER BY m.denominacion_comercial, tc.nombre, cc.valor DESC
         `;

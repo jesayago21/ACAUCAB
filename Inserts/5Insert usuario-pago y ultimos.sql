@@ -582,3 +582,30 @@ SELECT setval('detalle_venta_online_clave_seq', (SELECT MAX(clave) FROM detalle_
 
 -- Sincronizar secuencia de detalle_venta_fisica
 SELECT setval('detalle_venta_fisica_clave_seq', (SELECT MAX(clave) FROM detalle_venta_fisica));
+
+-- =================================================================
+-- VENTAS DE ENTRADAS ADICIONALES PARA EL REPORTE (JUNIO-JULIO 2025)
+-- =================================================================
+
+-- Insertar ventas de entradas adicionales en el período correcto
+INSERT INTO venta_entrada (fecha, monto_total, fk_evento, fk_cliente, fk_usuario) VALUES
+('2025-06-15', 45.00, 1, 1, NULL),
+('2025-06-16', 60.00, 2, NULL, 1),
+('2025-06-17', 85.50, 3, 2, NULL),
+('2025-06-18', 35.00, 4, NULL, 2),
+('2025-06-19', 70.25, 5, 3, NULL),
+('2025-06-20', 55.00, 1, NULL, 3),
+('2025-06-21', 95.75, 2, 4, NULL),
+('2025-06-22', 40.00, 3, NULL, 4),
+('2025-06-23', 65.50, 4, 5, NULL),
+('2025-06-24', 80.00, 5, NULL, 5),
+('2025-06-25', 50.00, 1, 1, NULL),
+('2025-06-26', 75.25, 2, NULL, 1),
+('2025-06-27', 90.00, 3, 2, NULL),
+('2025-06-28', 30.00, 4, NULL, 2),
+('2025-06-29', 65.75, 5, 3, NULL),
+('2025-06-30', 55.50, 1, NULL, 3),
+('2025-07-01', 85.00, 2, 4, NULL),
+('2025-07-02', 45.25, 3, NULL, 4),
+('2025-07-03', 70.00, 4, 5, NULL),
+('2025-07-04', 95.50, 5, NULL, 5);
