@@ -1,2 +1,12 @@
 # dependencies
 node_modules/
+
+# logs
+logs/
+
+# storage
+storage/
+
+# jsreport files
+data/fs.journal
+data/fs.version
