@@ -84,33 +84,20 @@ async function generarReporte(format = 'html') {
 
 // Generar con fechas personalizadas desde la línea de comandos
 async function generarReporteConFechas(fechaInicio, fechaFin, format = 'html') {
-    let tempScriptPath = '';
     try {
         await jsreport.init();
         console.log(`🔄 Generando reporte para el período: ${fechaInicio} - ${fechaFin}`);
-        
-        const dataScript = fs.readFileSync(dataScriptPath, 'utf8');
-        const modifiedScript = dataScript
-            .replace(/const fechaInicio = '.*?';/, `const fechaInicio = '${fechaInicio}';`)
-            .replace(/const fechaFin = '.*?';/, `const fechaFin = '${fechaFin}';`);
-        
-        tempScriptPath = `./data/Reportes/${reportName}_report_temp.js`;
-        fs.writeFileSync(tempScriptPath, modifiedScript);
-        
-        delete require.cache[require.resolve(path.resolve(tempScriptPath))];
-        const { run: runModified } = require(tempScriptPath);
-        
-        const data = await runModified();
+
+        // Llama directamente a run con las fechas recibidas
+        const { run } = require(dataScriptPath);
+        const data = await run(fechaInicio, fechaFin);
         data.customFileName = `${fechaInicio}_a_${fechaFin}`;
-        
+
         await renderReport(data, format);
 
     } catch (error) {
         console.error('❌ Error generando el reporte con fechas personalizadas:', error.message, error.stack);
     } finally {
-        if (tempScriptPath && fs.existsSync(tempScriptPath)) {
-            fs.unlinkSync(tempScriptPath); // Limpiar archivo temporal
-        }
         await jsreport.close();
     }
 }
