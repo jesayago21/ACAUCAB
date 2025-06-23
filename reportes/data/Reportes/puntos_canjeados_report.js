@@ -13,18 +13,8 @@ async function run() {
         COALESCE(c.razon_social, c.primer_nombre || ' ' || c.primer_apellido) AS cliente,
         c.tipo AS tipo_cliente,
         COUNT(p.clave) AS cantidad_pagos_puntos,
-        SUM(
-          CASE 
-            WHEN md.tipo = 'Puntos' THEN p.monto_total
-            ELSE 0
-          END
-        ) AS total_puntos_canjeados,
-        SUM(
-          CASE 
-            WHEN md.tipo = 'Puntos' THEN p.monto_total * tc.monto_equivalencia
-            ELSE 0
-          END
-        ) AS total_bolivares,
+        SUM(p.monto_total) AS total_puntos_canjeados,
+        SUM(p.monto_total * tc.monto_equivalencia) AS total_bolivares,
         MIN(p.fecha_pago) AS primera_fecha_pago,
         MAX(p.fecha_pago) AS ultima_fecha_pago
       FROM pago p
@@ -41,12 +31,7 @@ async function run() {
         AND (tc.fecha_fin IS NULL OR tc.fecha_fin >= p.fecha_pago)
         AND c.tipo IN ('natural', 'juridico')
       GROUP BY c.rif, c.razon_social, c.primer_nombre, c.primer_apellido, c.tipo
-      HAVING SUM(
-        CASE 
-          WHEN md.tipo = 'Puntos' THEN p.monto_total
-          ELSE 0
-        END
-      ) > 0
+      HAVING SUM(p.monto_total) > 0
       ORDER BY total_bolivares DESC
     `;
 

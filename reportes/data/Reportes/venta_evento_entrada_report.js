@@ -20,39 +20,26 @@ async function run() {
         e.nombre AS nombre_evento,
         e.fecha_inicio,
         e.precio_entrada,
-
-        -- Ingresos por entradas (venta_entrada)
         COALESCE((
-            SELECT SUM(ve.monto_total)
-            FROM venta_entrada ve
-            WHERE ve.fk_evento = e.clave
-              AND ve.fecha BETWEEN $1 AND $2
+          SELECT SUM(ve.monto_total)
+          FROM venta_entrada ve
+          WHERE ve.fk_evento = e.clave AND ve.fecha BETWEEN $1 AND $2
         ), 0) AS total_ingresos_entradas,
-
-        -- Ingresos por productos vendidos en eventos (venta_evento + detalle_venta_evento)
         COALESCE((
-            SELECT SUM(ve.monto_total)
-            FROM venta_evento ve
-            WHERE ve.fk_evento = e.clave
-              AND ve.fecha BETWEEN $1 AND $2
+          SELECT SUM(ve.monto_total)
+          FROM venta_evento ve
+          WHERE ve.fk_evento = e.clave AND ve.fecha BETWEEN $1 AND $2
         ), 0) AS total_ingresos_productos,
-
-        -- Cantidad de entradas vendidas
         COALESCE((
-            SELECT COUNT(*)
-            FROM venta_entrada ve
-            WHERE ve.fk_evento = e.clave
-              AND ve.fecha BETWEEN $1 AND $2
+          SELECT COUNT(*)
+          FROM venta_entrada ve
+          WHERE ve.fk_evento = e.clave AND ve.fecha BETWEEN $1 AND $2
         ), 0) AS cantidad_entradas_vendidas,
-
-        -- Cantidad de ventas de productos
         COALESCE((
-            SELECT COUNT(*)
-            FROM venta_evento ve
-            WHERE ve.fk_evento = e.clave
-              AND ve.fecha BETWEEN $1 AND $2
+          SELECT COUNT(*)
+          FROM venta_evento ve
+          WHERE ve.fk_evento = e.clave AND ve.fecha BETWEEN $1 AND $2
         ), 0) AS cantidad_ventas_productos
-
       FROM evento e
       WHERE EXISTS (
           SELECT 1 FROM venta_entrada ve 
