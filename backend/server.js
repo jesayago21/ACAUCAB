@@ -52,7 +52,7 @@ app.use('/api/privileges', privilegeRoutes);
 app.use('/api/clientes', clientRoutes);
 
 /** rutas para los reportes */
-const reportRoutes = require('./routes/reportRoutes');
+const reportRoutes = require('./routes/reportesRouter');
 app.use('/api/reportes', reportRoutes);
 
 /** Manejo de rutas no encontradas */
