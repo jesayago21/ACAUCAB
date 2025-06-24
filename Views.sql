@@ -201,3 +201,190 @@ JOIN
     estatus AS e ON h.fk_estatus = e.clave
 ORDER BY
     "Tipo de Entidad", "ID de la Entidad", h.fecha;
+
+
+-- Vistas de los reportes
+------------------------------------------------------------------------
+-- Reporte 1: Puntos canjeados
+CREATE OR REPLACE VIEW vw_puntos_canjeados_detalle AS
+SELECT
+  c.rif,
+  COALESCE(c.razon_social, c.primer_nombre || ' ' || c.primer_apellido) AS cliente,
+  c.tipo AS tipo_cliente,
+  COUNT(p.clave) AS cantidad_pagos_puntos,
+  SUM(p.monto_total) AS total_puntos_canjeados,
+  SUM(p.monto_total * tc.monto_equivalencia) AS total_bolivares,
+  MIN(p.fecha_pago) AS primera_fecha_pago,
+  MAX(p.fecha_pago) AS ultima_fecha_pago
+FROM pago p
+JOIN metodo_de_pago md ON md.clave = p.fk_metodo_de_pago
+JOIN tasa_cambio tc ON tc.clave = p.fk_tasa_cambio
+JOIN venta_online v ON v.clave = p.fk_venta_online
+JOIN usuario u ON u.clave = v.fk_usuario
+JOIN cliente c ON c.clave = u.fk_cliente
+WHERE
+  md.tipo = 'Puntos'
+  AND tc.moneda = 'PUNTOS'
+  AND c.tipo IN ('natural', 'juridico')
+GROUP BY c.rif, c.razon_social, c.primer_nombre, c.primer_apellido, c.tipo
+HAVING SUM(p.monto_total) > 0;
+
+CREATE OR REPLACE VIEW vw_puntos_canjeados_resumen AS
+SELECT
+  COUNT(DISTINCT c.rif) AS total_clientes_afiliados,
+  COUNT(p.clave) AS total_pagos_puntos,
+  SUM(
+    CASE 
+      WHEN md.tipo = 'Puntos' THEN p.monto_total
+      ELSE 0
+    END
+  ) AS total_puntos_canjeados,
+  SUM(
+    CASE 
+      WHEN md.tipo = 'Puntos' THEN p.monto_total * tc.monto_equivalencia
+      ELSE 0
+    END
+  ) AS total_bolivares,
+  MIN(p.fecha_pago) AS primera_fecha_pago,
+  MAX(p.fecha_pago) AS ultima_fecha_pago
+FROM pago p
+JOIN metodo_de_pago md ON md.clave = p.fk_metodo_de_pago
+JOIN tasa_cambio tc ON tc.clave = p.fk_tasa_cambio
+JOIN venta_online v ON v.clave = p.fk_venta_online
+JOIN usuario u ON u.clave = v.fk_usuario
+JOIN cliente c ON c.clave = u.fk_cliente
+WHERE
+  md.tipo = 'Puntos'
+  AND tc.moneda = 'PUNTOS'
+  AND tc.fecha_inicio <= p.fecha_pago 
+  AND (tc.fecha_fin IS NULL OR tc.fecha_fin >= p.fecha_pago)
+  AND c.tipo IN ('natural', 'juridico');
+
+  CREATE OR REPLACE VIEW vw_puntos_canjeados_por_tipo AS
+SELECT
+  c.tipo AS tipo_cliente,
+  COUNT(DISTINCT c.rif) AS cantidad_clientes,
+  SUM(
+    CASE 
+      WHEN md.tipo = 'Puntos' THEN p.monto_total
+      ELSE 0
+    END
+  ) AS total_puntos_canjeados,
+  SUM(
+    CASE 
+      WHEN md.tipo = 'Puntos' THEN p.monto_total * tc.monto_equivalencia
+      ELSE 0
+    END
+  ) AS total_bolivares
+FROM pago p
+JOIN metodo_de_pago md ON md.clave = p.fk_metodo_de_pago
+JOIN tasa_cambio tc ON tc.clave = p.fk_tasa_cambio
+JOIN venta_online v ON v.clave = p.fk_venta_online
+JOIN usuario u ON u.clave = v.fk_usuario
+JOIN cliente c ON c.clave = u.fk_cliente
+WHERE
+  md.tipo = 'Puntos'
+  AND tc.moneda = 'PUNTOS'
+  AND tc.fecha_inicio <= p.fecha_pago 
+  AND (tc.fecha_fin IS NULL OR tc.fecha_fin >= p.fecha_pago)
+  AND c.tipo IN ('natural', 'juridico')
+GROUP BY c.tipo;
+
+-- Reporte 2: Ventas de eventos
+CREATE OR REPLACE VIEW vw_venta_evento_entrada AS
+SELECT
+  e.clave AS id_evento,
+  e.nombre AS nombre_evento,
+  e.fecha_inicio,
+  e.precio_entrada,
+  COALESCE((
+    SELECT SUM(ve.monto_total)
+    FROM venta_entrada ve
+    WHERE ve.fk_evento = e.clave
+  ), 0) AS total_ingresos_entradas,
+  COALESCE((
+    SELECT SUM(ve.monto_total)
+    FROM venta_evento ve
+    WHERE ve.fk_evento = e.clave
+  ), 0) AS total_ingresos_productos,
+  COALESCE((
+    SELECT COUNT(*)
+    FROM venta_entrada ve
+    WHERE ve.fk_evento = e.clave
+  ), 0) AS cantidad_entradas_vendidas,
+  COALESCE((
+    SELECT COUNT(*)
+    FROM venta_evento ve
+    WHERE ve.fk_evento = e.clave
+  ), 0) AS cantidad_ventas_productos
+FROM evento e;
+-- Reporte 3: Analisis IBU
+CREATE OR REPLACE VIEW vw_analisis_ibu AS
+SELECT 
+    m.denominacion_comercial AS productor,
+    c.nombre AS cerveza,
+    tc.nombre AS tipo_cerveza,
+    c.grado_alcohol,
+    m.razon_social,
+    m.direccion_fiscal,
+    cc.valor AS ibu
+FROM cerveza c
+JOIN miembro m ON c.fk_miembro = m.rif
+JOIN tipo_cerveza tc ON c.fk_tipo_cerveza = tc.clave
+LEFT JOIN car_cer cc ON cc.fk_cerveza = c.clave
+LEFT JOIN caracteristica ca ON cc.fk_caracteristica = ca.clave
+WHERE tc.clave IN (26, 39)  -- American Pale Ale (26) y American Amber Ale (39)
+    AND (ca.nombre = 'Amargor (IBU)' OR ca.nombre IS NULL)
+ORDER BY m.denominacion_comercial, tc.nombre, cc.valor DESC;
+
+-- Reporte 4: Tiempo de entrega
+CREATE OR REPLACE VIEW vw_tiempo_entrega_resumen AS
+WITH tiempos_entrega AS (
+    SELECT 
+      vo.clave AS id_venta,
+      vo.fecha AS fecha_venta,
+      EXTRACT(DOW FROM vo.fecha) AS dia_semana,
+      TO_CHAR(vo.fecha, 'Day') AS nombre_dia,
+      -- Tiempo desde "listo para entrega" hasta "entregado"
+      CASE 
+        WHEN h_listo.fecha IS NOT NULL AND h_entregado.fecha IS NOT NULL 
+        THEN EXTRACT(EPOCH FROM (h_entregado.fecha - h_listo.fecha)) / 3600
+        ELSE NULL
+      END AS tiempo_entrega_horas,
+      -- Tiempo desde "procesando" hasta "listo para entrega"
+      CASE 
+        WHEN h_procesando.fecha IS NOT NULL AND h_listo.fecha IS NOT NULL 
+        THEN EXTRACT(EPOCH FROM (h_listo.fecha - h_procesando.fecha)) / 3600
+        ELSE NULL
+      END AS tiempo_preparacion_horas,
+      -- Tiempo total desde "procesando" hasta "entregado"
+      CASE 
+        WHEN h_procesando.fecha IS NOT NULL AND h_entregado.fecha IS NOT NULL 
+        THEN EXTRACT(EPOCH FROM (h_entregado.fecha - h_procesando.fecha)) / 3600
+        ELSE NULL
+      END AS tiempo_total_horas,
+      vo.monto_total,
+      u.username AS cliente
+    FROM venta_online vo
+    LEFT JOIN usuario u ON u.clave = vo.fk_usuario
+    LEFT JOIN historico h_listo ON h_listo.fk_venta_online = vo.clave AND h_listo.fk_estatus = 8
+    LEFT JOIN historico h_entregado ON h_entregado.fk_venta_online = vo.clave AND h_entregado.fk_estatus = 9
+    LEFT JOIN historico h_procesando ON h_procesando.fk_venta_online = vo.clave AND h_procesando.fk_estatus = 7
+    WHERE h_listo.fecha IS NOT NULL
+)
+SELECT 
+  dia_semana,
+  nombre_dia,
+  COUNT(*) AS total_pedidos,
+  COUNT(CASE WHEN tiempo_entrega_horas IS NOT NULL THEN 1 END) AS pedidos_entregados,
+  ROUND(AVG(tiempo_entrega_horas)::numeric, 2) AS tiempo_entrega_promedio_horas,
+  ROUND(AVG(tiempo_preparacion_horas)::numeric, 2) AS tiempo_preparacion_promedio_horas,
+  ROUND(AVG(tiempo_total_horas)::numeric, 2) AS tiempo_total_promedio_horas,
+  ROUND(MIN(tiempo_entrega_horas)::numeric, 2) AS tiempo_entrega_minimo_horas,
+  ROUND(MAX(tiempo_entrega_horas)::numeric, 2) AS tiempo_entrega_maximo_horas,
+  ROUND(SUM(monto_total)::numeric, 2) AS total_ventas_dia,
+  MIN(fecha_venta) AS fecha_venta_min,
+  MAX(fecha_venta) AS fecha_venta_max
+FROM tiempos_entrega
+GROUP BY dia_semana, nombre_dia
+ORDER BY dia_semana;
