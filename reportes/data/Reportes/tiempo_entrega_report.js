@@ -15,60 +15,10 @@ async function run() {
 
     // --- CONSULTA PARA CALCULAR TIEMPO DE ENTREGA ---
     const queryTiempoEntrega = `
-      WITH tiempos_entrega AS (
-        SELECT 
-          vo.clave AS id_venta,
-          vo.fecha AS fecha_venta,
-          EXTRACT(DOW FROM vo.fecha) AS dia_semana,
-          TO_CHAR(vo.fecha, 'Day') AS nombre_dia,
-          -- Tiempo desde "listo para entrega" hasta "entregado"
-          CASE 
-            WHEN h_listo.fecha IS NOT NULL AND h_entregado.fecha IS NOT NULL 
-            THEN EXTRACT(EPOCH FROM (h_entregado.fecha - h_listo.fecha)) / 3600 -- en horas
-            ELSE NULL
-          END AS tiempo_entrega_horas,
-          -- Tiempo desde "procesando" hasta "listo para entrega"
-          CASE 
-            WHEN h_procesando.fecha IS NOT NULL AND h_listo.fecha IS NOT NULL 
-            THEN EXTRACT(EPOCH FROM (h_listo.fecha - h_procesando.fecha)) / 3600 -- en horas
-            ELSE NULL
-          END AS tiempo_preparacion_horas,
-          -- Tiempo total desde "procesando" hasta "entregado"
-          CASE 
-            WHEN h_procesando.fecha IS NOT NULL AND h_entregado.fecha IS NOT NULL 
-            THEN EXTRACT(EPOCH FROM (h_entregado.fecha - h_procesando.fecha)) / 3600 -- en horas
-            ELSE NULL
-          END AS tiempo_total_horas,
-          vo.monto_total,
-          u.username AS cliente
-        FROM venta_online vo
-        LEFT JOIN usuario u ON u.clave = vo.fk_usuario
-        -- Estado "listo para entrega" (estatus 8)
-        LEFT JOIN historico h_listo ON h_listo.fk_venta_online = vo.clave 
-          AND h_listo.fk_estatus = 8
-        -- Estado "entregado" (estatus 9)
-        LEFT JOIN historico h_entregado ON h_entregado.fk_venta_online = vo.clave 
-          AND h_entregado.fk_estatus = 9
-        -- Estado "procesando" (estatus 7)
-        LEFT JOIN historico h_procesando ON h_procesando.fk_venta_online = vo.clave 
-          AND h_procesando.fk_estatus = 7
-        WHERE vo.fecha BETWEEN $1 AND $2
-          AND h_listo.fecha IS NOT NULL -- Solo pedidos que llegaron a "listo para entrega"
-      )
-      SELECT 
-        dia_semana,
-        nombre_dia,
-        COUNT(*) AS total_pedidos,
-        COUNT(CASE WHEN tiempo_entrega_horas IS NOT NULL THEN 1 END) AS pedidos_entregados,
-        ROUND(AVG(tiempo_entrega_horas)::numeric, 2) AS tiempo_entrega_promedio_horas,
-        ROUND(AVG(tiempo_preparacion_horas)::numeric, 2) AS tiempo_preparacion_promedio_horas,
-        ROUND(AVG(tiempo_total_horas)::numeric, 2) AS tiempo_total_promedio_horas,
-        ROUND(MIN(tiempo_entrega_horas)::numeric, 2) AS tiempo_entrega_minimo_horas,
-        ROUND(MAX(tiempo_entrega_horas)::numeric, 2) AS tiempo_entrega_maximo_horas,
-        ROUND(SUM(monto_total)::numeric, 2) AS total_ventas_dia
-      FROM tiempos_entrega
-      GROUP BY dia_semana, nombre_dia
-      ORDER BY dia_semana;
+      SELECT *
+      FROM vw_tiempo_entrega_resumen
+      WHERE fecha_venta_min >= $1 AND fecha_venta_max <= $2
+      ORDER BY dia_semana
     `;
 
     const tiempoEntregaResult = await pool.query(queryTiempoEntrega, [fechaInicio, fechaFin]);

@@ -4,22 +4,8 @@ async function run() {
     try {
         // Consulta corregida para obtener cervezas American Amber Ale (clave 39) y American Pale Ale (clave 26)
         const query = `
-            SELECT 
-                m.denominacion_comercial AS productor,
-                c.nombre AS cerveza,
-                tc.nombre AS tipo_cerveza,
-                c.grado_alcohol,
-                m.razon_social,
-                m.direccion_fiscal,
-                cc.valor AS ibu
-            FROM cerveza c
-            JOIN miembro m ON c.fk_miembro = m.rif
-            JOIN tipo_cerveza tc ON c.fk_tipo_cerveza = tc.clave
-            LEFT JOIN car_cer cc ON cc.fk_cerveza = c.clave
-            LEFT JOIN caracteristica ca ON cc.fk_caracteristica = ca.clave
-            WHERE tc.clave IN (26, 39)  -- American Pale Ale (26) y American Amber Ale (39)
-                AND (ca.nombre = 'Amargor (IBU)' OR ca.nombre IS NULL)
-            ORDER BY m.denominacion_comercial, tc.nombre, cc.valor DESC
+            SELECT *
+            FROM vw_analisis_ibu
         `;
         
         const result = await pool.query(query);

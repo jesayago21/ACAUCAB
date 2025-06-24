@@ -19,47 +19,22 @@ async function run() {
   try {
     // --- PARÁMETROS DEL REPORTE ---
     // Estas fechas pueden ser sobrescritas por el script generador.
-    const fechaInicio = '2025-06-01';
+    const fechaInicio = '2024-06-01';
     const fechaFin = '2025-07-01';
 
     console.log('🔄 Ejecutando consulta de ingresos por evento...');
 
     // --- CONSULTA CORREGIDA PARA MOSTRAR EVENTOS CON VENTAS EN EL RANGO ---
     const queryDetalle = `
-      SELECT DISTINCT
-        e.clave AS id_evento,
-        e.nombre AS nombre_evento,
-        e.fecha_inicio,
-        e.precio_entrada,
-        COALESCE((
-          SELECT SUM(ve.monto_total)
-          FROM venta_entrada ve
-          WHERE ve.fk_evento = e.clave AND ve.fecha BETWEEN $1 AND $2
-        ), 0) AS total_ingresos_entradas,
-        COALESCE((
-          SELECT SUM(ve.monto_total)
-          FROM venta_evento ve
-          WHERE ve.fk_evento = e.clave AND ve.fecha BETWEEN $1 AND $2
-        ), 0) AS total_ingresos_productos,
-        COALESCE((
-          SELECT COUNT(*)
-          FROM venta_entrada ve
-          WHERE ve.fk_evento = e.clave AND ve.fecha BETWEEN $1 AND $2
-        ), 0) AS cantidad_entradas_vendidas,
-        COALESCE((
-          SELECT COUNT(*)
-          FROM venta_evento ve
-          WHERE ve.fk_evento = e.clave AND ve.fecha BETWEEN $1 AND $2
-        ), 0) AS cantidad_ventas_productos
-      FROM evento e
-      WHERE EXISTS (
-          SELECT 1 FROM venta_entrada ve 
-          WHERE ve.fk_evento = e.clave AND ve.fecha BETWEEN $1 AND $2
-      ) OR EXISTS (
-          SELECT 1 FROM venta_evento ve 
-          WHERE ve.fk_evento = e.clave AND ve.fecha BETWEEN $1 AND $2
-      )
-      ORDER BY e.fecha_inicio DESC;
+      SELECT *
+      FROM vw_venta_evento_entrada
+      WHERE 
+        (fecha_inicio BETWEEN $1 AND $2)
+        AND (
+          total_ingresos_entradas > 0
+          OR total_ingresos_productos > 0
+        )
+      ORDER BY fecha_inicio DESC
     `;
 
     const detalleResult = await pool.query(queryDetalle, [fechaInicio, fechaFin]);

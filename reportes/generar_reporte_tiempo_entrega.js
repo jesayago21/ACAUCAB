@@ -1,83 +1,75 @@
-const jsreport = require('jsreport')();
 const fs = require('fs');
 const path = require('path');
+const jsreport = require('jsreport')();
 
-// --- CONFIGURACIÓN DEL REPORTE ---
-const reportName = 'tiempo_entrega';
-const reportTitle = 'Tiempo de Entrega de Pedidos Online';
-const dataScriptPath = `./data/Reportes/${reportName}_report.js`;
-const templatePath = `./data/Reportes/${reportName}_template.html`;
-const outputDir = `./ReportesPdf/tiempo_entrega`;
+// Usa rutas absolutas para todo
+const outputDir = path.resolve(__dirname, 'ReportesPdf/tiempo_entrega');
+const templatePath = path.resolve(__dirname, 'data/Reportes/tiempo_entrega_template.html');
+const dataScriptPath = path.resolve(__dirname, 'data/Reportes/tiempo_entrega_report.js');
+const { run } = require(dataScriptPath);
 
-// Asegurarse de que el directorio de salida exista
-fs.mkdirSync(outputDir, { recursive: true });
-
-// Helper para formatear moneda, usado en la consola y en la plantilla
+// Helper para formatear moneda
 function formatCurrency(value) {
     const number = Number(value);
     return !isNaN(number) ? number.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '0.00';
 }
 
-// Función base para renderizar el reporte
-async function renderReport(data, format = 'html') {
-    const recipe = format === 'pdf' ? 'chrome-pdf' : 'html';
-    const result = await jsreport.render({
-        template: {
-            content: fs.readFileSync(templatePath, 'utf8'),
-            engine: 'handlebars',
-            recipe: recipe,
-            helpers: `
-                function formatCurrency(value) {
-                    const number = Number(value);
-                    return !isNaN(number) ? number.toFixed(2).replace(/\\B(?=(\\d{3})+(?!\\d))/g, ",") : '0.00';
-                }
-                function eq(a, b) { return a === b; }
-                function gte(a, b) { return a >= b; }
-            `,
-            chrome: { // Opciones para PDF
-                format: 'A4',
-                landscape: true, // La tabla puede ser ancha, modo paisaje es mejor
-                marginTop: '1.5cm',
-                marginLeft: '1.5cm',
-                marginRight: '1.5cm',
-                marginBottom: '1.5cm'
-            }
-        },
-        data: data
-    });
-
-    const timestamp = new Date().toISOString().split('T')[0];
-    const fileName = data.customFileName ? `reporte_${reportName}_${data.customFileName}.${format}` : `reporte_${reportName}_${timestamp}.${format}`;
-    const outputPath = path.join(outputDir, fileName);
-    
-    fs.writeFileSync(outputPath, result.content);
-
-    console.log(`✅ Reporte en ${format.toUpperCase()} generado exitosamente!`);
-    console.log(`📁 Archivo guardado en: ${outputPath}`);
-    console.log(`📅 Período: ${data.fechaInicio} - ${data.fechaFin}`);
-
-    if (data.resumen) {
-        console.log('\n📈 RESUMEN DEL REPORTE:');
-        console.log(`   • Total Pedidos: ${data.resumen.total_pedidos}`);
-        console.log(`   • Pedidos Entregados: ${data.resumen.total_pedidos_entregados}`);
-        console.log(`   • Tasa de Entrega: ${data.resumen.porcentaje_entregados}%`);
-        console.log(`   • Tiempo Promedio de Entrega: ${data.resumen.promedio_entrega_general}h`);
-        console.log(`   • Tiempo Promedio de Preparación: ${data.resumen.promedio_preparacion_general}h`);
-        console.log(`   • Tiempo Total Promedio: ${data.resumen.promedio_total_general}h`);
-        console.log(`   • Total Ventas: Bs. ${formatCurrency(data.resumen.total_ventas)}`);
-    }
-}
-
-// --- FUNCIONES DE GENERACIÓN ---
-
-// Generar con fechas por defecto (del script de datos)
-async function generarReporte(format = 'html') {
+async function generarReporte() {
     try {
         await jsreport.init();
-        console.log(`🔄 Generando reporte de ${reportTitle} con fechas por defecto...`);
-        const { run } = require(dataScriptPath);
+
+        console.log('🔄 Generando reporte de Tiempo de Entrega de Pedidos Online...');
+
         const data = await run();
-        await renderReport(data, format);
+
+        console.log('✅ Datos obtenidos correctamente');
+        console.log(`📊 Total Pedidos: ${data.resumen?.total_pedidos || 0}`);
+        console.log(`🚚 Pedidos Entregados: ${data.resumen?.total_pedidos_entregados || 0}`);
+        console.log(`⏱️ Tiempo Promedio de Entrega: ${data.resumen?.promedio_entrega_general || '0.0'}h`);
+
+        const result = await jsreport.render({
+            template: {
+                content: fs.readFileSync(templatePath, 'utf8'),
+                engine: 'handlebars',
+                recipe: 'html',
+                helpers: `
+                    function formatCurrency(value) {
+                        const number = Number(value);
+                        return !isNaN(number) ? number.toFixed(2).replace(/\\B(?=(\\d{3})+(?!\\d))/g, ",") : '0.00';
+                    }
+                    function eq(a, b) { return a === b; }
+                    function gte(a, b) { return a >= b; }
+                `
+            },
+            data: data
+        });
+
+        if (!fs.existsSync(outputDir)) {
+            fs.mkdirSync(outputDir, { recursive: true });
+        }
+
+        const now = new Date();
+        const fecha = now.toISOString().split('T')[0];
+        const hora = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+        const outputPath = path.join(outputDir, `reporte_tiempo_entrega_${fecha}_${hora}.html`);
+        fs.writeFileSync(outputPath, result.content);
+        console.log(`ARCHIVO_REPORTE: ${outputPath}`);
+
+        console.log('✅ Reporte generado exitosamente!');
+        console.log(`📁 Archivo guardado en: ${outputPath}`);
+        console.log(`📅 Período: ${data.fechaInicio} - ${data.fechaFin}`);
+
+        if (data.resumen) {
+            console.log('\n📈 RESUMEN DEL REPORTE:');
+            console.log(`   • Total Pedidos: ${data.resumen.total_pedidos}`);
+            console.log(`   • Pedidos Entregados: ${data.resumen.total_pedidos_entregados}`);
+            console.log(`   • Tasa de Entrega: ${data.resumen.porcentaje_entregados}%`);
+            console.log(`   • Tiempo Promedio de Entrega: ${data.resumen.promedio_entrega_general}h`);
+            console.log(`   • Tiempo Promedio de Preparación: ${data.resumen.promedio_preparacion_general}h`);
+            console.log(`   • Tiempo Total Promedio: ${data.resumen.promedio_total_general}h`);
+            console.log(`   • Total Ventas: Bs. ${formatCurrency(data.resumen.total_ventas)}`);
+        }
+
     } catch (error) {
         console.error('❌ Error generando el reporte:', error.message, error.stack);
     } finally {
@@ -85,80 +77,78 @@ async function generarReporte(format = 'html') {
     }
 }
 
-// Generar con fechas personalizadas desde la línea de comandos
-async function generarReporteConFechas(fechaInicio, fechaFin, format = 'html') {
-    let tempScriptPath = '';
+// Función para generar reporte en PDF
+async function generarReportePDF() {
     try {
         await jsreport.init();
-        console.log(`🔄 Generando reporte para el período: ${fechaInicio} - ${fechaFin}`);
-        
-        const dataScript = fs.readFileSync(dataScriptPath, 'utf8');
-        const modifiedScript = dataScript
-            .replace(/const fechaInicio = '.*?';/, `const fechaInicio = '${fechaInicio}';`)
-            .replace(/const fechaFin = '.*?';/, `const fechaFin = '${fechaFin}';`);
-        
-        tempScriptPath = `./data/Reportes/${reportName}_report_temp.js`;
-        fs.writeFileSync(tempScriptPath, modifiedScript);
-        
-        delete require.cache[require.resolve(path.resolve(tempScriptPath))];
-        const { run: runModified } = require(tempScriptPath);
-        
-        const data = await runModified();
-        data.customFileName = `${fechaInicio}_a_${fechaFin}`;
-        
-        await renderReport(data, format);
+
+        console.log('🔄 Generando reporte PDF de Tiempo de Entrega de Pedidos Online...');
+
+        const data = await run();
+
+        const result = await jsreport.render({
+            template: {
+                content: fs.readFileSync(templatePath, 'utf8'),
+                engine: 'handlebars',
+                recipe: 'chrome-pdf',
+                helpers: `
+                    function formatCurrency(value) {
+                        const number = Number(value);
+                        return !isNaN(number) ? number.toFixed(2).replace(/\\B(?=(\\d{3})+(?!\\d))/g, ",") : '0.00';
+                    }
+                    function eq(a, b) { return a === b; }
+                    function gte(a, b) { return a >= b; }
+                `,
+                chrome: {
+                    format: 'A4',
+                    landscape: true,
+                    marginTop: '1.5cm',
+                    marginLeft: '1.5cm',
+                    marginRight: '1.5cm',
+                    marginBottom: '1.5cm'
+                }
+            },
+            data: data
+        });
+
+        if (!fs.existsSync(outputDir)) {
+            fs.mkdirSync(outputDir, { recursive: true });
+        }
+
+        const now = new Date();
+        const fecha = now.toISOString().split('T')[0];
+        const hora = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+        const outputPath = path.join(outputDir, `reporte_tiempo_entrega_${fecha}_${hora}.pdf`);
+        fs.writeFileSync(outputPath, result.content);
+        console.log(`ARCHIVO_REPORTE: ${outputPath}`);
+
+        console.log('✅ Reporte PDF generado exitosamente!');
+        console.log(`📁 Archivo guardado en: ${outputPath}`);
 
     } catch (error) {
-        console.error('❌ Error generando el reporte con fechas personalizadas:', error.message, error.stack);
+        console.error('❌ Error generando el reporte PDF:', error.message, error.stack);
     } finally {
-        if (tempScriptPath && fs.existsSync(tempScriptPath)) {
-            fs.unlinkSync(tempScriptPath); // Limpiar archivo temporal
-        }
         await jsreport.close();
     }
 }
 
-// --- EJECUCIÓN DESDE LÍNEA DE COMANDOS ---
+// Ejecutar según los argumentos de línea de comandos
+const args = process.argv.slice(2);
 
-(async () => {
-    const args = process.argv.slice(2);
-    const scriptName = path.basename(__filename);
-
-    if (args.includes('--pdf')) {
-        const fechasIndex = args.indexOf('--fechas');
-        if (fechasIndex !== -1 && args.length > fechasIndex + 2) {
-            await generarReporteConFechas(args[fechasIndex + 1], args[fechasIndex + 2], 'pdf');
-        } else {
-            await generarReporte('pdf');
-        }
-    } else if (args.includes('--fechas')) {
-        const fechasIndex = args.indexOf('--fechas');
-        if (args.length > fechasIndex + 2) {
-            await generarReporteConFechas(args[fechasIndex + 1], args[fechasIndex + 2], 'html');
-        } else {
-            showHelp(scriptName);
-        }
-    } else if (args.length === 0) {
-        await generarReporte('html');
-    } else {
-        showHelp(scriptName);
-    }
-})();
-
-function showHelp(scriptName) {
+if (args.length === 0) {
+    generarReporte();
+} else if (args[0] === '--pdf') {
+    generarReportePDF();
+} else {
     console.log('📖 Uso del script:');
-    console.log(`   node ${scriptName}                    # Reporte HTML con fechas por defecto`);
-    console.log(`   node ${scriptName} --pdf              # Reporte PDF con fechas por defecto`);
-    console.log(`   node ${scriptName} --fechas YYYY-MM-DD YYYY-MM-DD  # Reporte HTML con fechas personalizadas`);
-    console.log(`   node ${scriptName} --fechas YYYY-MM-DD YYYY-MM-DD --pdf # Reporte PDF con fechas personalizadas`);
+    console.log('   node generar_reporte_tiempo_entrega.js                    # Reporte HTML');
+    console.log('   node generar_reporte_tiempo_entrega.js --pdf              # Reporte en PDF');
     console.log('');
-    console.log('📅 Ejemplo:');
-    console.log(`   node ${scriptName} --fechas 2024-11-01 2024-11-30 --pdf`);
-    console.log('');
-    console.log('📊 Este reporte analiza:');
-    console.log('   • Tiempo promedio de preparación (procesando → listo para entrega)');
-    console.log('   • Tiempo promedio de entrega (listo para entrega → entregado)');
-    console.log('   • Tiempo total promedio (procesando → entregado)');
-    console.log('   • Análisis por día de la semana');
-    console.log('   • Detalle de pedidos recientes');
-} 
+    console.log('📊 Descripción:');
+    console.log('   Análisis de tiempo de entrega de pedidos online.');
+}
+
+module.exports = {
+    generarReporte,
+    generarReportePDF
+};

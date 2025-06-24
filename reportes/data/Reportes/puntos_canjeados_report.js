@@ -18,98 +18,32 @@ async function run() {
 
     // Consulta principal - Detalle por cliente
     const queryDetalle = `
-      SELECT
-        c.rif,
-        COALESCE(c.razon_social, c.primer_nombre || ' ' || c.primer_apellido) AS cliente,
-        c.tipo AS tipo_cliente,
-        COUNT(p.clave) AS cantidad_pagos_puntos,
-        SUM(p.monto_total) AS total_puntos_canjeados,
-        SUM(p.monto_total * tc.monto_equivalencia) AS total_bolivares,
-        MIN(p.fecha_pago) AS primera_fecha_pago,
-        MAX(p.fecha_pago) AS ultima_fecha_pago
-      FROM pago p
-      JOIN metodo_de_pago md ON md.clave = p.fk_metodo_de_pago
-      JOIN tasa_cambio tc ON tc.clave = p.fk_tasa_cambio
-      JOIN venta_online v ON v.clave = p.fk_venta_online
-      JOIN usuario u ON u.clave = v.fk_usuario
-      JOIN cliente c ON c.clave = u.fk_cliente
-      WHERE
-        md.tipo = 'Puntos'
-        AND tc.moneda = 'PUNTOS'
-        AND p.fecha_pago BETWEEN $1 AND $2
-        AND tc.fecha_inicio <= p.fecha_pago 
-        AND (tc.fecha_fin IS NULL OR tc.fecha_fin >= p.fecha_pago)
-        AND c.tipo IN ('natural', 'juridico')
-      GROUP BY c.rif, c.razon_social, c.primer_nombre, c.primer_apellido, c.tipo
-      HAVING SUM(p.monto_total) > 0
+      SELECT *
+      FROM vw_puntos_canjeados_detalle
+      WHERE primera_fecha_pago >= $1 AND ultima_fecha_pago <= $2
       ORDER BY total_bolivares DESC
     `;
 
     // Consulta resumen total
     const queryResumen = `
-      SELECT
-        COUNT(DISTINCT c.rif) AS total_clientes_afiliados,
-        COUNT(p.clave) AS total_pagos_puntos,
-        SUM(
-          CASE 
-            WHEN md.tipo = 'Puntos' THEN p.monto_total
-            ELSE 0
-          END
-        ) AS total_puntos_canjeados,
-        SUM(
-          CASE 
-            WHEN md.tipo = 'Puntos' THEN p.monto_total * tc.monto_equivalencia
-            ELSE 0
-          END
-        ) AS total_bolivares,
-        MIN(p.fecha_pago) AS primera_fecha_pago,
-        MAX(p.fecha_pago) AS ultima_fecha_pago
-      FROM pago p
-      JOIN metodo_de_pago md ON md.clave = p.fk_metodo_de_pago
-      JOIN tasa_cambio tc ON tc.clave = p.fk_tasa_cambio
-      JOIN venta_online v ON v.clave = p.fk_venta_online
-      JOIN usuario u ON u.clave = v.fk_usuario
-      JOIN cliente c ON c.clave = u.fk_cliente
-      WHERE
-        md.tipo = 'Puntos'
-        AND tc.moneda = 'PUNTOS'
-        AND p.fecha_pago BETWEEN $1 AND $2
-        AND tc.fecha_inicio <= p.fecha_pago 
-        AND (tc.fecha_fin IS NULL OR tc.fecha_fin >= p.fecha_pago)
-        AND c.tipo IN ('natural', 'juridico')
+      SELECT *
+      FROM vw_puntos_canjeados_resumen
+      WHERE primera_fecha_pago >= $1 AND ultima_fecha_pago <= $2
     `;
 
     // Consulta por tipo de cliente
     const queryPorTipo = `
-      SELECT
-        c.tipo AS tipo_cliente,
-        COUNT(DISTINCT c.rif) AS cantidad_clientes,
-        SUM(
-          CASE 
-            WHEN md.tipo = 'Puntos' THEN p.monto_total
-            ELSE 0
-          END
-        ) AS total_puntos_canjeados,
-        SUM(
-          CASE 
-            WHEN md.tipo = 'Puntos' THEN p.monto_total * tc.monto_equivalencia
-            ELSE 0
-          END
-        ) AS total_bolivares
-      FROM pago p
-      JOIN metodo_de_pago md ON md.clave = p.fk_metodo_de_pago
-      JOIN tasa_cambio tc ON tc.clave = p.fk_tasa_cambio
-      JOIN venta_online v ON v.clave = p.fk_venta_online
-      JOIN usuario u ON u.clave = v.fk_usuario
-      JOIN cliente c ON c.clave = u.fk_cliente
-      WHERE
-        md.tipo = 'Puntos'
-        AND tc.moneda = 'PUNTOS'
-        AND p.fecha_pago BETWEEN $1 AND $2
-        AND tc.fecha_inicio <= p.fecha_pago 
-        AND (tc.fecha_fin IS NULL OR tc.fecha_fin >= p.fecha_pago)
-        AND c.tipo IN ('natural', 'juridico')
-      GROUP BY c.tipo
+      SELECT *
+      FROM vw_puntos_canjeados_por_tipo
+      WHERE tipo_cliente IS NOT NULL
+        AND tipo_cliente IN ('natural', 'juridico')
+        AND EXISTS (
+          SELECT 1
+          FROM vw_puntos_canjeados_detalle d
+          WHERE d.tipo_cliente = vw_puntos_canjeados_por_tipo.tipo_cliente
+            AND d.primera_fecha_pago >= $1
+            AND d.ultima_fecha_pago <= $2
+        )
       ORDER BY total_bolivares DESC
     `;
 
