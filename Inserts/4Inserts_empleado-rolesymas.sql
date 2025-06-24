@@ -11,6 +11,8 @@ INSERT INTO horario (clave, dia, fecha_hora_inicio, fecha_hora_fin) VALUES
 (4, 'Jueves', '08:00:00', '17:00:00'),
 (5, 'Viernes', '08:00:00', '17:00:00');
 
+-- =================================================================
+
 INSERT INTO horario (clave, dia, fecha_hora_inicio, fecha_hora_fin) VALUES
 (6, 'Lunes', '09:00:00', '18:00:00'),
 (7, 'Martes', '09:00:00', '18:00:00'),
@@ -98,7 +100,7 @@ INSERT INTO empleado (ci, primer_nombre, segundo_nombre, primer_apellido, segund
 -- Tabla tienda_fisica
 -- Se asume que existen lugares con clave del 1 al 10.
 INSERT INTO tienda_fisica (clave, nombre, direccion, rif_empresa, fk_lugar) VALUES
-(1,'ACAUCAB Sede Principal', 'Av. Principal, Edif. Cervecero, Piso 1', 123456789, 1354),
+(1,'ACAUCAB Sede Principal', 'Av. Principal, Edif. Cervecero, Piso 1', 123456789, 1354);
 /*
 (2,'ACAUCAB Valencia', 'C.C. Metrópolis, Nivel Sol, Local 10', 123456789, 653),
 (3,'ACAUCAB Maracay', 'Av. Las Delicias, al lado de la redoma', 123456789, 479),

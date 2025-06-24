@@ -1,24 +1,37 @@
-/* Tablas creadas, cheqquear en:
-https://www.canva.com/design/DAGqE0e9XEM/PXLuCVMecbLF0AXxoVMUxw/edit?utm_content=DAGqE0e9XEM&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
-*/
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tipo_moneda') THEN
+        CREATE TYPE tipo_moneda AS ENUM (
+            'USD',
+            'EUR',
+            'VES',
+            'PUNTOS'
+        );
+    END IF;
+END
+$$;
 
-CREATE TYPE tipo_moneda AS ENUM (
-    'USD',
-    'EUR',
-    'VES',
-    'PUNTOS'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tipo_metodo_pago') THEN
+        CREATE TYPE tipo_metodo_pago AS ENUM (
+            'Efectivo',
+            'Cheque',
+            'Tarjeta de credito',
+            'Tarjeta de debito',
+            'Puntos'
+        );
+    END IF;
+END
+$$;
 
-CREATE TYPE tipo_metodo_pago AS ENUM (
-    'Efectivo',
-    'Cheque',
-    'Tarjeta de credito',
-    'Tarjeta de debito',
-    'Puntos'
-);
-
-CREATE TYPE tipo_cliente AS ENUM ('natural', 'juridico');
-
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tipo_cliente') THEN
+        CREATE TYPE tipo_cliente AS ENUM ('natural', 'juridico');
+    END IF;
+END
+$$;
 
 CREATE TABLE IF NOT EXISTS receta (
     clave SERIAL,
@@ -276,7 +289,6 @@ CREATE TABLE IF NOT EXISTS metodo_de_pago (
          fecha_vencimiento IS NULL AND
          banco IS NULL AND
          metodo_preferido IS FALSE)
-         )
         OR
         (tipo = 'Cheque' AND
          numero_cheque IS NOT NULL AND
@@ -359,8 +371,7 @@ CREATE TABLE IF NOT EXISTS departamento (
     descripcion TEXT,
     fk_tienda_fisica INT NOT NULL,
     CONSTRAINT pk_departamento PRIMARY KEY (clave),
-    CONSTRAINT fk_tienda_fisica_departamento FOREIGN KEY (fk_tienda_fisica) REFERENCES tienda_fisica(clave),
-    CONSTRAINT chk_nombre_departamento CHECK (nombre IN ('compras', 'ventas', 'entrega', 'despacho'))
+    CONSTRAINT fk_tienda_fisica_departamento FOREIGN KEY (fk_tienda_fisica) REFERENCES tienda_fisica(clave)
 );
 
 CREATE TABLE IF NOT EXISTS tienda_online (
@@ -623,7 +634,7 @@ CREATE TABLE IF NOT EXISTS pago (
     CONSTRAINT fk_venta_evento_pago FOREIGN KEY (fk_venta_evento) REFERENCES venta_evento(clave),
     CONSTRAINT fk_venta_entrada_pago FOREIGN KEY (fk_venta_entrada) REFERENCES venta_entrada(clave),
     CONSTRAINT fk_cuota_pago FOREIGN KEY (fk_cuota) REFERENCES cuota(clave),
-    CONSTRAINT fk_compra_pago FOREIGN KEY (fk_compra) REFERENCES c  ompra(clave),
+    CONSTRAINT fk_compra_pago FOREIGN KEY (fk_compra) REFERENCES compra(clave),
     --arco de pago
     CONSTRAINT arco_pago CHECK (
         (CASE WHEN fk_venta_tienda_fisica IS NOT NULL THEN 1 ELSE 0 END) +
