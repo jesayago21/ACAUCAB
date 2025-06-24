@@ -174,11 +174,11 @@ exports.assignPrivilegesToRole = async (req, res) => {
 };
 
 exports.getPrivilegesByRoleId = async (req, res) => {
-    const { rolClave } = req.params;
+    const { roleId } = req.params;
 
     try {
         // Verificar si el rol existe
-        const roleExists = await pool.query('SELECT 1 FROM rol WHERE clave = $1', [rolClave]);
+        const roleExists = await pool.query('SELECT 1 FROM rol WHERE clave = $1', [roleId]);
         if (roleExists.rows.length === 0) {
             return res.status(404).json({ message: 'Rol no encontrado.' });
         }
@@ -189,7 +189,7 @@ exports.getPrivilegesByRoleId = async (req, res) => {
              JOIN rol_pri rp ON p.clave = rp.fk_privilegio
              WHERE rp.fk_rol = $1
              ORDER BY p.nombre ASC`,
-            [rolClave]
+            [roleId]
         );
         res.status(200).json(result.rows);
     } catch (error) {

@@ -330,4 +330,208 @@ router.get('/tasa-cambio-actual', shopController.getTasaCambioActual);
  */
 router.post('/venta-fisica', shopController.createVentaFisica);
 
+/**
+ * @swagger
+ * /api/shop/venta-completa/{ventaId}:
+ *   get:
+ *     summary: Obtener datos completos de una venta
+ *     description: Obtiene todos los datos de una venta incluyendo detalle, pagos y cliente
+ *     tags: [Ventas]
+ *     parameters:
+ *       - in: path
+ *         name: ventaId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la venta a consultar
+ *     responses:
+ *       200:
+ *         description: Datos completos de la venta
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 venta:
+ *                   type: object
+ *                   properties:
+ *                     clave: 
+ *                       type: integer
+ *                     fecha:
+ *                       type: string
+ *                     total_venta:
+ *                       type: number
+ *                     fk_tienda_fisica:
+ *                       type: integer
+ *                     fk_cliente:
+ *                       type: integer
+ *                 cliente:
+ *                   type: object
+ *                   properties:
+ *                     clave:
+ *                       type: integer
+ *                     rif:
+ *                       type: integer
+ *                     tipo:
+ *                       type: string
+ *                     primer_nombre:
+ *                       type: string
+ *                     primer_apellido:
+ *                       type: string
+ *                     razon_social:
+ *                       type: string
+ *                 detalle:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       clave:
+ *                         type: integer
+ *                       cantidad:
+ *                         type: integer
+ *                       precio_unitario:
+ *                         type: number
+ *                       producto:
+ *                         type: object
+ *                 pagos:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       clave:
+ *                         type: integer
+ *                       fecha_pago:
+ *                         type: string
+ *                       monto_total:
+ *                         type: number
+ *                       metodo_pago:
+ *                         type: object
+ *       404:
+ *         description: Venta no encontrada
+ *       500:
+ *         description: Error del servidor
+ */
+router.get('/venta-completa/:ventaId', async (req, res) => {
+    try {
+        const { ventaId } = req.params;
+        const pool = req.app.get('db');
+
+        // Obtener datos de la venta
+        const ventaQuery = `
+            SELECT v.*, tf.nombre as tienda_nombre
+            FROM venta_tienda_fisica v
+            LEFT JOIN tienda_fisica tf ON v.fk_tienda_fisica = tf.clave
+            WHERE v.clave = $1
+        `;
+        const ventaResult = await pool.query(ventaQuery, [ventaId]);
+
+        if (ventaResult.rows.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Venta no encontrada' 
+            });
+        }
+
+        const venta = ventaResult.rows[0];
+
+        // Obtener datos del cliente
+        const clienteQuery = `
+            SELECT c.*, 
+                   -- Datos de persona natural
+                   c.ci, c.primer_nombre, c.segundo_nombre, c.primer_apellido, c.segundo_apellido,
+                   -- Datos de persona jurídica
+                   c.razon_social, c.denominacion_comercial, c.capital_disponible
+            FROM cliente c
+            WHERE c.clave = $1
+        `;
+        const clienteResult = await pool.query(clienteQuery, [venta.fk_cliente]);
+        const cliente = clienteResult.rows[0] || null;
+
+        // Obtener detalle de la venta
+        const detalleQuery = `
+            SELECT dv.*, 
+                   p.nombre as producto_nombre,
+                   p.ean_13,
+                   c.nombre as cerveza_nombre,
+                   c.grado_alcohol,
+                   tc.nombre as tipo_cerveza
+            FROM detalle_venta_fisica dv
+            JOIN inventario_tienda it ON dv.fk_inventario_tienda = it.clave
+            JOIN presentacion p ON it.fk_presentacion = p.clave
+            JOIN cerveza c ON p.fk_cerveza = c.clave
+            JOIN tipo_cerveza tc ON c.fk_tipo_cerveza = tc.clave
+            WHERE dv.fk_venta_tienda_fisica = $1
+        `;
+        const detalleResult = await pool.query(detalleQuery, [ventaId]);
+
+        // Obtener pagos de la venta
+        const pagosQuery = `
+            SELECT p.*, 
+                   mp.tipo as tipo_metodo_pago,
+                   mp.moneda,
+                   mp.numero_tarjeta,
+                   mp.banco,
+                   tc.monto_equivalencia
+            FROM pago p
+            JOIN metodo_de_pago mp ON p.fk_metodo_de_pago = mp.clave
+            LEFT JOIN tasa_cambio tc ON p.fk_tasa_cambio = tc.clave
+            WHERE p.fk_venta_tienda_fisica = $1
+            ORDER BY p.fecha_pago
+        `;
+        const pagosResult = await pool.query(pagosQuery, [ventaId]);
+
+        // Construir respuesta
+        const response = {
+            success: true,
+            data: {
+                venta: {
+                    ...venta,
+                    tienda_nombre: venta.tienda_nombre
+                },
+                cliente: cliente,
+                detalle: detalleResult.rows.map(item => ({
+                    clave: item.clave,
+                    cantidad: item.cantidad,
+                    precio_unitario: parseFloat(item.precio_unitario),
+                    subtotal: item.cantidad * parseFloat(item.precio_unitario),
+                    producto: {
+                        nombre: item.producto_nombre,
+                        ean_13: item.ean_13,
+                        cerveza: item.cerveza_nombre,
+                        grado_alcohol: item.grado_alcohol,
+                        tipo: item.tipo_cerveza
+                    }
+                })),
+                pagos: pagosResult.rows.map(pago => ({
+                    clave: pago.clave,
+                    fecha_pago: pago.fecha_pago,
+                    monto_total: parseFloat(pago.monto_total),
+                    metodo_pago: {
+                        tipo: pago.tipo_metodo_pago,
+                        moneda: pago.moneda,
+                        numero_tarjeta: pago.numero_tarjeta ? `****${pago.numero_tarjeta.toString().slice(-4)}` : null,
+                        banco: pago.banco
+                    },
+                    tasa_cambio: pago.monto_equivalencia ? parseFloat(pago.monto_equivalencia) : null
+                })),
+                resumen: {
+                    total_productos: detalleResult.rows.reduce((sum, item) => sum + item.cantidad, 0),
+                    total_items: detalleResult.rows.length,
+                    total_venta: parseFloat(venta.total_venta),
+                    total_pagado: pagosResult.rows.reduce((sum, pago) => sum + parseFloat(pago.monto_total), 0),
+                    puntos_otorgados: detalleResult.rows.reduce((sum, item) => sum + item.cantidad, 0) // 1 punto por producto
+                }
+            }
+        };
+
+        res.json(response);
+    } catch (error) {
+        console.error('Error obteniendo datos completos de venta:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error al obtener datos de la venta' 
+        });
+    }
+});
+
 module.exports = router;

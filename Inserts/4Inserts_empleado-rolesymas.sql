@@ -99,6 +99,7 @@ INSERT INTO empleado (ci, primer_nombre, segundo_nombre, primer_apellido, segund
 -- Se asume que existen lugares con clave del 1 al 10.
 INSERT INTO tienda_fisica (clave, nombre, direccion, rif_empresa, fk_lugar) VALUES
 (1,'ACAUCAB Sede Principal', 'Av. Principal, Edif. Cervecero, Piso 1', 123456789, 1354),
+/*
 (2,'ACAUCAB Valencia', 'C.C. Metrópolis, Nivel Sol, Local 10', 123456789, 653),
 (3,'ACAUCAB Maracay', 'Av. Las Delicias, al lado de la redoma', 123456789, 479),
 (4,'ACAUCAB Barquisimeto', 'C.C. Sambil, Feria de Comida', 123456789, 171),
@@ -108,7 +109,7 @@ INSERT INTO tienda_fisica (clave, nombre, direccion, rif_empresa, fk_lugar) VALU
 (8,'ACAUCAB San Cristóbal', 'Barrio Obrero, Carrera 21', 123456789, 1265),
 (9,'ACAUCAB Maracaibo', 'Av. 5 de Julio, Edif. Zuliano', 123456789, 879),
 (10,'ACAUCAB Maturín', 'C.C. Monagas Plaza, Local 30', 123456789, 1068);
-
+*/
 -- =================================================================
 -- TABLAS CON DEPENDENCIAS DE PRIMER NIVEL
 -- =================================================================
@@ -120,12 +121,12 @@ INSERT INTO departamento (clave, nombre, descripcion, fk_tienda_fisica) VALUES
 (2,'despacho', 'Departamento de preparación de pedidos.', 1),
 (3,'entrega', 'Departamento de logística y reparto.', 1),
 (4,'compras', 'Departamento de adquisiciones y relación con proveedores.', 1),
-(5,'ventas', 'Departamento de ventas de la sucursal de Valencia.', 2),
-(6,'despacho', 'Departamento de preparación de pedidos en Valencia.', 2),
-(7,'ventas', 'Departamento de ventas de la sucursal de Maracay.', 3),
-(8,'entrega', 'Departamento de logística y reparto en Maracay.', 3),
-(9,'ventas', 'Departamento de ventas de la sucursal de Barquisimeto.', 4),
-(10,'compras', 'Departamento de compras regional Oeste.', 4);
+(5,'ventas', 'Departamento de ventas en tienda.', 1),
+(6,'recursos humanos', 'Departamento de recursos humanos.', 1),
+(7,'finanzas', 'Departamento de finanzas.', 1),
+(8,'marketing', 'Departamento de marketing.', 1),
+(9,'produccion', 'Departamento de producción.', 1),
+(10,'logistica', 'Departamento de logística.', 1);
 
 -- Tabla emp_ben (Empleado - Beneficio)
 -- Asignamos beneficios a varios empleados.

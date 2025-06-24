@@ -98,8 +98,8 @@ const RoleManagement: React.FC<RoleManagementProps> = ({ user }) => {
     const loadRoles = async () => {
         const response = await fetch('http://localhost:5000/api/roles');
         if (!response.ok) throw new Error('Error al cargar roles');
-        const data = await response.json();
-        setRoles(data);
+                const data = await response.json();
+                setRoles(data);
     };
 
     const loadPrivilegios = async () => {
@@ -315,37 +315,37 @@ const RoleManagement: React.FC<RoleManagementProps> = ({ user }) => {
                 <div className="bg-white p-6 rounded-lg shadow-md border">
                     <h3 className="text-lg font-semibold mb-4">Crear Nuevo Rol</h3>
                     <form onSubmit={handleCreateRole} className="space-y-4">
-                        <div>
+                                    <div>
                             <label className="block text-sm font-medium text-gray-700">
-                                Nombre del Rol
-                            </label>
-                            <input
-                                type="text"
+                            Nombre del Rol
+                        </label>
+                        <input
+                            type="text"
                                 value={newRole.nombre}
                                 onChange={(e) => setNewRole({...newRole, nombre: e.target.value})}
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                placeholder="Ej: Supervisor de Ventas"
-                                required
-                            />
-                        </div>
-
-                        <div className="flex justify-end space-x-3">
-                            <button
-                                type="button"
+                            placeholder="Ej: Supervisor de Ventas"
+                            required
+                        />
+                    </div>
+                    
+                    <div className="flex justify-end space-x-3">
+                        <button
+                            type="button"
                                 onClick={() => setShowCreateForm(false)}
                                 className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                type="submit"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
                                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                            >
-                                Crear Rol
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                        >
+                            Crear Rol
+                        </button>
+                    </div>
+                </form>
+            </div>
             )}
 
             {/* Tabla de roles */}

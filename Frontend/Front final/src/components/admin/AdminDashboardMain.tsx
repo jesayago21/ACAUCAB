@@ -4,6 +4,13 @@ import RoleManagement from './RoleManagement';
 import UserManagement from './UserManagement';
 import PrivilegeManagement from './PrivilegeManagement';
 import StatusManagement from './StatusManagement';
+import VentasManagement from './VentasManagement';
+import VentasWebManagement from './VentasWebManagement';
+import VentasTiendaManagement from './VentasTiendaManagement';
+import PuntosManagement from './PuntosManagement';
+import ComprasManagement from './ComprasManagement';
+import ReposicionManagement from './ReposicionManagement';
+import ReportesManagement from './ReportesManagement';
 import type { Usuario } from '../../types/auth';
 
 /** Interfaz para los permisos del usuario */
@@ -82,10 +89,38 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
                 return <ModulePlaceholder title="Gestión de Almacén" user={user} />;
             case 'inventario-tienda':
                 return <ModulePlaceholder title="Inventario de Tienda" user={user} />;
+            case 'reposicion':
+                return <ReposicionManagement user={user} />;
             case 'reposiciones':
                 return <ModulePlaceholder title="Gestión de Reposiciones" user={user} />;
             
-            // Módulos de ventas
+            // Módulos de ventas (nuevos)
+            case 'ventas':
+                return <VentasManagement user={user} />;
+            case 'ventas-web':
+                return <VentasWebManagement 
+                    user={user}
+                    canView={true}
+                    canCreate={true}
+                    canUpdate={true}
+                    canDelete={true}
+                />;
+            case 'ventas-tienda':
+                return <VentasTiendaManagement 
+                    user={user}
+                    canView={true}
+                    canCreate={true}
+                    canUpdate={true}
+                    canDelete={true}
+                />;
+            case 'puntos':
+                return <PuntosManagement 
+                    user={user}
+                    canView={true}
+                    canManage={true}
+                />;
+            
+            // Módulos de ventas (legacy)
             case 'ventas-fisicas':
                 return <ModulePlaceholder title="Ventas Físicas" user={user} />;
             case 'ventas-online':
@@ -94,6 +129,8 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
                 return <ModulePlaceholder title="Ventas en Eventos" user={user} />;
             
             // Módulos de compras
+            case 'compras-mayoristas':
+                return <ComprasManagement user={user} />;
             case 'compras':
                 return <ModulePlaceholder title="Órdenes de Compra" user={user} />;
             
@@ -112,8 +149,10 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
                 return <ModulePlaceholder title="Gestión de Ofertas" user={user} />;
             
             // Módulos de reportes
+            case 'reportes':
+                return <ReportesManagement user={user} />;
             case 'reportes-ventas':
-                return <ModulePlaceholder title="Reportes de Ventas" user={user} />;
+                return <ReportesManagement user={user} />;
             case 'reportes-inventario':
                 return <ModulePlaceholder title="Reportes de Inventario" user={user} />;
             case 'reportes-financieros':
@@ -145,16 +184,23 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             'presentaciones': 'Gestión de Presentaciones',
             'almacen': 'Gestión de Almacén',
             'inventario-tienda': 'Inventario de Tienda',
+            'reposicion': 'Gestión de Reposición',
             'reposiciones': 'Gestión de Reposiciones',
+            'ventas': 'Gestión de Ventas',
+            'ventas-web': 'Ventas Online',
+            'ventas-tienda': 'Ventas en Tienda',
+            'puntos': 'Gestión de Puntos',
             'ventas-fisicas': 'Ventas Físicas',
             'ventas-online': 'Ventas Online',
             'ventas-eventos': 'Ventas en Eventos',
+            'compras-mayoristas': 'Compras Mayoristas',
             'compras': 'Órdenes de Compra',
             'clientes': 'Gestión de Clientes',
             'empleados': 'Gestión de Empleados',
             'miembros': 'Gestión de Miembros',
             'eventos': 'Gestión de Eventos',
             'ofertas': 'Gestión de Ofertas',
+            'reportes': 'Gestión de Reportes',
             'reportes-ventas': 'Reportes de Ventas',
             'reportes-inventario': 'Reportes de Inventario',
             'reportes-financieros': 'Reportes Financieros',

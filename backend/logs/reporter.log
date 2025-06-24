@@ -1,0 +1,129 @@
+2025-06-24T02:13:59.569Z - info: Initializing jsreport (version: 4.9.0, configuration file: jsreport.config.json, nodejs: 22.11.0)
+2025-06-24T02:13:59.581Z - info: Searching for available extensions in C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\reportes\
+2025-06-24T02:13:59.587Z - info: Extensions location cache not found, crawling directories
+2025-06-24T02:14:02.923Z - info: Found 35 extension(s)
+2025-06-24T02:14:04.738Z - info: Using extension base@4.0.0
+2025-06-24T02:14:04.764Z - info: Using extension child-templates@4.1.0
+2025-06-24T02:14:04.790Z - info: Using extension cli@4.1.1
+2025-06-24T02:14:04.940Z - info: Using extension components@4.0.2
+2025-06-24T02:14:04.987Z - info: Using extension data@4.1.0
+2025-06-24T02:14:05.023Z - info: Using extension express@4.2.0
+2025-06-24T02:14:24.500Z - info: Using extension freeze@4.0.0
+2025-06-24T02:14:24.534Z - info: Using extension fs-store@4.1.1
+2025-06-24T02:14:30.551Z - info: Using extension handlebars@4.0.1
+2025-06-24T02:14:30.585Z - info: Using extension import-export@4.0.7
+2025-06-24T02:14:31.005Z - info: Using extension jsrender@4.0.0
+2025-06-24T02:14:31.028Z - info: Using extension licensing@4.0.5
+2025-06-24T02:14:32.115Z - info: Using extension localization@4.0.1
+2025-06-24T02:14:32.138Z - info: Using extension npm@4.0.0
+2025-06-24T02:14:44.631Z - info: Initializing jsreport (version: 4.9.0, configuration file: jsreport.config.json, nodejs: 22.11.0)
+2025-06-24T02:14:44.635Z - info: Searching for available extensions in C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\reportes\
+2025-06-24T02:14:44.642Z - info: Extensions location cache contains up to date information, skipping crawling in C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\reportes\
+2025-06-24T02:14:44.651Z - info: Found 35 extension(s)
+2025-06-24T02:14:44.723Z - info: Using extension base@4.0.0
+2025-06-24T02:14:44.729Z - info: Using extension child-templates@4.1.0
+2025-06-24T02:14:44.732Z - info: Using extension cli@4.1.1
+2025-06-24T02:14:44.735Z - info: Using extension components@4.0.2
+2025-06-24T02:14:44.737Z - info: Using extension data@4.1.0
+2025-06-24T02:14:44.738Z - info: Using extension express@4.2.0
+2025-06-24T02:14:45.250Z - info: Using extension freeze@4.0.0
+2025-06-24T02:14:45.252Z - info: Using extension fs-store@4.1.1
+2025-06-24T02:14:45.391Z - info: Using extension handlebars@4.0.1
+2025-06-24T02:14:45.392Z - info: Using extension import-export@4.0.7
+2025-06-24T02:14:45.405Z - info: Using extension jsrender@4.0.0
+2025-06-24T02:14:45.406Z - info: Using extension licensing@4.0.5
+2025-06-24T02:14:45.464Z - info: Using extension localization@4.0.1
+2025-06-24T02:14:45.465Z - info: Using extension npm@4.0.0
+2025-06-24T02:14:45.468Z - info: Using extension pdf-utils@4.3.0
+2025-06-24T02:14:45.470Z - info: Using extension reports@4.1.4
+2025-06-24T02:14:45.473Z - info: Using extension tags@4.0.1
+2025-06-24T02:14:45.475Z - info: Using extension text@4.0.2
+2025-06-24T02:14:45.476Z - info: Using extension version-control@4.1.1
+2025-06-24T02:14:45.486Z - info: Using extension assets@4.2.2
+2025-06-24T02:14:45.500Z - info: Using extension authorization@4.1.0
+2025-06-24T02:14:45.506Z - info: Using extension browser-client@4.1.0
+2025-06-24T02:14:45.508Z - info: Using extension chrome-pdf@4.2.0
+2025-06-24T02:14:45.511Z - info: Using extension docx@4.8.0
+2025-06-24T02:14:45.514Z - info: Using extension html-to-xlsx@4.2.1
+2025-06-24T02:14:45.783Z - info: html-to-xlsx detected chrome as available html engine
+2025-06-24T02:14:45.783Z - info: Using extension pptx@4.4.1
+2025-06-24T02:14:45.785Z - info: Using extension scheduling@4.1.0
+2025-06-24T02:14:45.819Z - info: Using extension scripts@4.2.0
+2025-06-24T02:14:45.820Z - info: Using extension static-pdf@4.1.0
+2025-06-24T02:14:45.821Z - info: Using extension studio@4.3.1
+2025-06-24T02:14:45.914Z - info: Using extension xlsx@4.4.1
+2025-06-24T02:14:45.930Z - info: Using extension public-templates@4.0.0
+2025-06-24T02:14:45.949Z - info: Using extension sample-template@4.0.1
+2025-06-24T02:14:45.972Z - info: Using extension studio-theme-dark@4.0.0
+2025-06-24T02:14:46.019Z - info: Using general timeout for rendering (reportTimeout: 60000)
+2025-06-24T02:14:46.019Z - info: Using fs provider for template store.
+2025-06-24T02:14:46.025Z - info: fs store is persisting using fs for C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\reportes\data
+2025-06-24T02:14:46.032Z - info: fs store is loading data
+2025-06-24T02:14:32.171Z - info: Using extension pdf-utils@4.3.0
+2025-06-24T02:14:32.217Z - info: Using extension reports@4.1.4
+2025-06-24T02:14:32.282Z - info: Using extension tags@4.0.1
+2025-06-24T02:14:32.348Z - info: Using extension text@4.0.2
+2025-06-24T02:14:32.374Z - info: Using extension version-control@4.1.1
+2025-06-24T02:14:32.619Z - info: Using extension assets@4.2.2
+2025-06-24T02:14:32.979Z - info: Using extension authorization@4.1.0
+2025-06-24T02:14:33.154Z - info: Using extension browser-client@4.1.0
+2025-06-24T02:14:33.278Z - info: Using extension chrome-pdf@4.2.0
+2025-06-24T02:14:33.317Z - info: Using extension docx@4.8.0
+2025-06-24T02:14:33.349Z - info: Using extension html-to-xlsx@4.2.1
+2025-06-24T02:14:42.068Z - info: html-to-xlsx detected chrome as available html engine
+2025-06-24T02:14:42.069Z - info: Using extension pptx@4.4.1
+2025-06-24T02:14:42.112Z - info: Using extension scheduling@4.1.0
+2025-06-24T02:14:43.234Z - info: Using extension scripts@4.2.0
+2025-06-24T02:14:43.264Z - info: Using extension static-pdf@4.1.0
+2025-06-24T02:14:43.292Z - info: Using extension studio@4.3.1
+2025-06-24T02:14:45.899Z - info: Using extension xlsx@4.4.1
+2025-06-24T02:14:45.932Z - info: Using extension public-templates@4.0.0
+2025-06-24T02:14:45.951Z - info: Using extension sample-template@4.0.1
+2025-06-24T02:14:45.974Z - info: Using extension studio-theme-dark@4.0.0
+2025-06-24T02:14:46.020Z - info: Using general timeout for rendering (reportTimeout: 60000)
+2025-06-24T02:14:46.020Z - info: Using fs provider for template store.
+2025-06-24T02:14:46.030Z - info: fs store is persisting using fs for C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\reportes\data
+2025-06-24T02:14:46.236Z - info: fs store is initialized successfully
+2025-06-24T02:14:46.249Z - info: fs store is loading data
+2025-06-24T02:14:46.314Z - info: fs store is initialized successfully
+2025-06-24T02:14:46.244Z - info: Creating default express app.
+2025-06-24T02:14:47.137Z - info: jsreport server successfully started on http port: 5488
+2025-06-24T02:14:47.138Z - info: Verifying license key free
+2025-06-24T02:14:47.139Z - info: Using free license
+2025-06-24T02:14:46.342Z - info: Creating default express app.
+2025-06-24T02:14:47.138Z - error: Error when starting http server on port 5488 Error: listen EADDRINUSE: address already in use :::5488
+    at Server.setupListenHandle [as _listen2] (node:net:1907:16)
+    at listenInCluster (node:net:1964:12)
+    at Server.listen (node:net:2066:7)
+    at C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\reportes\node_modules\@jsreport\jsreport-express\lib\main.js:22:12
+    at new Promise (<anonymous>)
+    at startAsync (C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\reportes\node_modules\@jsreport\jsreport-express\lib\main.js:16:10)
+    at C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\reportes\node_modules\@jsreport\jsreport-express\lib\main.js:50:14
+    at Object.start (C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\reportes\node_modules\@jsreport\jsreport-express\lib\main.js:125:13)
+    at Object.<anonymous> (C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\reportes\node_modules\@jsreport\jsreport-express\lib\main.js:333:30)
+    at async ListenerCollection.fire (C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\shared\listenerCollection.js:157:21)
+2025-06-24T02:14:47.138Z - error: Error occurred during reporter init: Error: listen EADDRINUSE: address already in use :::5488
+    at Server.setupListenHandle [as _listen2] (node:net:1907:16)
+    at listenInCluster (node:net:1964:12)
+    at Server.listen (node:net:2066:7)
+    at C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\reportes\node_modules\@jsreport\jsreport-express\lib\main.js:22:12
+    at new Promise (<anonymous>)
+    at startAsync (C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\reportes\node_modules\@jsreport\jsreport-express\lib\main.js:16:10)
+    at C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\reportes\node_modules\@jsreport\jsreport-express\lib\main.js:50:14
+    at Object.start (C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\reportes\node_modules\@jsreport\jsreport-express\lib\main.js:125:13)
+    at Object.<anonymous> (C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\reportes\node_modules\@jsreport\jsreport-express\lib\main.js:333:30)
+    at async ListenerCollection.fire (C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\reportes\node_modules\@jsreport\jsreport-core\lib\shared\listenerCollection.js:157:21)
+2025-06-24T02:14:47.139Z - info: Closing jsreport instance
+2025-06-24T02:14:47.142Z - info: Initializing worker threads
+2025-06-24T02:14:47.171Z - warn: fs journal is corrupted, reloading Unexpected token '<', "<<<<<<< HEAD" is not valid JSON stack=SyntaxError: Unexpected token '<', "<<<<<<< HEAD" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at module.exports.parse (C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\reportes\node_modules\@jsreport\serializator\index.js:56:15)
+    at parse (C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\reportes\node_modules\@jsreport\jsreport-fs-store\lib\customUtils.js:63:10)
+    at Object.sync (C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\reportes\node_modules\@jsreport\jsreport-fs-store\lib\journal.js:114:24)
+    at async C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\reportes\node_modules\@jsreport\jsreport-fs-store\lib\transaction.js:117:9
+    at async lock (C:\Users\sebav\OneDrive\Documentos\ACAUCAB REPO\ACAUCAB\reportes\node_modules\@jsreport\jsreport-fs-store\lib\customUtils.js:153:12)
+2025-06-24T02:14:47.178Z - info: fs store is loading data
+2025-06-24T02:14:47.212Z - info: jsreport instance has been closed
+2025-06-24T02:14:51.900Z - info: 2 worker threads initialized in 4758ms
+2025-06-24T02:14:51.901Z - info: Starting temp files cleanup with 180000ms threshold
+2025-06-24T02:14:51.902Z - info: reporter initialized

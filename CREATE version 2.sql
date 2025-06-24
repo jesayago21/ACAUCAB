@@ -254,9 +254,8 @@ CREATE TABLE IF NOT EXISTS usuario (
 
 CREATE TABLE IF NOT EXISTS metodo_de_pago (
     clave SERIAL,
-    moneda tipo_moneda NOT NULL,
-    metodo_preferido BOOLEAN NOT NULL DEFAULT FALSE,
-    fk_usuario INT,
+    moneda tipo_moneda NOT NULL DEFAULT 'VES',
+    fk_cliente INT,
     valor INT,
     numero_cheque INT,
     fecha_vencimiento DATE,
@@ -264,9 +263,8 @@ CREATE TABLE IF NOT EXISTS metodo_de_pago (
     numero_tarjeta BIGINT,
     tipo tipo_metodo_pago NOT NULL,
     CONSTRAINT pk_metodo_de_pago PRIMARY KEY (clave),
-    CONSTRAINT fk_usuario_metodo_de_pago FOREIGN KEY (fk_usuario) REFERENCES usuario(clave),
-    CONSTRAINT chk_metodo_preferido CHECK ((metodo_preferido = FALSE AND fk_usuario IS NULL)
-     OR (metodo_preferido = TRUE AND fk_usuario IS NOT NULL AND tipo = 'Tarjeta de credito')),
+    CONSTRAINT fk_cliente_metodo_de_pago FOREIGN KEY (fk_cliente) REFERENCES cliente(clave),
+
     
     CONSTRAINT chk_tipo_metodo_de_pago CHECK (
         (tipo = 'Efectivo' AND
@@ -610,6 +608,7 @@ CREATE TABLE IF NOT EXISTS pago (
     fk_venta_evento INT,
     fk_venta_entrada INT,
     fk_cuota INT,
+    fk_compra INT,
     CONSTRAINT pk_pago PRIMARY KEY (clave),
     CONSTRAINT fk_tasa_cambio_pago FOREIGN KEY (fk_tasa_cambio) REFERENCES tasa_cambio(clave),
     CONSTRAINT fk_metodo_de_pago_pago FOREIGN KEY (fk_metodo_de_pago) REFERENCES metodo_de_pago(clave),
@@ -618,13 +617,15 @@ CREATE TABLE IF NOT EXISTS pago (
     CONSTRAINT fk_venta_evento_pago FOREIGN KEY (fk_venta_evento) REFERENCES venta_evento(clave),
     CONSTRAINT fk_venta_entrada_pago FOREIGN KEY (fk_venta_entrada) REFERENCES venta_entrada(clave),
     CONSTRAINT fk_cuota_pago FOREIGN KEY (fk_cuota) REFERENCES cuota(clave),
+    CONSTRAINT fk_compra_pago FOREIGN KEY (fk_compra) REFERENCES c  ompra(clave),
     --arco de pago
     CONSTRAINT arco_pago CHECK (
         (CASE WHEN fk_venta_tienda_fisica IS NOT NULL THEN 1 ELSE 0 END) +
         (CASE WHEN fk_venta_online IS NOT NULL THEN 1 ELSE 0 END) +
         (CASE WHEN fk_venta_evento IS NOT NULL THEN 1 ELSE 0 END) +
         (CASE WHEN fk_venta_entrada IS NOT NULL THEN 1 ELSE 0 END) +
-        (CASE WHEN fk_cuota IS NOT NULL THEN 1 ELSE 0 END)
+        (CASE WHEN fk_cuota IS NOT NULL THEN 1 ELSE 0 END) +
+        (CASE WHEN fk_compra IS NOT NULL THEN 1 ELSE 0 END)
         = 1
     )
 );

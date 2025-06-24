@@ -85,7 +85,32 @@ const canAccessModule = (user: User, module: string): boolean => {
         case 'estados-reposicion':
             return hasPermission(user, 'gestionar estados reposicion');
 
-        // Gestión de ventas
+        // Gestión de ventas (nuevos módulos)
+        case 'ventas':
+            return hasPermission(user, 'consultar venta_tienda_fisica') ||
+                   hasPermission(user, 'Consultar venta_tienda_fisica') ||
+                   hasPermission(user, 'consultar venta_online') ||
+                   hasPermission(user, 'Consultar venta_online') ||
+                   hasPermission(user, 'consultar venta_evento') ||
+                   hasPermission(user, 'Consultar venta_evento') ||
+                   hasPermission(user, 'consultar puntos') ||
+                   hasPermission(user, 'Consultar puntos');
+        case 'ventas-web':
+            return hasPermission(user, 'consultar venta_online') || hasPermission(user, 'Consultar venta_online');
+        case 'ventas-tienda':
+            return hasPermission(user, 'consultar venta_tienda_fisica') || hasPermission(user, 'Consultar venta_tienda_fisica');
+        case 'puntos':
+            return hasPermission(user, 'consultar puntos') || hasPermission(user, 'Consultar puntos');
+
+        // Gestión de compras (nuevo módulo)
+        case 'compras-mayoristas':
+            return hasPermission(user, 'consultar compra') || hasPermission(user, 'Consultar compra');
+
+        // Gestión de reposición (nuevo módulo como hijo de inventario)
+        case 'reposicion':
+            return hasPermission(user, 'consultar reposicion') || hasPermission(user, 'Consultar reposicion');
+
+        // Módulos legacy (mantener por compatibilidad)
         case 'ventas-fisicas':
             return hasPermission(user, 'consultar venta tienda fisica');
         case 'ventas-online':
@@ -94,8 +119,6 @@ const canAccessModule = (user: User, module: string): boolean => {
             return hasPermission(user, 'consultar venta evento');
         case 'estados-venta-online':
             return hasPermission(user, 'gestionar estados venta online');
-
-        // Gestión de compras
         case 'compras':
             return hasPermission(user, 'Consultar compra');
         case 'estados-compra':
@@ -123,6 +146,16 @@ const canAccessModule = (user: User, module: string): boolean => {
             return hasPermission(user, 'ver reportes inventario');
         case 'reportes-financieros':
             return hasPermission(user, 'ver reportes financieros');
+        case 'reportes':
+            // Temporalmente permitir acceso a reportes para todos los usuarios autenticados
+            return true;
+            /* Cuando se creen los permisos, usar:
+            return hasPermission(user, 'ver reportes ventas') ||
+                   hasPermission(user, 'ver reportes inventario') ||
+                   hasPermission(user, 'ver reportes financieros') ||
+                   hasPermission(user, 'consultar reporte') ||
+                   hasPermission(user, 'Consultar reporte');
+            */
 
         // Gestión de pagos
         case 'pagos':
@@ -178,29 +211,25 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
             children: [
                 { id: 'almacen', name: 'Almacén', icon: '🏪' },
                 { id: 'inventario-tienda', name: 'Inventario Tienda', icon: '🏬' },
-                { id: 'reposiciones', name: 'Reposiciones', icon: '🔄' },
+                { id: 'reposicion', name: 'Reposición', icon: '🔄' },
                 { id: 'estados-reposicion', name: 'Estados de Reposición', icon: '📊' }
             ]
         },
         {
             id: 'ventas',
-            name: 'Ventas',
+            name: 'Gestión de Ventas',
             icon: '💰',
             children: [
-                { id: 'ventas-fisicas', name: 'Ventas Físicas', icon: '🏪' },
-                { id: 'ventas-online', name: 'Ventas Online', icon: '💻' },
-                { id: 'ventas-eventos', name: 'Ventas Eventos', icon: '🎉' },
-                { id: 'estados-venta-online', name: 'Estados Venta Online', icon: '📊' }
+                { id: 'ventas-web', name: 'Ventas Online', icon: '🌐' },
+                { id: 'ventas-tienda', name: 'Ventas Tienda', icon: '🏪' },
+                { id: 'puntos', name: 'Gestión de Puntos', icon: '⭐' }
             ]
         },
         {
-            id: 'compras',
-            name: 'Compras',
+            id: 'compras-mayoristas',
+            name: 'Compras Mayoristas',
             icon: '🛒',
-            children: [
-                { id: 'compras', name: 'Órdenes de Compra', icon: '📝' },
-                { id: 'estados-compra', name: 'Estados de Compra', icon: '📊' }
-            ]
+            children: []
         },
         {
             id: 'personas',
