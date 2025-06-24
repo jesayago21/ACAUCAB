@@ -441,9 +441,6 @@ const VentasTiendaManagement: React.FC<VentasTiendaManagementProps> = ({
                                         >
                                             Ver Detalle
                                         </button>
-                                        <button className="text-blue-600 hover:text-blue-900">
-                                            Imprimir
-                                        </button>
                                     </td>
                                 </tr>
                             ))}
@@ -459,8 +456,16 @@ const VentasTiendaManagement: React.FC<VentasTiendaManagementProps> = ({
 
             {/* Modal de detalle de venta */}
             {selectedVenta && ventaDetalle && (
-                <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50 print:!bg-transparent print:!p-0 print:!items-start">
+                    {/* Estilos para impresión */}
+                    <style>{`
+                        @media print {
+                            body * { visibility: hidden !important; }
+                            .modal-factura, .modal-factura * { visibility: visible !important; }
+                            .modal-factura { position: absolute !important; left: 0; top: 0; width: 100vw !important; min-height: 100vh !important; background: white !important; box-shadow: none !important; z-index: 9999 !important; }
+                        }
+                    `}</style>
+                    <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto modal-factura">
                         <div className="p-6">
                             <div className="flex justify-between items-start mb-6">
                                 <div>
@@ -476,7 +481,7 @@ const VentasTiendaManagement: React.FC<VentasTiendaManagementProps> = ({
                                         setSelectedVenta(null);
                                         setVentaDetalle(null);
                                     }}
-                                    className="text-gray-400 hover:text-gray-600"
+                                    className="text-gray-400 hover:text-gray-600 print:hidden"
                                 >
                                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -586,11 +591,14 @@ const VentasTiendaManagement: React.FC<VentasTiendaManagementProps> = ({
                                                 setSelectedVenta(null);
                                                 setVentaDetalle(null);
                                             }}
-                                            className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
+                                            className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors print:hidden"
                                         >
                                             Cerrar
                                         </button>
-                                        <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                                        <button
+                                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors print:hidden"
+                                            onClick={() => window.print()}
+                                        >
                                             Imprimir Factura
                                         </button>
                                     </div>

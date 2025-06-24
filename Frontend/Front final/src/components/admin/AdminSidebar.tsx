@@ -279,11 +279,11 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
     );
 
     return (
-        <div className={`bg-gray-900 text-white h-full transition-all duration-300 ${
+        <div className={`bg-gray-900 text-white h-screen fixed left-0 top-0 z-50 transition-all duration-300 ${
             isCollapsed ? 'w-16' : 'w-64'
         }`}>
-            {/* Header del sidebar */}
-            <div className="p-4 border-b border-gray-700">
+            {/* Header del sidebar - Fijo */}
+            <div className="p-4 border-b border-gray-700 bg-gray-900">
                 <div className="flex items-center justify-between">
                     <div className={`flex items-center ${isCollapsed ? 'justify-center' : ''}`}>
                         <span className="text-2xl">🍺</span>
@@ -303,9 +303,9 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 </div>
             </div>
 
-            {/* Información del usuario */}
+            {/* Información del usuario - Fija */}
             {!isCollapsed && (
-                <div className="p-4 border-b border-gray-700">
+                <div className="p-4 border-b border-gray-700 bg-gray-900">
                     <div className="text-sm">
                         <div className="font-medium">{user.username}</div>
                         <div className="text-gray-400">{user.rol.nombre}</div>
@@ -323,8 +323,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 </div>
             )}
 
-            {/* Navegación */}
-            <nav className="flex-1 overflow-y-auto">
+            {/* Navegación - Con scroll interno */}
+            <nav className="flex-1 overflow-y-auto sidebar-scroll" style={{ height: 'calc(100vh - 140px)' }}>
                 <div className="p-2">
                     {visibleModules.map(module => (
                         <div key={module.id} className="mb-2">
@@ -379,9 +379,9 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 </div>
             </nav>
 
-            {/* Footer con información de permisos (solo en modo debug) */}
+            {/* Footer con información de permisos (solo en modo debug) - Fijo */}
             {!isCollapsed && process.env.NODE_ENV === 'development' && (
-                <div className="p-2 border-t border-gray-700 text-xs text-gray-500">
+                <div className="p-2 border-t border-gray-700 text-xs text-gray-500 bg-gray-900">
                     <div>Permisos: {user.permisos.length}</div>
                     <div>Módulos visibles: {visibleModules.length}</div>
                 </div>
