@@ -13,18 +13,7 @@ interface Permission {
     descripcion?: string;
 }
 
-/** Interfaz para el usuario */
-interface User {
-    id: number;
-    username: string;
-    tipo_entidad: string;
-    rol: {
-        id: number;
-        nombre: string;
-    };
-    permisos: Permission[];
-    entidad?: any;
-}
+
 
 /** Props del componente */
 interface AdminDashboardMainProps {
@@ -59,6 +48,9 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
         switch (activeModule) {
             case 'dashboard':
                 return <DashboardOverview user={user} />;
+            
+            case 'usuarios':
+                return <UserManagement user={user} />;
             
             case 'usuarios-lista':
                 return <UserManagement user={user} />;
@@ -140,6 +132,7 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
     const getModuleTitle = () => {
         const moduleNames: { [key: string]: string } = {
             'dashboard': 'Dashboard Principal',
+            'usuarios': 'Gestión de Usuarios',
             'usuarios-lista': 'Lista de Usuarios',
             'usuarios-crear': 'Crear Usuario',
             'roles': 'Gestión de Roles',
@@ -203,8 +196,8 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
                                 </div>
                                 <div className="text-xs text-gray-500">
                                     {user.rol.nombre}
-                                    {user.entidad && user.tipo_entidad === 'empleado' && user.entidad.departamento && (
-                                        <span> • {user.entidad.departamento}</span>
+                                    {user.entidad && user.tipo_entidad === 'empleado' && (user.entidad as any).departamento && (
+                                        <span> • {(user.entidad as any).departamento}</span>
                                     )}
                                 </div>
                             </div>
@@ -324,7 +317,7 @@ const DashboardOverview: React.FC<{ user: Usuario }> = ({ user }) => {
                     {user.entidad && user.tipo_entidad === 'empleado' && (
                         <div>
                             <p className="text-sm font-medium text-gray-600">Departamento</p>
-                            <p className="text-base text-gray-900">{user.entidad.departamento || 'No asignado'}</p>
+                            <p className="text-base text-gray-900">{(user.entidad as any).departamento || 'No asignado'}</p>
                         </div>
                     )}
                 </div>
@@ -348,7 +341,7 @@ const DashboardOverview: React.FC<{ user: Usuario }> = ({ user }) => {
 };
 
 /** Componente placeholder para módulos no implementados */
-const ModulePlaceholder: React.FC<{ title: string; user: User }> = ({ title, user }) => {
+const ModulePlaceholder: React.FC<{ title: string; user: Usuario }> = ({ title, user }) => {
     return (
         <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200 text-center">
             <div className="text-6xl mb-4">🚧</div>
@@ -362,7 +355,7 @@ const ModulePlaceholder: React.FC<{ title: string; user: User }> = ({ title, use
 };
 
 /** Componente para crear usuarios */
-const UserCreationForm: React.FC<{ user: User }> = ({ user }) => {
+const UserCreationForm: React.FC<{ user: Usuario }> = ({ user }) => {
     return (
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Crear Nuevo Usuario</h2>

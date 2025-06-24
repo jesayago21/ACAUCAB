@@ -198,7 +198,7 @@ const RoleManagement: React.FC<RoleManagementProps> = ({ user }) => {
             setSelectedRoleForPrivileges(role);
             
             // Cargar privilegios actuales del rol
-            const response = await fetch(`http://localhost:5000/api/roles/${role.clave}/privileges`);
+            const response = await fetch(`http://localhost:5000/api/privileges/${role.clave}`);
             if (!response.ok) throw new Error('Error al cargar privilegios del rol');
             
             const rolePrivilegesData = await response.json();
