@@ -230,7 +230,7 @@ INSERT INTO tasa_cambio (moneda, monto_equivalencia, fecha_inicio)
 VALUES ('PUNTOS', 10.00, CURRENT_DATE)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO metodo_de_pago (moneda, metodo_preferido, fk_usuario, valor, numero_cheque, fecha_vencimiento, banco, numero_tarjeta, tipo) VALUES
+INSERT INTO metodo_de_pago (moneda, metodo_preferido, fk_cliente, valor, numero_cheque, fecha_vencimiento, banco, numero_tarjeta, tipo) VALUES
 ('VES', FALSE, NULL, 50000, NULL, NULL, NULL, NULL, 'Efectivo'), -- Efectivo, no preferido, sin usuario
 ('USD', TRUE, 1, NULL, NULL, '2027-12-31', 'Banco Mercantil', 4111222233334444, 'Tarjeta de credito'), -- Tarjeta de crédito preferida para el usuario 1
 ('VES', FALSE, NULL, NULL, 10001, NULL, 'Banco de Venezuela', NULL, 'Cheque'), -- Cheque, no preferido, sin usuario
@@ -241,7 +241,30 @@ INSERT INTO metodo_de_pago (moneda, metodo_preferido, fk_usuario, valor, numero_
 ('VES', FALSE, NULL, NULL, 10002, NULL, 'Banco Nacional de Crédito', NULL, 'Cheque'), -- Otro cheque, no preferido, sin usuario
 ('USD', FALSE, NULL, NULL, NULL, '2026-11-20', 'Banesco', 5111222233334444, 'Tarjeta de debito'), -- Tarjeta de débito, no preferida, **sin usuario**
 ('EUR', TRUE, 5, NULL, NULL, '2029-01-01', 'BOD', 5222333344445555, 'Tarjeta de credito'); -- Tarjeta de crédito preferida para el usuario 5
+-- INSERT de métodos de pago favoritos de ejemplo
+-- Estos son para probar la funcionalidad de métodos favoritos en el frontend
 
+-- Métodos favoritos para cliente ID 1 (José Francisco)
+INSERT INTO metodo_de_pago (moneda, fk_cliente, metodo_preferido, numero_tarjeta, fecha_vencimiento, banco, tipo)
+VALUES 
+('VES', 1, TRUE, 4111111111111111, '2025-12-01', 'Banco de Venezuela', 'Tarjeta de credito'),
+('VES', 1, TRUE, 5555555555554444, '2026-08-01', 'Banesco', 'Tarjeta de debito');
+
+-- Métodos favoritos para cliente ID 2 (María Elena)
+INSERT INTO metodo_de_pago (moneda, fk_cliente, metodo_preferido, numero_tarjeta, fecha_vencimiento, banco, tipo)
+VALUES 
+('VES', 2, TRUE, 4000000000000002, '2025-10-01', 'Mercantil', 'Tarjeta de credito');
+
+-- Métodos favoritos para cliente ID 3 (Carlos Andrés)
+INSERT INTO metodo_de_pago (moneda, fk_cliente, metodo_preferido, numero_tarjeta, fecha_vencimiento, banco, tipo)
+VALUES 
+('VES', 3, TRUE, 3782822463100005, '2027-03-01', 'Provincial', 'Tarjeta de credito'),
+('VES', 3, TRUE, 6011000990139424, '2026-06-01', 'Bicentenario', 'Tarjeta de debito');
+
+-- Métodos favoritos para cliente jurídico ID 4 (EMPRESA DEMO)
+INSERT INTO metodo_de_pago (moneda, fk_cliente, metodo_preferido, numero_tarjeta, fecha_vencimiento, banco, tipo)
+VALUES 
+('VES', 4, TRUE, 4242424242424242, '2025-11-01', 'Banco Nacional de Crédito', 'Tarjeta de credito'); 
 --Insertar ordenes de compra 
 --Ventas online 
 INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)

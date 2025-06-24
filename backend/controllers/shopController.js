@@ -2,9 +2,39 @@ const db = require('../config/db');
 
 /** Obtener presentaciones de cerveza disponibles en inventario de tienda física con ofertas */
 const getAvailableProducts = async (req, res) => {
-  const { tienda_id } = req.query; // Parámetro opcional para filtrar por tienda
+  const { tienda_id, busqueda, tipo, limite, offset } = req.query;
   
   try {
+    // Construir condiciones WHERE dinámicamente
+    let whereConditions = ['it.cantidad > 0'];
+    let queryParams = [];
+    let paramIndex = 1;
+
+    // Filtro por tienda
+    if (tienda_id) {
+      whereConditions.push(`tf.clave = $${paramIndex}`);
+      queryParams.push(tienda_id);
+      paramIndex++;
+    }
+
+    // Filtro de búsqueda (nombre de cerveza, presentación o EAN)
+    if (busqueda) {
+      whereConditions.push(`(
+        LOWER(c.nombre) LIKE LOWER($${paramIndex}) OR 
+        LOWER(p.nombre) LIKE LOWER($${paramIndex}) OR 
+        CAST(p.ean_13 AS TEXT) LIKE $${paramIndex}
+      )`);
+      queryParams.push(`%${busqueda}%`);
+      paramIndex++;
+    }
+
+    // Filtro por tipo de cerveza
+    if (tipo) {
+      whereConditions.push(`LOWER(tc.nombre) = LOWER($${paramIndex})`);
+      queryParams.push(tipo);
+      paramIndex++;
+    }
+
     /** Query para obtener presentaciones con información completa y ofertas activas */
     const queryText = `
       SELECT 
@@ -37,12 +67,14 @@ const getAvailableProducts = async (req, res) => {
       INNER JOIN tienda_fisica tf ON it.fk_tienda_fisica = tf.clave
       LEFT JOIN oferta o ON p.clave = o.fk_presentacion 
         AND CURRENT_DATE BETWEEN o.fecha_inicio AND o.fecha_fin
-      WHERE it.cantidad > 0
-      ${tienda_id ? 'AND tf.clave = $1' : ''}
-      ORDER BY tf.nombre, lt.nombre, p.nombre;
+      WHERE ${whereConditions.join(' AND ')}
+      ORDER BY 
+        CASE WHEN CAST(p.ean_13 AS TEXT) = '${busqueda || ''}' THEN 0 ELSE 1 END,
+        tf.nombre, lt.nombre, p.nombre
+      ${limite ? `LIMIT ${parseInt(limite)}` : ''}
+      ${offset ? `OFFSET ${parseInt(offset)}` : ''};
     `;
     
-    const queryParams = tienda_id ? [tienda_id] : [];
     const { rows } = await db.query(queryText, queryParams);
     
     res.status(200).json({
@@ -70,6 +102,52 @@ const getUserPaymentMethods = async (req, res) => {
   } catch (error) {
     console.error('Error fetching payment methods:', error);
     res.status(500).json({ message: 'Error interno del servidor' });
+  }
+};
+
+/** Obtener métodos de pago favoritos del cliente */
+const getClienteFavoritePaymentMethods = async (req, res) => {
+  const { clienteId } = req.params;
+  
+  try {
+    const queryText = `
+      SELECT 
+        clave,
+        banco,
+        numero_tarjeta,
+        fecha_vencimiento,
+        tipo,
+        moneda
+      FROM metodo_de_pago 
+      WHERE fk_cliente = $1 
+        AND metodo_preferido = true 
+        AND tipo IN ('Tarjeta de credito', 'Tarjeta de debito')
+      ORDER BY clave DESC;
+    `;
+    
+    const { rows } = await db.query(queryText, [clienteId]);
+    
+    // Formatear los datos para el frontend
+    const metodosFavoritos = rows.map(metodo => ({
+      id: metodo.clave,
+      banco: metodo.banco,
+      numero_tarjeta: metodo.numero_tarjeta?.toString(),
+      fecha_vencimiento: metodo.fecha_vencimiento,
+      tipo: metodo.tipo === 'Tarjeta de credito' ? 'credito' : 'debito',
+      moneda: metodo.moneda
+    }));
+    
+    res.status(200).json({
+      success: true,
+      metodos: metodosFavoritos
+    });
+    
+  } catch (error) {
+    console.error('Error fetching favorite payment methods:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error interno del servidor' 
+    });
   }
 };
 
@@ -261,6 +339,46 @@ const getTasaCambioPuntos = async (req, res) => {
   }
 };
 
+/** Obtener todas las tasas de cambio vigentes */
+const getAllTasasCambio = async (req, res) => {
+  try {
+    const queryText = `
+      SELECT DISTINCT ON (moneda)
+        clave,
+        moneda,
+        monto_equivalencia,
+        fecha_inicio,
+        fecha_fin
+      FROM tasa_cambio 
+      WHERE (fecha_fin IS NULL OR fecha_fin >= CURRENT_DATE)
+        AND fecha_inicio <= CURRENT_DATE
+      ORDER BY moneda, fecha_inicio DESC;
+    `;
+    
+    const { rows } = await db.query(queryText);
+    
+    // Organizar las tasas por moneda para facilitar el acceso
+    const tasasPorMoneda = {};
+    rows.forEach(tasa => {
+      tasasPorMoneda[tasa.moneda] = tasa;
+    });
+    
+    res.status(200).json({
+      success: true,
+      message: 'Tasas de cambio obtenidas exitosamente',
+      tasas: tasasPorMoneda,
+      tasas_array: rows
+    });
+    
+  } catch (error) {
+    console.error('Error fetching all exchange rates:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error interno del servidor' 
+    });
+  }
+};
+
 /** Crear una venta de tienda física */
 const createVentaFisica = async (req, res) => {
   const {
@@ -371,12 +489,14 @@ const createVentaFisica = async (req, res) => {
       // Construir query específico según el tipo de método de pago
       switch (metodoPago.tipo) {
         case 'Efectivo':
+          // Determinar la moneda del efectivo basada en los detalles
+          const monedaEfectivo = metodoPago.detalles?.moneda || 'VES';
           insertMetodoPagoQuery = `
             INSERT INTO metodo_de_pago (moneda, metodo_preferido, valor, tipo)
-            VALUES ('VES', FALSE, $1, $2)
+            VALUES ($1, FALSE, $2, $3)
             RETURNING clave;
           `;
-          metodoPagoParams = [metodoPago.monto, metodoPago.tipo];
+          metodoPagoParams = [monedaEfectivo, metodoPago.detalles?.monto_original || metodoPago.monto, metodoPago.tipo];
           break;
           
         case 'Cheque':
@@ -394,12 +514,15 @@ const createVentaFisica = async (req, res) => {
           
         case 'Tarjeta de credito':
         case 'Tarjeta de debito':
+          const esPreferido = metodoPago.detalles?.guardar_como_favorito || false;
           insertMetodoPagoQuery = `
-            INSERT INTO metodo_de_pago (moneda, metodo_preferido, numero_tarjeta, fecha_vencimiento, banco, tipo)
-            VALUES ('VES', FALSE, $1, $2, $3, $4)
+            INSERT INTO metodo_de_pago (moneda, fk_cliente, metodo_preferido, numero_tarjeta, fecha_vencimiento, banco, tipo)
+            VALUES ('VES', $1, $2, $3, $4, $5, $6)
             RETURNING clave;
           `;
           metodoPagoParams = [
+            cliente_id,
+            esPreferido,
             metodoPago.detalles?.numero_tarjeta || null,
             metodoPago.detalles?.fecha_vencimiento || null,
             metodoPago.detalles?.banco || null,
@@ -497,13 +620,85 @@ const createVentaFisica = async (req, res) => {
   }
 };
 
+/** Buscar producto específicamente por EAN */
+const getProductByEAN = async (req, res) => {
+  const { ean } = req.params;
+  const { tienda_id } = req.query;
+  
+  try {
+    /** Query para obtener producto específico por EAN */
+    const queryText = `
+      SELECT 
+        p.clave,
+        p.ean_13,
+        p.nombre AS nombre_presentacion,
+        p.cantidad_unidades,
+        p.precio,
+        c.nombre AS nombre_cerveza,
+        c.grado_alcohol,
+        tc.nombre AS tipo_cerveza,
+        m.razon_social AS miembro,
+        it.cantidad AS cantidad_disponible,
+        lt.nombre AS lugar_tienda,
+        tf.nombre AS tienda_fisica,
+        CASE 
+          WHEN o.clave IS NOT NULL AND CURRENT_DATE BETWEEN o.fecha_inicio AND o.fecha_fin 
+          THEN true 
+          ELSE false 
+        END AS tiene_oferta,
+        o.porcentaje_descuento,
+        o.fecha_inicio AS fecha_inicio_oferta,
+        o.fecha_fin AS fecha_fin_oferta
+      FROM presentacion p
+      INNER JOIN cerveza c ON p.fk_cerveza = c.clave
+      INNER JOIN tipo_cerveza tc ON c.fk_tipo_cerveza = tc.clave
+      INNER JOIN miembro m ON c.fk_miembro = m.rif
+      INNER JOIN inventario_tienda it ON p.clave = it.fk_presentacion
+      INNER JOIN lugar_tienda lt ON it.fk_lugar_tienda = lt.clave
+      INNER JOIN tienda_fisica tf ON it.fk_tienda_fisica = tf.clave
+      LEFT JOIN oferta o ON p.clave = o.fk_presentacion 
+        AND CURRENT_DATE BETWEEN o.fecha_inicio AND o.fecha_fin
+      WHERE CAST(p.ean_13 AS TEXT) = $1
+        AND it.cantidad > 0
+        ${tienda_id ? 'AND tf.clave = $2' : ''}
+      LIMIT 1;
+    `;
+    
+    const queryParams = tienda_id ? [ean, tienda_id] : [ean];
+    const { rows } = await db.query(queryText, queryParams);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `Producto con EAN ${ean} no encontrado o sin stock`
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: 'Producto encontrado',
+      producto: rows[0]
+    });
+    
+  } catch (error) {
+    console.error('Error fetching product by EAN:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error interno del servidor' 
+    });
+  }
+};
+
 module.exports = {
   getAvailableProducts,
   getUserPaymentMethods,
+  getClienteFavoritePaymentMethods,
   createOnlineOrder,
   getProductsWithOffers,
   getTiendasFisicas,
   getTasaCambioActual,
   getTasaCambioPuntos,
+  getAllTasasCambio,
   createVentaFisica,
+  getProductByEAN,
 };

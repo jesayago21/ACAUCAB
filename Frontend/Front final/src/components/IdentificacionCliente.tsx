@@ -293,7 +293,7 @@ export default function IdentificacionCliente({
 
         {/* Footer informativo */}
         <div className="mt-8 text-center text-sm text-gray-500">
-          <p>💡 Presione Enter para verificar rápidamente</p>
+          
           <p className="mt-1">Sistema de Autopago ACAUCAB</p>
         </div>
       </div>

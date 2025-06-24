@@ -6,9 +6,17 @@ const path = require('path');
 // Reporte 1: Puntos canjeados
 // Este reporte genera un PDF con los puntos canjeados por los usuarios
 router.get('/reporte-puntos', (req, res) => {
+    const { fechaInicio, fechaFin } = req.query;
     const scriptPath = path.resolve(__dirname, '../../reportes/generar_reporte_puntos.js');
-    exec(`node "${scriptPath}"`, (error, stdout, stderr) => {
+    
+    let args = '';
+    if (fechaInicio && fechaFin) {
+        args = ` --fechas ${fechaInicio} ${fechaFin}`;
+    }
+    
+    exec(`node "${scriptPath}"${args}`, (error, stdout, stderr) => {
         if (error) {
+            console.error('Error generando reporte:', error);
             return res.status(500).send('Error generando el reporte de puntos');
         }
         // Buscar la línea ARCHIVO_REPORTE: ... en el stdout
@@ -58,9 +66,17 @@ router.get('/reporte-puntos', (req, res) => {
 // Reporte 2: Venta de entradas y de productos de eventos
 // Este reporte genera un PDF con las ventas de entradas y productos de eventos
 router.get('/reporte-evento', (req, res) => {
+    const { fechaInicio, fechaFin } = req.query;
     const scriptPath = path.resolve(__dirname, '../../reportes/generar_reporte_ventas_entradas.js');
-    exec(`node "${scriptPath}"`, (error, stdout, stderr) => {
+    
+    let args = '';
+    if (fechaInicio && fechaFin) {
+        args = ` --fechas ${fechaInicio} ${fechaFin}`;
+    }
+    
+    exec(`node "${scriptPath}"${args}`, (error, stdout, stderr) => {
         if (error) {
+            console.error('Error generando reporte:', error);
             return res.status(500).send('Error generando el reporte');
         }
         // Buscar la línea ARCHIVO_REPORTE: ... en el stdout
@@ -134,11 +150,18 @@ router.get('/reporte-ibu', (req, res) => {
 });
 
 // Reporte 4: Reporte comparativa cervezas
-
 router.get('/reporte-comparativa-cerveza', (req, res) => {
+    const { fechaInicio, fechaFin } = req.query;
     const scriptPath = path.resolve(__dirname, '../../reportes/generar_reporte_comparativa_cerveza.js');
-    exec(`node "${scriptPath}"`, (error, stdout, stderr) => {
+    
+    let args = '';
+    if (fechaInicio && fechaFin) {
+        args = ` --fechas ${fechaInicio} ${fechaFin}`;
+    }
+    
+    exec(`node "${scriptPath}"${args}`, (error, stdout, stderr) => {
         if (error) {
+            console.error('Error generando reporte:', error);
             return res.status(500).send('Error generando el reporte de comparativa de cerveza');
         }
         // Buscar la línea ARCHIVO_REPORTE: ... en el stdout
@@ -161,11 +184,18 @@ router.get('/reporte-comparativa-cerveza', (req, res) => {
 });
 
 // Reporte 5: Reporte tiempo de entrega
-
 router.get('/reporte-tiempo-entrega', (req, res) => {
+    const { fechaInicio, fechaFin } = req.query;
     const scriptPath = path.resolve(__dirname, '../../reportes/generar_reporte_tiempo_entrega.js');
-    exec(`node "${scriptPath}"`, (error, stdout, stderr) => {
+    
+    let args = '';
+    if (fechaInicio && fechaFin) {
+        args = ` --fechas ${fechaInicio} ${fechaFin}`;
+    }
+    
+    exec(`node "${scriptPath}"${args}`, (error, stdout, stderr) => {
         if (error) {
+            console.error('Error generando reporte:', error);
             return res.status(500).send('Error generando el reporte de tiempo de entrega');
         }
         // Buscar la línea ARCHIVO_REPORTE: ... en el stdout

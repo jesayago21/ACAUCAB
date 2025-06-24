@@ -222,6 +222,58 @@ const ReposicionManagement: React.FC<ReposicionManagementProps> = ({ user }) => 
                 </div>
             </div>
 
+            {/* Reposición más reciente pendiente */}
+            {reposicionesPendientes > 0 && (() => {
+                const reposicionMasReciente = reposiciones
+                    .filter(r => r.estado === 'pendiente')
+                    .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())[0];
+                
+                if (!reposicionMasReciente) return null;
+                
+                return (
+                    <div className="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg p-6 text-white shadow-lg">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="text-xl font-bold mb-2">
+                                    ⚡ Reposición Urgente Pendiente
+                                </h3>
+                                <div className="space-y-2">
+                                    <p className="text-lg">
+                                        <span className="font-medium">Producto:</span> {reposicionMasReciente.producto_nombre}
+                                    </p>
+                                    <div className="flex items-center space-x-4">
+                                        <p>
+                                            <span className="font-medium">Stock actual:</span> {reposicionMasReciente.stock_actual} unidades
+                                        </p>
+                                        <p>
+                                            <span className="font-medium">Necesita:</span> {reposicionMasReciente.cantidad} unidades
+                                        </p>
+                                    </div>
+                                    <p className="text-sm opacity-90">
+                                        Solicitado hace {Math.floor((Date.now() - new Date(reposicionMasReciente.fecha).getTime()) / (1000 * 60 * 60))} horas
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-center">
+                                <div className="text-5xl mb-2">
+                                    {(reposicionMasReciente.stock_actual / reposicionMasReciente.cantidad) <= 0.2 
+                                        ? '🚨' 
+                                        : '⚠️'}
+                                </div>
+                                {canManage && (
+                                    <button
+                                        onClick={() => handleAceptarReposicion(reposicionMasReciente.clave)}
+                                        className="bg-white text-orange-600 hover:bg-gray-100 px-4 py-2 rounded-lg font-medium transition-colors"
+                                    >
+                                        Procesar Ahora
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
+
             {/* Alertas críticas */}
             {reposicionesUrgentes > 0 && (
                 <div className="bg-red-50 border-l-4 border-red-400 p-4">

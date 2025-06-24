@@ -18,6 +18,8 @@ interface PagoAplicado {
   detalles?: any;
 }
 
+
+
 export default function MetodosPago({ 
   cliente, 
   carrito, 
@@ -26,7 +28,7 @@ export default function MetodosPago({
 }: MetodosPagoProps) {
   const [montoPendiente, setMontoPendiente] = useState(carrito.totalPrecio);
   const [pagosAplicados, setPagosAplicados] = useState<PagoAplicado[]>([]);
-  const [metodoPago, setMetodoPago] = useState<'Efectivo' | 'Cheque' | 'Tarjeta' | 'Puntos'>('Efectivo');
+  const [metodoPago, setMetodoPago] = useState<'Efectivo' | 'Cheque' | 'Tarjeta' | 'Puntos' | ''>('');
   const [subtipoTarjeta, setSubtipoTarjeta] = useState<'credito' | 'debito'>('credito');
   const [procesando, setProcesando] = useState(false);
   
@@ -36,18 +38,25 @@ export default function MetodosPago({
   const [tasaPuntos, setTasaPuntos] = useState<TasaCambio | null>(null);
   
   // Estados para formularios
-  const [montoEfectivo, setMontoEfectivo] = useState('');
+  const [montoEntregado, setMontoEntregado] = useState('');
+  const [monedaEfectivo, setMonedaEfectivo] = useState<'VES' | 'USD' | 'EUR'>('VES');
+  const [tasasCambio, setTasasCambio] = useState<{ [moneda: string]: TasaCambio }>({});
   const [montoTarjeta, setMontoTarjeta] = useState('');
   const [montoCheque, setMontoCheque] = useState('');
   const [datosTarjeta, setDatosTarjeta] = useState({
     numero: '',
     vencimiento: '',
-    banco: ''
+    banco: '',
+    guardarComoFavorito: false
   });
   const [datosCheque, setDatosCheque] = useState({
     numero: '',
     banco: ''
   });
+  
+  // Estados para métodos favoritos
+  const [metodosFavoritos, setMetodosFavoritos] = useState<any[]>([]);
+  const [mostrarFavoritos, setMostrarFavoritos] = useState(false);
 
   /** Cargar datos iniciales */
   useEffect(() => {
@@ -56,20 +65,42 @@ export default function MetodosPago({
 
   const cargarDatosIniciales = async () => {
     try {
-      // Cargar tasa de cambio de puntos
-      const tasaData = await tasaCambioService.obtenerTasaCambioPuntos();
-      setTasaPuntos(tasaData);
+      console.log('🔄 Cargando datos iniciales...');
+      
+      // Cargar todas las tasas de cambio de una vez
+      const todasLasTasas = await tasaCambioService.obtenerTodasLasTasas();
+      console.log('📊 Tasas de cambio obtenidas:', todasLasTasas);
+      
+      // Configurar todas las tasas
+      setTasasCambio(todasLasTasas);
+      
+      if (todasLasTasas.PUNTOS) {
+        setTasaPuntos(todasLasTasas.PUNTOS);
+      }
+      
+      // Cargar métodos de pago favoritos del cliente (solo tarjetas)
+      try {
+        const favoritos = await clienteService.obtenerMetodosFavoritos(cliente.clave!);
+        setMetodosFavoritos(favoritos);
+        console.log(`💳 ${favoritos.length} métodos favoritos cargados`);
+      } catch (error) {
+        console.error('Error cargando métodos favoritos:', error);
+        setMetodosFavoritos([]);
+      }
       
       // Usar los puntos reales del cliente
       const puntosDisponibles = cliente.puntos_acumulados || 0;
+      const tasaPuntosValor = todasLasTasas.PUNTOS?.monto_equivalencia || 1;
       const puntosData: PuntosCliente = {
         puntos_disponibles: puntosDisponibles,
-        valor_en_bolivares: parseFloat((puntosDisponibles * tasaData.monto_equivalencia).toFixed(2)),
-        tasa_cambio: tasaData.monto_equivalencia
+        valor_en_bolivares: parseFloat((puntosDisponibles * tasaPuntosValor).toFixed(2)),
+        tasa_cambio: tasaPuntosValor
       };
       setPuntosCliente(puntosData);
+      
+      console.log('✅ Datos iniciales cargados exitosamente');
     } catch (error) {
-      console.error('Error cargando datos iniciales:', error);
+      console.error('❌ Error cargando datos iniciales:', error);
       // Fallback con datos del cliente sin tasa
       if (cliente.puntos_acumulados) {
         const puntosSimulados: PuntosCliente = {
@@ -92,24 +123,32 @@ export default function MetodosPago({
 
   /** Aplicar pago */
   const aplicarPago = (tipoPago: PagoAplicado['tipo'], monto: number, detalles?: any) => {
-    if (monto <= 0 || monto > montoPendiente) return;
+    if (monto <= 0) return;
+
+    // Permitir pagar más solo en efectivo
+    if (tipoPago !== 'Efectivo' && monto > montoPendiente) {
+      alert('El monto no puede ser mayor al pendiente para este método de pago.');
+      return;
+    }
+    
+    const montoFinalAplicado = Math.min(monto, montoPendiente);
 
     const nuevoPago: PagoAplicado = {
       id: `${tipoPago}-${Date.now()}`,
       tipo: tipoPago,
-      monto,
+      monto: montoFinalAplicado,
       detalles
     };
 
     setPagosAplicados(prev => [...prev, nuevoPago]);
-    setMontoPendiente(prev => prev - monto);
+    setMontoPendiente(prev => prev - montoFinalAplicado);
 
     // Resetear formularios
-    setMontoEfectivo('');
+    setMontoEntregado('');
     setMontoPuntos('');
     setMontoTarjeta('');
     setMontoCheque('');
-    setDatosTarjeta({ numero: '', vencimiento: '', banco: '' });
+    setDatosTarjeta({ numero: '', vencimiento: '', banco: '', guardarComoFavorito: false });
     setDatosCheque({ numero: '', banco: '' });
   };
 
@@ -122,12 +161,37 @@ export default function MetodosPago({
     setMontoPendiente(prev => prev + pago.monto);
   };
 
+  /** Calcular equivalente en bolívares según la moneda seleccionada */
+  const calcularEquivalenteBolivares = (monto: number, moneda: 'VES' | 'USD' | 'EUR'): number => {
+    if (moneda === 'VES') return monto;
+    
+    const tasa = tasasCambio[moneda];
+    if (!tasa) return monto;
+    
+    // Convertir a bolívares usando la tasa actual
+    return monto * tasa.monto_equivalencia;
+  };
+
   /** Aplicar pago con efectivo */
   const handlePagoEfectivo = () => {
-    const monto = parseFloat(montoEfectivo) || 0;
-    if (monto > 0 && monto <= montoPendiente) {
-      aplicarPago('Efectivo', monto);
-    }
+    const montoEntregadoNum = parseFloat(montoEntregado) || 0;
+    if (montoEntregadoNum <= 0) return;
+
+    const tasa = monedaEfectivo !== 'VES' ? tasasCambio[monedaEfectivo] : null;
+    const montoPendienteEnMoneda = tasa ? parseFloat((montoPendiente / tasa.monto_equivalencia).toFixed(2)) : montoPendiente;
+
+    const montoAplicadoEnMoneda = Math.min(montoEntregadoNum, montoPendienteEnMoneda);
+    const vueltoEnMoneda = montoEntregadoNum - montoAplicadoEnMoneda;
+
+    const montoAplicadoEnBs = calcularEquivalenteBolivares(montoAplicadoEnMoneda, monedaEfectivo);
+
+    aplicarPago('Efectivo', montoAplicadoEnBs, {
+      monto_original: montoAplicadoEnMoneda,
+      moneda: monedaEfectivo,
+      tasa_cambio: tasa?.monto_equivalencia || 1,
+      monto_entregado: montoEntregadoNum,
+      vuelto: vueltoEnMoneda,
+    });
   };
 
   /** Aplicar pago con puntos */
@@ -137,7 +201,7 @@ export default function MetodosPago({
     const montoDeseado = parseFloat(montoPuntos) || 0;
     if (montoDeseado <= 0) return;
     
-    const tasaActual = parseFloat(String(tasaPuntos.monto_equivalencia || tasaPuntos.tasa || 1));
+          const tasaActual = parseFloat(String(tasaPuntos.monto_equivalencia || 1));
     const puntosNecesarios = Math.ceil(montoDeseado / tasaActual);
     const montoMaximo = Math.min(puntosCliente.valor_en_bolivares, montoPendiente);
     const montoFinal = Math.min(montoDeseado, montoMaximo);
@@ -175,7 +239,8 @@ export default function MetodosPago({
     aplicarPago(tipoFinal as PagoAplicado['tipo'], monto, {
       numero_tarjeta: datosTarjeta.numero,
       fecha_vencimiento: datosTarjeta.vencimiento,
-      banco: datosTarjeta.banco
+      banco: datosTarjeta.banco,
+      guardar_como_favorito: datosTarjeta.guardarComoFavorito
     });
   };
 
@@ -374,38 +439,110 @@ export default function MetodosPago({
 
             {/* Formulario según método seleccionado */}
             <div className="bg-white rounded-lg shadow-sm p-4">
-              {metodoPago === 'Efectivo' && (
-                <div>
-                  <h3 className="text-lg font-semibold text-[#2C2C2C] mb-4">Pago en Efectivo</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-[#2C2C2C] mb-2">
-                        Monto (Bs.)
-                      </label>
-                      <input
-                        type="number"
-                        min="0.01"
-                        max={montoPendiente}
-                        step="0.01"
-                        value={montoEfectivo}
-                        onChange={(e) => setMontoEfectivo(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A1B5A0]"
-                        placeholder="0.00"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Pendiente: Bs. {formatearPrecio(montoPendiente)}
-                      </p>
+              {metodoPago === 'Efectivo' && (() => {
+                const montoEntregadoNum = parseFloat(montoEntregado) || 0;
+                const tasa = monedaEfectivo !== 'VES' ? tasasCambio[monedaEfectivo] : null;
+                const montoPendienteEnMoneda = tasa ? parseFloat((montoPendiente / tasa.monto_equivalencia).toFixed(2)) : montoPendiente;
+
+                const montoAplicadoEnMoneda = Math.min(montoEntregadoNum, montoPendienteEnMoneda);
+                const vueltoEnMoneda = montoEntregadoNum - montoAplicadoEnMoneda;
+
+                return (
+                  <div>
+                    <h3 className="text-lg font-semibold text-[#2C2C2C] mb-4">Pago en Efectivo</h3>
+                    <div className="space-y-4">
+                      {/* Selector de moneda */}
+                      <div>
+                        <label className="block text-sm font-medium text-[#2C2C2C] mb-2">
+                          Tipo de Moneda
+                        </label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            { value: 'VES', label: 'Bolívares (VES)', flag: '🇻🇪' },
+                            { value: 'USD', label: 'Dólares (USD)', flag: '🇺🇸' },
+                            { value: 'EUR', label: 'Euros (EUR)', flag: '🇪🇺' }
+                          ].map((moneda) => (
+                            <button
+                              key={moneda.value}
+                              onClick={() => setMonedaEfectivo(moneda.value as any)}
+                              className={`p-2 rounded-lg border-2 text-sm transition-all ${
+                                monedaEfectivo === moneda.value
+                                  ? 'border-[#3D4A3A] bg-[#3D4A3A] text-white'
+                                  : 'border-gray-200 hover:border-[#A1B5A0]'
+                              }`}
+                            >
+                              <div className="text-center">
+                                <div className="text-lg mb-1">{moneda.flag}</div>
+                                <div className="font-medium">{moneda.value}</div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                        
+                        {tasa && (
+                          <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
+                            <p className="text-xs text-blue-800">
+                              💱 Tasa actual: 1 {monedaEfectivo} = Bs. {formatearPrecio(tasa.monto_equivalencia)}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-[#2C2C2C] mb-2">
+                          Monto Entregado por Cliente ({monedaEfectivo})
+                        </label>
+                        <input
+                          type="number"
+                          min="0.01"
+                          step="0.01"
+                          value={montoEntregado}
+                          onChange={(e) => setMontoEntregado(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A1B5A0]"
+                          placeholder="Ej: 20 (si paga con billete de $20)"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Pendiente: {
+                            monedaEfectivo === 'VES' 
+                            ? `Bs. ${formatearPrecio(montoPendiente)}`
+                            : `${monedaEfectivo} ${formatearPrecio(montoPendienteEnMoneda)} (Bs. ${formatearPrecio(montoPendiente)})`
+                          }
+                        </p>
+                      </div>
+                      
+                      {montoEntregadoNum > 0 && (
+                        <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded space-y-1">
+                          <p className="text-sm text-green-800 font-medium">
+                            Monto a aplicar: {monedaEfectivo} {formatearPrecio(montoAplicadoEnMoneda)}
+                          </p>
+                          <p className="text-xs text-green-700">
+                            (Equivale a Bs. {formatearPrecio(calcularEquivalenteBolivares(montoAplicadoEnMoneda, monedaEfectivo))})
+                          </p>
+                          
+                          {vueltoEnMoneda > 0.001 && (
+                            <div className="pt-2 mt-2 border-t border-green-200">
+                              <p className="text-sm text-yellow-800 font-bold">
+                                Vuelto a entregar: {monedaEfectivo} {formatearPrecio(vueltoEnMoneda)}
+                              </p>
+                              <p className="text-xs text-yellow-700">
+                                (Equivale a Bs. {formatearPrecio(calcularEquivalenteBolivares(vueltoEnMoneda, monedaEfectivo))})
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      <button
+                        onClick={handlePagoEfectivo}
+                        disabled={montoEntregadoNum <= 0}
+                        className="w-full bg-[#3D4A3A] hover:bg-[#2C3631] text-white font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Aplicar Pago en Efectivo
+                      </button>
                     </div>
-                    <button
-                      onClick={handlePagoEfectivo}
-                      disabled={!montoEfectivo || parseFloat(montoEfectivo) <= 0 || parseFloat(montoEfectivo) > montoPendiente}
-                      className="w-full bg-[#3D4A3A] hover:bg-[#2C3631] text-white font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Aplicar Pago en Efectivo
-                    </button>
                   </div>
-                </div>
-              )}
+                )
+              })()}
 
               {metodoPago === 'Puntos' && (
                 <div>
@@ -420,7 +557,7 @@ export default function MetodosPago({
                           Equivale a: Bs. {formatearPrecio(puntosCliente.valor_en_bolivares)}
                         </p>
                         <p className="text-xs text-green-600">
-                          1 punto = Bs. {(parseFloat(String(tasaPuntos.monto_equivalencia || tasaPuntos.tasa || 1))).toFixed(2)}
+                          1 punto = Bs. {(parseFloat(String(tasaPuntos.monto_equivalencia || 1))).toFixed(2)}
                         </p>
                       </div>
 
@@ -443,7 +580,7 @@ export default function MetodosPago({
                         </p>
                         {montoPuntos && (
                           <p className="text-xs text-blue-600 mt-1">
-                            Puntos necesarios: {Math.ceil(parseFloat(montoPuntos) / parseFloat(String(tasaPuntos.monto_equivalencia || tasaPuntos.tasa || 1)))}
+                            Puntos necesarios: {Math.ceil(parseFloat(montoPuntos) / parseFloat(String(tasaPuntos.monto_equivalencia || 1)))}
                           </p>
                         )}
                       </div>
@@ -465,6 +602,54 @@ export default function MetodosPago({
               {metodoPago === 'Tarjeta' && (
                 <div>
                   <h3 className="text-lg font-semibold text-[#2C2C2C] mb-4">Pago con Tarjeta</h3>
+                  
+                  {/* Métodos favoritos */}
+                  {metodosFavoritos.length > 0 && (
+                    <div className="mb-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-md font-medium text-[#2C2C2C]">Métodos Favoritos</h4>
+                        <button
+                          onClick={() => setMostrarFavoritos(!mostrarFavoritos)}
+                          className="text-sm text-[#3D4A3A] hover:text-[#2C3631] transition-colors"
+                        >
+                          {mostrarFavoritos ? 'Ocultar' : 'Ver'} ({metodosFavoritos.length})
+                        </button>
+                      </div>
+                      
+                      {mostrarFavoritos && (
+                        <div className="space-y-2 bg-gray-50 p-3 rounded-lg">
+                          {metodosFavoritos.map((metodo, index) => (
+                            <div key={index} className="flex items-center justify-between p-3 bg-white rounded border hover:border-[#A1B5A0] cursor-pointer transition-colors">
+                              <div className="flex items-center space-x-3">
+                                <div className="w-10 h-6 bg-gradient-to-r from-blue-600 to-blue-400 rounded text-white text-xs flex items-center justify-center font-bold">
+                                  {metodo.banco?.substring(0, 3).toUpperCase()}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium">**** **** **** {metodo.numero_tarjeta?.slice(-4)}</p>
+                                  <p className="text-xs text-gray-500">{metodo.banco} • Vence {metodo.fecha_vencimiento}</p>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  setDatosTarjeta({
+                                    numero: metodo.numero_tarjeta || '',
+                                    vencimiento: metodo.fecha_vencimiento || '',
+                                    banco: metodo.banco || '',
+                                    guardarComoFavorito: false
+                                  });
+                                  setMostrarFavoritos(false);
+                                }}
+                                className="px-3 py-1 text-xs bg-[#3D4A3A] text-white rounded hover:bg-[#2C3631] transition-colors"
+                              >
+                                Usar
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
                   <div className="space-y-4">
                     <div className="flex space-x-4">
                       <label className="flex items-center">
@@ -549,6 +734,19 @@ export default function MetodosPago({
                       <p className="text-xs text-gray-500 mt-1">
                         Pendiente: Bs. {formatearPrecio(montoPendiente)}
                       </p>
+                    </div>
+
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="guardarTarjeta"
+                        checked={datosTarjeta.guardarComoFavorito}
+                        onChange={(e) => setDatosTarjeta(prev => ({ ...prev, guardarComoFavorito: e.target.checked }))}
+                        className="mr-2"
+                      />
+                      <label htmlFor="guardarTarjeta" className="text-sm text-gray-700">
+                        Guardar como método favorito para futuros pagos
+                      </label>
                     </div>
 
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">

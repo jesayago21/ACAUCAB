@@ -17,26 +17,45 @@ export default function ProductCard({
   const [imagenError, setImagenError] = useState(false);
   const [expandido, setExpandido] = useState(false);
 
+  // Precargar las imágenes por defecto para asegurar que estén disponibles
+  React.useEffect(() => {
+    const preloadImg1 = new Image();
+    const preloadImg2 = new Image();
+    
+    preloadImg1.onload = () => console.log('✅ Imagen por defecto unit cargada');
+    preloadImg1.onerror = () => console.error('❌ Error cargando imagen por defecto unit');
+    preloadImg1.src = '/images/products/beer-unit-default.jpg';
+    
+    preloadImg2.onload = () => console.log('✅ Imagen por defecto sixpack cargada');
+    preloadImg2.onerror = () => console.error('❌ Error cargando imagen por defecto sixpack');
+    preloadImg2.src = '/images/products/beer-sixpack-default.jpeg';
+  }, []);
+
   // Obtener stock disponible con fallback
   const stockDisponible = producto.stock_disponible || producto.cantidad_disponible || 0;
 
-  /** Obtener la ruta de la imagen con lógica de fallback */
+  /** Obtener la ruta de la imagen con lógica de fallback limpia */
   const obtenerRutaImagen = (): string => {
     try {
+      if (imagenError) {
+        // Fallback: usar imágenes por defecto sin comillas extra
+        return producto.cantidad_unidades === 6 
+          ? '/images/products/beer-sixpack-default.jpeg'
+          : '/images/products/beer-unit-default.jpg';
+      }
+      
+      // Verificar si tenemos un ID válido
+      const productId = producto.clave || producto.id;
+      if (!productId) {
+        return '/images/products/beer-unit-default.jpg';
+      }
+      
       // Usar la clave/id de la presentación para el nombre de archivo
-      return `/images/products/beer-${producto.clave}.jpg`;
+      return `/images/products/beer-${productId}.jpg`;
     } catch (error) {
       console.error('Error en obtenerRutaImagen:', error);
-      return obtenerImagenFallback();
+      return '/images/products/beer-unit-default.jpg';
     }
-  };
-
-  /** Obtener imagen de fallback */
-  const obtenerImagenFallback = (): string => {
-    // Fallback: usar SVG simple sin caracteres especiales
-    return producto.cantidad_unidades === 6 
-      ? "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='160' viewBox='0 0 200 160'%3E%3Crect width='200' height='160' fill='%233D4A3A'/%3E%3Ctext x='100' y='80' text-anchor='middle' fill='white' font-family='Arial' font-size='14'%3ESIXPACK%3C/text%3E%3Ctext x='100' y='100' text-anchor='middle' fill='%23A1B5A0' font-family='Arial' font-size='12'%3ESin imagen%3C/text%3E%3C/svg%3E"
-      : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='160' viewBox='0 0 200 160'%3E%3Crect width='200' height='160' fill='%233D4A3A'/%3E%3Ccircle cx='100' cy='80' r='30' fill='%23A1B5A0'/%3E%3Ctext x='100' y='85' text-anchor='middle' fill='white' font-family='Arial' font-size='16'%3EB%3C/text%3E%3Ctext x='100' y='120' text-anchor='middle' fill='%23A1B5A0' font-family='Arial' font-size='12'%3ESin imagen%3C/text%3E%3C/svg%3E";
   };
 
   /** Calcular precio con descuento usando los datos del backend */
@@ -70,24 +89,43 @@ export default function ProductCard({
     setExpandido(!expandido);
   };
 
-
-
-    try {
+  try {
     return (
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300">
         {/* Imagen del producto - Clickeable para expandir */}
-        <div className="relative cursor-pointer" onClick={toggleExpandido}>
+        <div 
+          className="relative w-full h-80 bg-white overflow-hidden rounded-t-lg cursor-pointer group"
+          onClick={toggleExpandido}
+          style={{ height: '12rem' }}
+        >
           <img
-            src={imagenError ? obtenerImagenFallback() : obtenerRutaImagen()}
-            alt={producto.nombre_cerveza}
-            className="w-full h-40 object-cover"
+            key={obtenerRutaImagen()}
+            alt={`Cerveza ${producto.nombre_cerveza}`}
+            src={obtenerRutaImagen()}
+            className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105 p-2"
+            style={{
+              maxWidth: '90%', 
+              maxHeight: '90%',
+              margin: 'auto',
+              position: 'absolute',
+              top: '0',
+              bottom: '0',
+              left: '0',
+              right: '0'
+            }}
             onError={(e) => {
               if (!imagenError) {
                 setImagenError(true);
-                // Cambiar la src directamente para evitar loops
-                (e.target as HTMLImageElement).src = obtenerImagenFallback();
+                const target = e.target as HTMLImageElement;
+                // Determinar la imagen fallback directamente
+                const fallbackSrc = producto.cantidad_unidades === 6 
+                  ? '/images/products/beer-sixpack-default.jpeg'
+                  : '/images/products/beer-unit-default.jpg';
+                // Forzar el cambio inmediato de src
+                target.src = fallbackSrc;
               }
             }}
+            loading="lazy"
           />
           
           {/* Badge de oferta */}
@@ -122,10 +160,10 @@ export default function ProductCard({
         </div>
 
         {/* Contenido de la tarjeta */}
-        <div className="p-4">
+        <div className="p-4 flex flex-col flex-grow">
           {/* Nombre y presentación */}
-          <div className="mb-3">
-            <h3 className="text-lg font-semibold text-[#2C2C2C] mb-1 line-clamp-2">
+          <div className="mb-3 flex-grow">
+            <h3 className="text-lg font-semibold text-[#2C2C2C] mb-1 line-clamp-2" style={{ minHeight: '3.5rem' }}>
               {producto.nombre_cerveza}
             </h3>
             <p className="text-sm text-gray-600">

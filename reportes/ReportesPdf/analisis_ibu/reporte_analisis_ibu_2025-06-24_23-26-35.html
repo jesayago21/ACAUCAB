@@ -305,11 +305,11 @@
         <div class="meta-info">
             <div>
                 <i>📅</i>
-                <span>Fecha: {{fechaGeneracion}}</span>
+                <span>Fecha: 23/6/2025</span>
             </div>
             <div>
                 <i>🕒</i>
-                <span>Hora: {{horaGeneracion}}</span>
+                <span>Hora: 23:26:34</span>
             </div>
             <div>
                 <i>🏢</i>
@@ -323,39 +323,31 @@
                 <h2>📊 Resumen General</h2>
                 <div class="resumen-grid">
                     <div class="resumen-item">
-                        <h3>{{resumen.total_productores}}</h3>
+                        <h3>5</h3>
                         <p>Productores Analizados</p>
                     </div>
                     <div class="resumen-item">
-                        <h3>{{resumen.total_cervezas}}</h3>
+                        <h3>5</h3>
                         <p>Total de Cervezas</p>
                     </div>
                     <div class="resumen-item">
-                        <h3>{{resumen.cervezas_con_ibu}}</h3>
+                        <h3>0</h3>
                         <p>Cervezas con IBU</p>
                     </div>
                     <div class="resumen-item">
-                        <h3>{{resumen.promedio_ibu}}</h3>
+                        <h3>0</h3>
                         <p>IBU Promedio</p>
                     </div>
                     <div class="resumen-item">
-                        <h3>{{resumen.max_ibu}}</h3>
+                        <h3>0</h3>
                         <p>IBU Máximo</p>
                     </div>
                     <div class="resumen-item">
-                        <h3>{{resumen.min_ibu}}</h3>
+                        <h3>0</h3>
                         <p>IBU Mínimo</p>
                     </div>
                 </div>
                 
-                {{#if resumen.cerveza_max_ibu}}
-                <div style="margin-top: 20px; text-align: center;">
-                    <p><strong>🏆 Cerveza con mayor IBU:</strong> {{resumen.cerveza_max_ibu}} ({{resumen.max_ibu}} IBU) - {{resumen.productor_max_ibu}}</p>
-                    {{#if resumen.cerveza_min_ibu}}
-                    <p><strong>🥇 Cerveza con menor IBU:</strong> {{resumen.cerveza_min_ibu}} ({{resumen.min_ibu}} IBU) - {{resumen.productor_min_ibu}}</p>
-                    {{/if}}
-                </div>
-                {{/if}}
             </div>
             
             <!-- Rangos IBU Section -->
@@ -364,13 +356,13 @@
                 <div class="rangos-grid">
                     <div class="rango-item">
                         <h4>American Amber Ale</h4>
-                        <div class="ibu-range">{{rangos_ibu.american_amber_ale.minimo}} - {{rangos_ibu.american_amber_ale.maximo}} IBU</div>
-                        <p>{{rangos_ibu.american_amber_ale.descripcion}}</p>
+                        <div class="ibu-range">25 - 40 IBU</div>
+                        <p>Moderado a alto amargor con notas de caramelo</p>
                     </div>
                     <div class="rango-item">
                         <h4>American Pale Ale</h4>
-                        <div class="ibu-range">{{rangos_ibu.american_pale_ale.minimo}} - {{rangos_ibu.american_pale_ale.maximo}} IBU</div>
-                        <p>{{rangos_ibu.american_pale_ale.descripcion}}</p>
+                        <div class="ibu-range">30 - 50 IBU</div>
+                        <p>Alto amargor con notas cítricas y florales</p>
                     </div>
                 </div>
             </div>
@@ -379,76 +371,119 @@
             <div class="productores-section">
                 <h2>🏭 Análisis por Productor</h2>
                 
-                {{#if productores}}
-                    {{#each productores}}
                     <div class="productor-card">
                         <div class="productor-header">
-                            <h3>{{nombre}}</h3>
-                            <p>{{razon_social}}</p>
-                            <p style="font-size: 0.8em; margin-top: 5px;">📍 {{direccion}}</p>
+                            <h3>Caribe Malt</h3>
+                            <p>Malta Caribe C.A.</p>
+                            <p style="font-size: 0.8em; margin-top: 5px;">📍 Calle 7 con Av. 8, Porlamar</p>
                         </div>
                         <div class="productor-content">
                             <div class="cervezas-grid">
-                                {{#if american_amber_ale.length}}
                                 <div class="tipo-cerveza">
                                     <h4>American Amber Ale</h4>
-                                    {{#each american_amber_ale}}
                                     <div class="cerveza-item">
                                         <div class="cerveza-info">
-                                            <h5>{{nombre}}</h5>
-                                            <p>{{grado_alcohol}}% ABV</p>
+                                            <h5>Caribe American Amber</h5>
+                                            <p>6% ABV</p>
                                         </div>
-                                        {{#if (eq ibu "No especificado")}}
                                             <div class="ibu-no-especificado">N/A</div>
-                                        {{else}}
-                                            <div class="ibu-badge">{{ibu}} IBU</div>
-                                        {{/if}}
                                     </div>
-                                    {{/each}}
                                 </div>
-                                {{/if}}
                                 
-                                {{#if american_pale_ale.length}}
-                                <div class="tipo-cerveza">
-                                    <h4>American Pale Ale</h4>
-                                    {{#each american_pale_ale}}
-                                    <div class="cerveza-item">
-                                        <div class="cerveza-info">
-                                            <h5>{{nombre}}</h5>
-                                            <p>{{grado_alcohol}}% ABV</p>
-                                        </div>
-                                        {{#if (eq ibu "No especificado")}}
-                                            <div class="ibu-no-especificado">N/A</div>
-                                        {{else}}
-                                            <div class="ibu-badge">{{ibu}} IBU</div>
-                                        {{/if}}
-                                    </div>
-                                    {{/each}}
-                                </div>
-                                {{/if}}
                             </div>
                         </div>
                     </div>
-                    {{/each}}
-                {{else}}
-                    <div class="no-data">
-                        <h3>📭 No se encontraron datos</h3>
-                        <p>No hay cervezas de los tipos American Amber Ale o American Pale Ale en la base de datos.</p>
+                    <div class="productor-card">
+                        <div class="productor-header">
+                            <h3>CHS Brews</h3>
+                            <p>Caracas Hop Society</p>
+                            <p style="font-size: 0.8em; margin-top: 5px;">📍 Calle Chacao #65, Caracas</p>
+                        </div>
+                        <div class="productor-content">
+                            <div class="cervezas-grid">
+                                
+                                <div class="tipo-cerveza">
+                                    <h4>American Pale Ale</h4>
+                                    <div class="cerveza-item">
+                                        <div class="cerveza-info">
+                                            <h5>CHS Urban Pale</h5>
+                                            <p>6% ABV</p>
+                                        </div>
+                                            <div class="ibu-no-especificado">N/A</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                {{/if}}
+                    <div class="productor-card">
+                        <div class="productor-header">
+                            <h3>Craft Roots</h3>
+                            <p>Craft Roots Venezuela</p>
+                            <p style="font-size: 0.8em; margin-top: 5px;">📍 Calle Humboldt #11, Colonia Tovar</p>
+                        </div>
+                        <div class="productor-content">
+                            <div class="cervezas-grid">
+                                
+                                <div class="tipo-cerveza">
+                                    <h4>American Pale Ale</h4>
+                                    <div class="cerveza-item">
+                                        <div class="cerveza-info">
+                                            <h5>Craft Roots Organic Pale</h5>
+                                            <p>6% ABV</p>
+                                        </div>
+                                            <div class="ibu-no-especificado">N/A</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="productor-card">
+                        <div class="productor-header">
+                            <h3>Orinoco Flow</h3>
+                            <p>Cervecería Orinoco Flow</p>
+                            <p style="font-size: 0.8em; margin-top: 5px;">📍 Av. Bolívar #500, Ciudad Bolívar</p>
+                        </div>
+                        <div class="productor-content">
+                            <div class="cervezas-grid">
+                                
+                                <div class="tipo-cerveza">
+                                    <h4>American Pale Ale</h4>
+                                    <div class="cerveza-item">
+                                        <div class="cerveza-info">
+                                            <h5>Orinoco Delta Pale</h5>
+                                            <p>6% ABV</p>
+                                        </div>
+                                            <div class="ibu-no-especificado">N/A</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="productor-card">
+                        <div class="productor-header">
+                            <h3>Paradise Beer</h3>
+                            <p>Cervecería Margarita Paradise</p>
+                            <p style="font-size: 0.8em; margin-top: 5px;">📍 Av. 4 de Mayo #77, Porlamar</p>
+                        </div>
+                        <div class="productor-content">
+                            <div class="cervezas-grid">
+                                <div class="tipo-cerveza">
+                                    <h4>American Amber Ale</h4>
+                                    <div class="cerveza-item">
+                                        <div class="cerveza-info">
+                                            <h5>Paradise Sunset Amber</h5>
+                                            <p>6% ABV</p>
+                                        </div>
+                                            <div class="ibu-no-especificado">N/A</div>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
             </div>
         </div>
         
-        <!-- Contenedor para Gráfica -->
-        <div class="chart-container" style="margin: 30px 0; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <h2 class="section-title">Análisis Visual de IBU</h2>
-            <div style="position: relative; height: 400px;">
-                <canvas id="ibuChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Tabla de Cervezas Analizadas -->
-
         <!-- Footer -->
         <div class="footer">
             <p>© 2024 ACAUCAB - Análisis Comparativo de Amargor (IBU) de Cervezas Americanas</p>

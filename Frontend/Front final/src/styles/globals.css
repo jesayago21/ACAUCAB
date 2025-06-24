@@ -51,4 +51,30 @@
     min-height: 44px;
     min-width: 44px;
   }
+}
+
+/* Estilos para impresión de facturas */
+@media print {
+  body {
+    background-color: white !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+
+  .printable-invoice {
+    display: block !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  @page {
+    size: A4;
+    margin: 1cm;
+  }
 } 

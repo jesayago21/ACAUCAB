@@ -35,6 +35,54 @@ router.get('/products', shopController.getAvailableProducts);
 
 /**
  * @swagger
+ * /api/shop/products/ean/{ean}:
+ *   get:
+ *     summary: Buscar producto por código EAN
+ *     description: Busca un producto específico por su código de barras EAN-13
+ *     tags: [Productos]
+ *     parameters:
+ *       - in: path
+ *         name: ean
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Código EAN-13 del producto
+ *       - in: query
+ *         name: tienda_id
+ *         schema:
+ *           type: integer
+ *         description: ID de la tienda física para filtrar productos (opcional)
+ *     responses:
+ *       200:
+ *         description: Producto encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 producto:
+ *                   $ref: '#/components/schemas/PresentacionCerveza'
+ *       404:
+ *         description: Producto no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get('/products/ean/:ean', shopController.getProductByEAN);
+
+/**
+ * @swagger
  * /api/shop/offers:
  *   get:
  *     summary: Obtener productos con ofertas activas
@@ -136,6 +184,55 @@ router.get('/payment-methods/:userId', shopController.getUserPaymentMethods);
 
 /**
  * @swagger
+ * /api/shop/cliente/{clienteId}/metodos-favoritos:
+ *   get:
+ *     summary: Obtener métodos de pago favoritos del cliente
+ *     description: Retorna las tarjetas guardadas como favoritas del cliente para agilizar el proceso de pago
+ *     tags: [Clientes]
+ *     parameters:
+ *       - in: path
+ *         name: clienteId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del cliente
+ *     responses:
+ *       200:
+ *         description: Métodos de pago favoritos encontrados
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 metodos:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       banco:
+ *                         type: string
+ *                       numero_tarjeta:
+ *                         type: string
+ *                         description: Número de tarjeta parcialmente oculto
+ *                       fecha_vencimiento:
+ *                         type: string
+ *                         format: date
+ *                       tipo:
+ *                         type: string
+ *                         enum: [credito, debito]
+ *                       moneda:
+ *                         type: string
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get('/cliente/:clienteId/metodos-favoritos', shopController.getClienteFavoritePaymentMethods);
+
+/**
+ * @swagger
  * /api/shop/order:
  *   post:
  *     summary: Crear una nueva venta online
@@ -215,6 +312,50 @@ router.post('/order', shopController.createOnlineOrder);
  *         description: Error interno del servidor
  */
 router.get('/tasa-cambio-puntos', shopController.getTasaCambioPuntos);
+
+/**
+ * @swagger
+ * /api/shop/tasas-cambio:
+ *   get:
+ *     summary: Obtener todas las tasas de cambio vigentes
+ *     description: Retorna todas las tasas de cambio vigentes organizadas por moneda
+ *     tags: [Tasas de Cambio]
+ *     responses:
+ *       200:
+ *         description: Tasas de cambio obtenidas exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 tasas:
+ *                   type: object
+ *                   description: Tasas organizadas por moneda
+ *                 tasas_array:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       clave:
+ *                         type: integer
+ *                       moneda:
+ *                         type: string
+ *                       monto_equivalencia:
+ *                         type: number
+ *                       fecha_inicio:
+ *                         type: string
+ *                         format: date
+ *                       fecha_fin:
+ *                         type: string
+ *                         format: date
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get('/tasas-cambio', shopController.getAllTasasCambio);
 
 /**
  * @swagger

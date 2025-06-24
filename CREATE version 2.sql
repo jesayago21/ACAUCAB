@@ -256,6 +256,7 @@ CREATE TABLE IF NOT EXISTS metodo_de_pago (
     clave SERIAL,
     moneda tipo_moneda NOT NULL DEFAULT 'VES',
     fk_cliente INT,
+    metodo_preferido BOOLEAN NOT NULL DEFAULT FALSE,
     valor INT,
     numero_cheque INT,
     fecha_vencimiento DATE,
@@ -273,28 +274,33 @@ CREATE TABLE IF NOT EXISTS metodo_de_pago (
          numero_cheque IS NULL AND
          numero_tarjeta IS NULL AND
          fecha_vencimiento IS NULL AND
-         banco IS NULL)
+         banco IS NULL AND
+         metodo_preferido IS FALSE)
+         )
         OR
         (tipo = 'Cheque' AND
          numero_cheque IS NOT NULL AND
          banco IS NOT NULL AND
          valor IS NULL AND
          numero_tarjeta IS NULL AND
-         fecha_vencimiento IS NULL)
+         fecha_vencimiento IS NULL AND
+         metodo_preferido IS FALSE)
         OR
         (tipo IN ('Tarjeta de credito', 'Tarjeta de debito') AND
          numero_tarjeta IS NOT NULL AND
          fecha_vencimiento IS NOT NULL AND
          banco IS NOT NULL AND
          valor IS NULL AND
-         numero_cheque IS NULL)
+         numero_cheque IS NULL AND
+         fk_cliente IS NOT NULL)    
         OR
         (tipo = 'Puntos' AND
          valor IS NULL AND
          numero_cheque IS NULL AND
          numero_tarjeta IS NULL AND
          fecha_vencimiento IS NULL AND
-         banco IS NULL)
+         banco IS NULL AND
+         metodo_preferido IS FALSE)
     )
 );
 

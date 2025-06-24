@@ -143,6 +143,32 @@ export const clienteService = {
       valor_en_bolivares: data.cliente.puntos_acumulados * 1, // Tasa 1:1 como fallback
       tasa_cambio: 1
     };
+  },
+
+  /** Obtener métodos de pago favoritos del cliente */
+  async obtenerMetodosFavoritos(clienteId: number): Promise<any[]> {
+    try {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/shop/cliente/${clienteId}/metodos-favoritos`);
+      const data = await handleResponse<{success: boolean, metodos: any[]}>(response);
+      
+      if (data.success && data.metodos) {
+        // Formatear los datos para el frontend
+        return data.metodos.map((metodo: any) => ({
+          id: metodo.id,
+          banco: metodo.banco,
+          numero_tarjeta: metodo.numero_tarjeta ? 
+            `**** **** **** ${metodo.numero_tarjeta.slice(-4)}` : 
+            '**** **** **** ****',
+          fecha_vencimiento: metodo.fecha_vencimiento,
+          tipo: metodo.tipo
+        }));
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('Error obteniendo métodos favoritos:', error);
+      return [];
+    }
   }
 };
 
@@ -210,6 +236,38 @@ export const productoService = {
       // Generar unique_key verdaderamente único para ofertas
       unique_key: `oferta-${producto.clave}-${producto.ean_13}-${timestamp}-${index}`
     }));
+  },
+
+  /** Buscar producto específico por EAN */
+  async buscarProductoPorEAN(ean: string): Promise<Producto | null> {
+    try {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/shop/products/ean/${ean}?tienda_id=1`);
+      const data = await handleResponse<{success: boolean, producto: any}>(response);
+      
+      if (!data.success || !data.producto) {
+        return null;
+      }
+
+      const producto = data.producto;
+      const timestamp = Date.now();
+      
+      // Mapear las propiedades para compatibilidad con componentes existentes
+      return {
+        ...producto,
+        id: producto.clave,
+        id_presentacion: producto.clave,
+        nombre: `${producto.nombre_cerveza} - ${producto.nombre_presentacion}`,
+        precio_original: parseFloat(producto.precio.toFixed(2)),
+        precio_oferta: producto.tiene_oferta && producto.porcentaje_descuento 
+          ? parseFloat((producto.precio * (1 - producto.porcentaje_descuento / 100)).toFixed(2))
+          : null,
+        stock_disponible: producto.cantidad_disponible,
+        unique_key: `ean-${producto.clave}-${producto.ean_13}-${timestamp}`
+      };
+    } catch (error) {
+      console.error('Error buscando producto por EAN:', error);
+      return null;
+    }
   }
 };
 
@@ -239,18 +297,6 @@ export const lugarService = {
 export const tasaCambioService = {
   /** Obtener tasa de cambio de puntos */
   async obtenerTasaCambioPuntos(): Promise<TasaCambio> {
-    const response = await fetchWithTimeout(`${API_BASE_URL}/shop/tasa-cambio-puntos`);
-    const data = await handleResponse<{tasa: any}>(response);
-    // Mapear campos para compatibilidad
-    return {
-      ...data.tasa,
-      tasa: data.tasa.monto_equivalencia,
-      fecha: data.tasa.fecha_inicio
-    };
-  },
-
-  /** Obtener tasa de cambio actual (USD) */
-  async obtenerTasaCambioActual(): Promise<TasaCambio> {
     const response = await fetchWithTimeout(`${API_BASE_URL}/shop/tasa-cambio-actual`);
     const data = await handleResponse<{tasa: any}>(response);
     // Mapear campos para compatibilidad
@@ -261,31 +307,74 @@ export const tasaCambioService = {
     };
   },
 
-  /** Obtener tasa de cambio por moneda - método legacy */
+  /** Obtener tasa de cambio por moneda específica */
   async obtenerTasaCambio(moneda: 'USD' | 'EUR' | 'VES' | 'PUNTOS'): Promise<TasaCambio> {
     if (moneda === 'PUNTOS') {
       return this.obtenerTasaCambioPuntos();
-    } else {
-      return this.obtenerTasaCambioActual();
     }
+    
+    // Para otras monedas, usar el endpoint consolidado
+    const todasLasTasas = await this.obtenerTodasLasTasas();
+    const tasa = todasLasTasas[moneda];
+    
+    if (!tasa) {
+      throw new Error(`Tasa de cambio no disponible para ${moneda}`);
+    }
+    
+    return tasa;
   },
 
   /** Obtener todas las tasas de cambio actuales */
-  async obtenerTodasLasTasas(): Promise<TasaCambio[]> {
+  async obtenerTodasLasTasas(): Promise<{ [moneda: string]: TasaCambio }> {
     try {
-      const [puntos, actual] = await Promise.all([
-        this.obtenerTasaCambioPuntos(),
-        this.obtenerTasaCambioActual()
-      ]);
-      return [puntos, actual];
+      console.log('🔍 Intentando obtener todas las tasas desde:', `${API_BASE_URL}/shop/tasas-cambio`);
+      const response = await fetchWithTimeout(`${API_BASE_URL}/shop/tasas-cambio`);
+      console.log('📡 Respuesta recibida:', response.status, response.ok);
+      
+      const data = await handleResponse<{success: boolean, tasas: any, tasas_array: any[]}>(response);
+      console.log('📊 Datos parseados:', data);
+      
+      if (data.success && data.tasas) {
+        // Mapear cada tasa para compatibilidad
+        const tasasFormateadas: { [moneda: string]: TasaCambio } = {};
+        
+        Object.keys(data.tasas).forEach(moneda => {
+          const tasa = data.tasas[moneda];
+          tasasFormateadas[moneda] = {
+            ...tasa,
+            tasa: tasa.monto_equivalencia,
+            fecha: tasa.fecha_inicio
+          };
+        });
+        
+        console.log('✅ Tasas formateadas exitosamente:', tasasFormateadas);
+        return tasasFormateadas;
+      }
+      
+      console.log('⚠️ Data.success es false o no hay tasas, usando fallback...');
+      // Fallback básico
+      const puntos = await this.obtenerTasaCambioPuntos();
+      
+      return {
+        'PUNTOS': puntos,
+        'VES': { clave: 1, moneda: 'VES', monto_equivalencia: 1, tasa: 1, fecha: new Date().toISOString(), fecha_inicio: new Date().toISOString() }
+      };
     } catch (error) {
-      console.warn('Error obteniendo algunas tasas de cambio:', error);
-      // Retornamos al menos la que funcione
+      console.error('❌ Error obteniendo todas las tasas:', error);
+      
+      // Fallback a método anterior
       try {
-        const actual = await this.obtenerTasaCambioActual();
-        return [actual];
-      } catch {
-        return [];
+        console.log('🔄 Intentando fallback con método de puntos...');
+        const puntos = await this.obtenerTasaCambioPuntos();
+        
+        console.log('✅ Fallback exitoso');
+        return {
+          'PUNTOS': puntos,
+          'VES': { clave: 1, moneda: 'VES', monto_equivalencia: 1, tasa: 1, fecha: new Date().toISOString(), fecha_inicio: new Date().toISOString() }
+        };
+      } catch (fallbackError) {
+        console.error('❌ Error en fallback de tasas:', fallbackError);
+        return {};
       }
     }
   }

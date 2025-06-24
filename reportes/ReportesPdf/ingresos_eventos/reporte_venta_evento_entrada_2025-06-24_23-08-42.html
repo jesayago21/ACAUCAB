@@ -30,7 +30,6 @@
         .amount { text-align: right; font-weight: 600; font-family: 'Courier New', Courier, monospace; }
         .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #dee2e6; color: #6c757d; font-size: 0.9em; }
         .no-data { text-align: center; padding: 40px; color: #6c757d; font-style: italic; }
-        .chart-container { margin: 30px 0; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
@@ -45,54 +44,43 @@
         <div class="report-info">
             <div class="info-item">
                 <div class="info-label">Período</div>
-                <div class="info-value">{{fechaInicio}} - {{fechaFin}}</div>
+                <div class="info-value">31/5/2024 - 30/6/2025</div>
             </div>
             <div class="info-item">
                 <div class="info-label">Fecha de Generación</div>
-                <div class="info-value">{{fechaGeneracion}}</div>
+                <div class="info-value">23/6/2025</div>
             </div>
             <div class="info-item">
                 <div class="info-label">Hora de Generación</div>
-                <div class="info-value">{{horaGeneracion}}</div>
+                <div class="info-value">23:08:41</div>
             </div>
         </div>
 
         <!-- Resumen General -->
-        {{#if resumen}}
         <div class="summary-section">
             <h2 class="section-title" style="color: white; border-bottom-color: rgba(255,255,255,0.3);">Resumen General del Período</h2>
             <div class="summary-grid">
                 <div class="summary-item">
-                    <div class="summary-value">{{resumen.numero_eventos}}</div>
+                    <div class="summary-value">10</div>
                     <div class="summary-label">Eventos Analizados</div>
                 </div>
                 <div class="summary-item">
-                    <div class="summary-value">Bs. {{formatCurrency resumen.gran_total_entradas}}</div>
+                    <div class="summary-value">Bs. 801.50</div>
                     <div class="summary-label">Total Ingresos (Entradas)</div>
                 </div>
                 <div class="summary-item">
-                    <div class="summary-value">Bs. {{formatCurrency resumen.gran_total_productos}}</div>
+                    <div class="summary-value">Bs. 6,970.05</div>
                     <div class="summary-label">Total Ingresos (Productos)</div>
                 </div>
                 <div class="summary-item">
-                    <div class="summary-value">Bs. {{formatCurrency resumen.gran_total_general}}</div>
+                    <div class="summary-value">Bs. 7,771.55</div>
                     <div class="summary-label">Ingresos Totales</div>
                 </div>
             </div>
         </div>
-        {{/if}}
 
-        <!-- Contenedor para Gráfica -->
-        <div class="chart-container" style="margin: 30px 0; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <h2 class="section-title" style="color: #007bff; font-size: 1.5em; margin-bottom: 20px;">Análisis de Ventas de Eventos</h2>
-            <div style="position: relative; height: 400px;">
-                <canvas id="eventoChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Detalle de Ventas de Entradas -->
+        <!-- Detalle por Evento -->
         <h2 class="section-title">Detalle por Evento</h2>
-        {{#if detalle.length}}
         <div class="table-container">
             <table>
                 <thead>
@@ -105,24 +93,79 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{#each detalle}}
                     <tr>
-                        <td>{{nombre_evento}}</td>
-                        <td>{{fecha_evento}}</td>
-                        <td class="amount">Bs. {{formatCurrency total_ingresos_entradas}}</td>
-                        <td class="amount">Bs. {{formatCurrency total_ingresos_productos}}</td>
-                        <td class="amount"><b>Bs. {{formatCurrency total_ingresos_evento}}</b></td>
+                        <td>Expo Ingredientes Orientales</td>
+                        <td>25/10/2024</td>
+                        <td class="amount">Bs. 0.00</td>
+                        <td class="amount">Bs. 300.00</td>
+                        <td class="amount"><b>Bs. 300.00</b></td>
                     </tr>
-                    {{/each}}
+                    <tr>
+                        <td>Cena Maridaje Amazónico</td>
+                        <td>22/10/2024</td>
+                        <td class="amount">Bs. 190.75</td>
+                        <td class="amount">Bs. 1,162.65</td>
+                        <td class="amount"><b>Bs. 1,353.40</b></td>
+                    </tr>
+                    <tr>
+                        <td>Curso Elaboración Anzoátegui</td>
+                        <td>7/9/2024</td>
+                        <td class="amount">Bs. 0.00</td>
+                        <td class="amount">Bs. 165.90</td>
+                        <td class="amount"><b>Bs. 165.90</b></td>
+                    </tr>
+                    <tr>
+                        <td>Tour Cervecero Selva</td>
+                        <td>3/9/2024</td>
+                        <td class="amount">Bs. 110.00</td>
+                        <td class="amount">Bs. 1,162.25</td>
+                        <td class="amount"><b>Bs. 1,272.25</b></td>
+                    </tr>
+                    <tr>
+                        <td>Lanzamiento Costa Caribe</td>
+                        <td>18/8/2024</td>
+                        <td class="amount">Bs. 0.00</td>
+                        <td class="amount">Bs. 275.20</td>
+                        <td class="amount"><b>Bs. 275.20</b></td>
+                    </tr>
+                    <tr>
+                        <td>Concurso Homebrew Orinoquía</td>
+                        <td>12/8/2024</td>
+                        <td class="amount">Bs. 165.00</td>
+                        <td class="amount">Bs. 1,102.80</td>
+                        <td class="amount"><b>Bs. 1,267.80</b></td>
+                    </tr>
+                    <tr>
+                        <td>Taller de Cata Costera</td>
+                        <td>10/7/2024</td>
+                        <td class="amount">Bs. 0.00</td>
+                        <td class="amount">Bs. 130.60</td>
+                        <td class="amount"><b>Bs. 130.60</b></td>
+                    </tr>
+                    <tr>
+                        <td>Taller de Cata Selvática</td>
+                        <td>5/7/2024</td>
+                        <td class="amount">Bs. 225.75</td>
+                        <td class="amount">Bs. 962.50</td>
+                        <td class="amount"><b>Bs. 1,188.25</b></td>
+                    </tr>
+                    <tr>
+                        <td>Festival Cervecero de Barcelona</td>
+                        <td>22/6/2024</td>
+                        <td class="amount">Bs. 0.00</td>
+                        <td class="amount">Bs. 250.80</td>
+                        <td class="amount"><b>Bs. 250.80</b></td>
+                    </tr>
+                    <tr>
+                        <td>Festival Cervecero Amazonas</td>
+                        <td>15/6/2024</td>
+                        <td class="amount">Bs. 110.00</td>
+                        <td class="amount">Bs. 1,457.35</td>
+                        <td class="amount"><b>Bs. 1,567.35</b></td>
+                    </tr>
                 </tbody>
             </table>
         </div>
-        {{else}}
-        <div class="no-data">
-            <h3>No se encontraron eventos</h3>
-            <p>No hay registros de eventos con ingresos para el período especificado.</p>
-        </div>
-        {{/if}}
 
         <!-- Footer -->
         <div class="footer">
