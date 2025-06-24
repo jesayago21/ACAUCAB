@@ -211,7 +211,7 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
 
     return (
         <div className="flex h-screen bg-gray-100">
-            {/* Sidebar */}
+            {/* Sidebar - Ahora es fijo */}
             <AdminSidebar
                 user={user}
                 activeModule={activeModule}
@@ -220,8 +220,10 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
                 onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             />
 
-            {/* Contenido principal */}
-            <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Contenido principal - Con margen para compensar el sidebar fijo */}
+            <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${
+                isSidebarCollapsed ? 'ml-16' : 'ml-64'
+            }`}>
                 {/* Header */}
                 <header className="bg-white shadow-sm border-b border-gray-200">
                     <div className="flex items-center justify-between px-6 py-4">

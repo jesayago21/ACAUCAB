@@ -1,47 +1,53 @@
--- Este es el Stored Procedure que encapsula toda la lógica de crear una venta.
--- Acepta los datos necesarios y devuelve el ID de la nueva venta.
 CREATE OR REPLACE PROCEDURE crear_venta_online(
-    -- Parámetros de ENTRADA (IN)
     IN p_usuario_id INT,
     IN p_direccion_envio TEXT,
     IN p_lugar_id INT,
-    IN p_metodo_pago_id INT,
-    IN p_tasa_cambio_id INT,
     IN p_items JSON, -- Un array JSON de items: [{"producto_id": 1, "cantidad": 2, "precio": 10.50}]
-    -- Parámetro de ENTRADA/SALIDA (INOUT) para devolver el ID de la venta creada
-    INOUT p_nueva_venta_id INT
+    IN p_pagos JSON -- Un array JSON de métodos de pago: [{"metodo_id": 1, "monto": 50.00, "tasa_id": 1}]
 )
 LANGUAGE plpgsql
 AS $$
 DECLARE
     v_monto_total DECIMAL(10, 2) := 0;
     v_item RECORD;
+    v_pago RECORD;
     v_stock_actual INT;
+    v_nueva_venta_id INT;
+    v_total_pagado DECIMAL(10,2) := 0;
 BEGIN
-    -- PASO 1: Calcular el monto total y verificar el stock de cada producto.
+    -- Calcular el monto total y verificar stock
     FOR v_item IN SELECT * FROM json_to_recordset(p_items) AS x(producto_id INT, cantidad INT, precio DECIMAL(10, 2))
     LOOP
-        -- Verificar si hay suficiente stock (asumo una tabla 'inventario_tienda')
         SELECT cantidad INTO v_stock_actual FROM inventario_tienda WHERE clave = v_item.producto_id;
-
         IF v_stock_actual IS NULL OR v_stock_actual < v_item.cantidad THEN
             RAISE EXCEPTION 'Stock insuficiente para el producto ID %', v_item.producto_id;
         END IF;
-
-        -- Sumar al monto total
         v_monto_total := v_monto_total + (v_item.cantidad * v_item.precio);
     END LOOP;
 
-    -- PASO 2: Insertar el registro principal de la venta.
+    -- Sumar los pagos
+    FOR v_pago IN SELECT * FROM json_to_recordset(p_pagos) AS x(metodo_id INT, monto DECIMAL(10, 2), tasa_id INT)
+    LOOP
+        v_total_pagado := v_total_pagado + v_pago.monto;
+    END LOOP;
+
+    IF v_total_pagado < v_monto_total THEN
+        RAISE EXCEPTION 'Monto pagado (%.2f) es insuficiente para el total de la venta (%.2f).', v_total_pagado, v_monto_total;
+    END IF;
+
+    -- Insertar la venta
     INSERT INTO venta_online (fecha, monto_total, direccion_envio, fk_lugar, fk_tienda_online, fk_usuario)
-    VALUES (NOW(), v_monto_total, p_direccion_envio, p_lugar_id, 1, p_usuario_id) -- Asumo fk_tienda_online=1
-    RETURNING clave INTO p_nueva_venta_id; -- Guardamos el ID de la nueva venta en el parámetro de salida
+    VALUES (NOW(), v_monto_total, p_direccion_envio, p_lugar_id, 1, p_usuario_id)
+    RETURNING clave INTO v_nueva_venta_id;
 
-    -- PASO 3: Insertar el registro del pago asociado a la venta.
-    INSERT INTO pago (fecha_pago, monto_total, fk_tasa_cambio, fk_metodo_de_pago, fk_venta_online)
-    VALUES (NOW(), v_monto_total, p_tasa_cambio_id, p_metodo_pago_id, p_nueva_venta_id);
+    -- Insertar los pagos
+    FOR v_pago IN SELECT * FROM json_to_recordset(p_pagos) AS x(metodo_id INT, monto DECIMAL(10, 2), tasa_id INT)
+    LOOP
+        INSERT INTO pago (fecha_pago, monto_total, fk_tasa_cambio, fk_metodo_de_pago, fk_venta_online)
+        VALUES (NOW(), v_pago.monto, v_pago.tasa_id, v_pago.metodo_id, v_nueva_venta_id);
+    END LOOP;
 
-    -- PASO 4: Actualizar el inventario (descontar el stock).
+    -- Actualizar inventario
     FOR v_item IN SELECT * FROM json_to_recordset(p_items) AS x(producto_id INT, cantidad INT)
     LOOP
         UPDATE inventario_tienda
@@ -49,13 +55,9 @@ BEGIN
         WHERE clave = v_item.producto_id;
     END LOOP;
 
-    -- PASO 5: Crear el primer estado en el historial.
-    -- Asumo que el estatus 'Procesando' para 'venta online' tiene el ID 10.
+    -- Crear el primer estado en el historial
     INSERT INTO historico (fecha, fk_estatus, fk_venta_online)
-    VALUES (NOW(), 10, p_nueva_venta_id);
-
-    -- Si todo salió bien, la transacción se confirma (COMMIT) automáticamente.
-    -- Si algo falló (como el stock), la excepción detiene todo y se hace ROLLBACK.
+    VALUES (NOW(), 10, v_nueva_venta_id);
 END;
 $$;
 

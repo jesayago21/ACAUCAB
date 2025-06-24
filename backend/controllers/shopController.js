@@ -153,51 +153,36 @@ const getClienteFavoritePaymentMethods = async (req, res) => {
 
 // La función estrella: crear una orden llamando al Stored Procedure
 const createOnlineOrder = async (req, res) => {
-  // El frontend nos envía el cuerpo de la petición con los datos de la orden
   const {
     usuarioId,
     direccionEnvio,
     lugarId,
-    metodoPagoId,
-    tasaCambioId,
-    items, // Esto debe ser un string JSON: '[{"producto_id":1, "cantidad":2, "precio":10.50}]'
+    items,
+    metodosPago // <-- ahora es un array [{metodo_id, monto, tasa_id}]
   } = req.body;
 
-  // Validación básica de entrada
-  if (!usuarioId || !items || !metodoPagoId) {
+  if (!usuarioId || !items || !metodosPago || !Array.isArray(metodosPago) || metodosPago.length === 0) {
     return res.status(400).json({ message: 'Faltan datos para crear la orden.' });
   }
 
   try {
-    // ¡AQUÍ ESTÁ LA MAGIA!
-    // Llamamos al Stored Procedure con CALL.
-    // El último parámetro (p_nueva_venta_id) se inicializa en 0 y la BD lo modificará.
-    const queryText = 'CALL crear_venta_online($1, $2, $3, $4, $5, $6, $7)';
+    const queryText = 'CALL crear_venta_online($1, $2, $3, $4, $5)';
     const queryParams = [
       usuarioId,
       direccionEnvio,
       lugarId,
-      metodoPagoId,
-      tasaCambioId,
-      JSON.stringify(items), // Convertimos el array de JS a un string JSON para la BD
-      0 // Valor inicial para el parámetro INOUT
+      JSON.stringify(items),
+      JSON.stringify(metodosPago)
     ];
 
     await db.query(queryText, queryParams);
-    
-    // NOTA: Para obtener el valor de vuelta de p_nueva_venta_id, la sintaxis puede variar.
-    // Una forma más simple es cambiar el SP a una FUNCTION que RETORNE el ID.
-    // Pero con CALL, el driver debe manejar parámetros de salida.
-    // Asumamos que el SP funciona y la venta se creó.
 
     res.status(201).json({ message: 'Venta creada exitosamente.' });
-
   } catch (error) {
-    // Si el Stored Procedure lanzó una excepción (ej: stock insuficiente), la capturamos aquí.
     console.error('Error creating order:', error);
     res.status(500).json({
       message: 'Error al procesar la venta.',
-      error: error.message, // Enviamos el mensaje de error de la BD al cliente (ej: "Stock insuficiente...")
+      error: error.message,
     });
   }
 };
