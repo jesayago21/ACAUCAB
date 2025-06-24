@@ -202,6 +202,76 @@ JOIN
 ORDER BY
     "Tipo de Entidad", "ID de la Entidad", h.fecha;
 
+-- Vista para comparativa de ingresos por tipo de cerveza (Ale vs Lager) por canal de venta
+CREATE VIEW v_comparativa_ingresos_cerveza AS
+WITH ventas_consolidadas AS (
+    -- Ventas físicas
+    SELECT 
+        vtf.fecha,
+        vtf.total_venta AS monto_total,
+        'Física' AS canal_venta,
+        dvf.cantidad,
+        dvf.precio_unitario,
+        c.nombre AS cerveza,
+        tc.nombre AS tipo_cerveza,
+        CASE 
+            WHEN tc.nombre LIKE '%Lager%' OR tc.nombre LIKE '%Pilsner%' OR tc.nombre LIKE '%Bock%' OR tc.nombre LIKE '%Oktoberfest%' THEN 'Lager'
+            WHEN tc.nombre LIKE '%Ale%' OR tc.nombre LIKE '%IPA%' OR tc.nombre LIKE '%Stout%' OR tc.nombre LIKE '%Porter%' OR tc.nombre LIKE '%Wheat%' OR tc.nombre LIKE '%Belgian%' OR tc.nombre LIKE '%Saison%' THEN 'Ale'
+            ELSE 'Otros'
+        END AS categoria_cerveza,
+        m.razon_social AS productor,
+        (dvf.cantidad * dvf.precio_unitario) AS ingreso_total
+    FROM venta_tienda_fisica vtf
+    JOIN detalle_venta_fisica dvf ON vtf.clave = dvf.fk_venta_tienda_fisica
+    JOIN inventario_tienda it ON dvf.fk_inventario_tienda = it.clave
+    JOIN presentacion p ON it.fk_presentacion = p.clave
+    JOIN cerveza c ON p.fk_cerveza = c.clave
+    JOIN tipo_cerveza tc ON c.fk_tipo_cerveza = tc.clave
+    JOIN miembro m ON c.fk_miembro = m.rif
+    
+    UNION ALL
+    
+    -- Ventas online
+    SELECT 
+        vo.fecha,
+        vo.monto_total,
+        'Online' AS canal_venta,
+        dvo.cantidad,
+        dvo.precio_unitario,
+        c.nombre AS cerveza,
+        tc.nombre AS tipo_cerveza,
+        CASE 
+            WHEN tc.nombre LIKE '%Lager%' OR tc.nombre LIKE '%Pilsner%' OR tc.nombre LIKE '%Bock%' OR tc.nombre LIKE '%Oktoberfest%' THEN 'Lager'
+            WHEN tc.nombre LIKE '%Ale%' OR tc.nombre LIKE '%IPA%' OR tc.nombre LIKE '%Stout%' OR tc.nombre LIKE '%Porter%' OR tc.nombre LIKE '%Wheat%' OR tc.nombre LIKE '%Belgian%' OR tc.nombre LIKE '%Saison%' THEN 'Ale'
+            ELSE 'Otros'
+        END AS categoria_cerveza,
+        m.razon_social AS productor,
+        (dvo.cantidad * dvo.precio_unitario) AS ingreso_total
+    FROM venta_online vo
+    JOIN detalle_venta_online dvo ON vo.clave = dvo.fk_venta_online
+    JOIN almacen a ON dvo.fk_almacen = a.clave
+    JOIN presentacion p ON a.fk_presentacion = p.clave
+    JOIN cerveza c ON p.fk_cerveza = c.clave
+    JOIN tipo_cerveza tc ON c.fk_tipo_cerveza = tc.clave
+    JOIN miembro m ON c.fk_miembro = m.rif
+)
+SELECT 
+    fecha,
+    canal_venta,
+    categoria_cerveza,
+    productor,
+    cerveza,
+    tipo_cerveza,
+    cantidad,
+    precio_unitario,
+    ingreso_total,
+    EXTRACT(YEAR FROM fecha) AS año,
+    EXTRACT(MONTH FROM fecha) AS mes,
+    TO_CHAR(fecha, 'YYYY-MM') AS periodo
+FROM ventas_consolidadas
+WHERE categoria_cerveza IN ('Ale', 'Lager')
+ORDER BY fecha DESC, canal_venta, categoria_cerveza;
+
 
 -- Vistas de los reportes
 ------------------------------------------------------------------------
