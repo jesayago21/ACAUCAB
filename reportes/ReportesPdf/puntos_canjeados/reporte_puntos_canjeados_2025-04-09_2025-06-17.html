@@ -392,15 +392,15 @@
         <div class="meta-info">
             <div>
                 <i>📅</i>
-                <span>Generado el: {{fechaGeneracion}} a las {{horaGeneracion}}</span>
+                <span>Generado el: 24/6/2025 a las 23:35:16</span>
             </div>
             <div>
                 <i>📊</i>
-                <span>Total de clientes: {{resumen.total_clientes_afiliados}}</span>
+                <span>Total de clientes: 0</span>
             </div>
             <div>
                 <i>📋</i>
-                <span>Período: {{fechaInicio}} - {{fechaFin}}</span>
+                <span>Período: 8/4/2025 - 16/6/2025</span>
             </div>
         </div>
         
@@ -410,19 +410,19 @@
                 <h2>Resumen General de Puntos Canjeados</h2>
                 <div class="resumen-grid">
                     <div class="resumen-item">
-                        <h3>{{resumen.total_clientes_afiliados}}</h3>
+                        <h3>0</h3>
                         <p>Clientes Afiliados</p>
                     </div>
                     <div class="resumen-item">
-                        <h3>{{resumen.total_pagos_puntos}}</h3>
+                        <h3>0</h3>
                         <p>Pagos con Puntos</p>
                     </div>
                     <div class="resumen-item">
-                        <h3>{{resumen.total_puntos_canjeados}}</h3>
+                        <h3>0</h3>
                         <p>Puntos Canjeados</p>
                     </div>
                     <div class="resumen-item">
-                        <h3>Bs. {{resumen.total_bolivares}}</h3>
+                        <h3>Bs. 0.00</h3>
                         <p>Valor Total</p>
                     </div>
                 </div>
@@ -432,71 +432,16 @@
             <div class="tipo-cliente-section">
                 <h2>Análisis por Tipo de Cliente</h2>
                 <div class="tipo-cliente-grid">
-                    {{#each puntos_por_tipo}}
-                    <div class="tipo-card {{tipo_cliente}}">
-                        <h3>
-                            <span class="icon">{{#if (eq tipo_cliente 'natural')}}N{{else}}J{{/if}}</span>
-                            Clientes {{#if (eq tipo_cliente 'natural')}}Naturales{{else}}Jurídicos{{/if}}
-                        </h3>
-                        <div class="stats-grid">
-                            <div class="stat-item">
-                                <div class="value">{{cantidad_clientes}}</div>
-                                <div class="label">Clientes</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="value">{{total_puntos_canjeados}}</div>
-                                <div class="label">Puntos Canjeados</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="value">Bs. {{total_bolivares}}</div>
-                                <div class="label">Valor Total</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="value">{{#if cantidad_clientes}}{{round (divide total_puntos_canjeados cantidad_clientes)}}{{else}}0{{/if}}</div>
-                                <div class="label">Promedio por Cliente</div>
-                            </div>
-                        </div>
-                    </div>
-                    {{/each}}
                 </div>
             </div>
             
             <!-- Detalle de Clientes -->
             <div class="detalle-section">
                 <h2>Detalle de Clientes con Puntos Canjeados</h2>
-                {{#if detalle.length}}
-                <table class="detalle-table">
-                    <thead>
-                        <tr>
-                            <th>Cliente</th>
-                            <th>Tipo</th>
-                            <th>Pagos con Puntos</th>
-                            <th>Puntos Canjeados</th>
-                            <th>Valor en Bs.</th>
-                            <th>Primera Fecha</th>
-                            <th>Última Fecha</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#each detalle}}
-                        <tr>
-                            <td>{{cliente}}</td>
-                            <td><span class="badge badge-{{tipo_cliente}}">{{tipo_cliente}}</span></td>
-                            <td class="center">{{cantidad_pagos_puntos}}</td>
-                            <td class="center">{{total_puntos_canjeados}}</td>
-                            <td class="amount">Bs. {{total_bolivares}}</td>
-                            <td>{{primera_fecha_pago}}</td>
-                            <td>{{ultima_fecha_pago}}</td>
-                        </tr>
-                        {{/each}}
-                    </tbody>
-                </table>
-                {{else}}
                 <div class="no-data">
                     <h3>No se encontraron canjes de puntos</h3>
                     <p>No hay registros de puntos canjeados para el período especificado.</p>
                 </div>
-                {{/if}}
             </div>
             
             <!-- Rankings -->
@@ -506,19 +451,6 @@
                         <h3>Top 5 Clientes por Puntos Canjeados</h3>
                     </div>
                     <div class="ranking-content">
-                        {{#each top_clientes}}
-                        <div class="ranking-item">
-                            <div class="ranking-info">
-                                <div class="ranking-name">{{cliente}}</div>
-                                <div class="ranking-details">
-                                    <span class="badge badge-{{tipo_cliente}}">{{tipo_cliente}}</span> | {{cantidad_pagos_puntos}} pagos
-                                </div>
-                            </div>
-                            <div class="ranking-value">
-                                {{total_puntos_canjeados}} pts
-                            </div>
-                        </div>
-                        {{/each}}
                     </div>
                 </div>
                 
@@ -527,19 +459,6 @@
                         <h3>Top 5 Clientes por Valor</h3>
                     </div>
                     <div class="ranking-content">
-                        {{#each top_valor}}
-                        <div class="ranking-item">
-                            <div class="ranking-info">
-                                <div class="ranking-name">{{cliente}}</div>
-                                <div class="ranking-details">
-                                    <span class="badge badge-{{tipo_cliente}}">{{tipo_cliente}}</span> | {{total_puntos_canjeados}} puntos
-                                </div>
-                            </div>
-                            <div class="ranking-value">
-                                Bs. {{total_bolivares}}
-                            </div>
-                        </div>
-                        {{/each}}
                     </div>
                 </div>
             </div>
@@ -550,19 +469,19 @@
                 <div class="tendencias-grid">
                     <div class="tendencia-item">
                         <h4>Tipo Dominante</h4>
-                        <div class="value">{{analisis_tendencias.tipo_dominante}}</div>
+                        <div class="value">Jurídico</div>
                     </div>
                     <div class="tendencia-item">
                         <h4>Promedio Puntos/Cliente</h4>
-                        <div class="value">{{analisis_tendencias.promedio_puntos_cliente}}</div>
+                        <div class="value">0</div>
                     </div>
                     <div class="tendencia-item">
                         <h4>Promedio Valor/Cliente</h4>
-                        <div class="value">Bs. {{analisis_tendencias.promedio_valor_cliente}}</div>
+                        <div class="value">Bs. 0.00</div>
                     </div>
                     <div class="tendencia-item">
                         <h4>Tasa de Uso</h4>
-                        <div class="value">{{analisis_tendencias.tasa_uso}}%</div>
+                        <div class="value">0%</div>
                     </div>
                 </div>
             </div>

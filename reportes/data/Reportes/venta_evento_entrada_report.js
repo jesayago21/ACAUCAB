@@ -3,35 +3,52 @@ const pool = require('../../../backend/config/db');
 
 /**
  * Función principal que ejecuta las consultas y estructura los datos para el reporte de ingresos.
+ * @param {string} fechaIni - Fecha de inicio en formato YYYY-MM-DD
+ * @param {string} fechaFinal - Fecha de fin en formato YYYY-MM-DD
  */
-
-/**
- * Prueba para pasar la fecha desde el front
- * async function run(fechaInicio, fechaFin) {
-      try {
-        // Si no se pasan fechas, usa valores por defecto
-        fechaInicio = fechaInicio || '2025-06-01';
-        fechaFin = fechaFin || '2025-07-01'; 
- */
-
-
 async function run(fechaIni, fechaFinal) {
   try {
-    // Si no se pasan fechas, usa valores por defecto
+    // Validar y procesar las fechas
     let fechaInicio = fechaIni;
     let fechaFin = fechaFinal;
+    let usandoFechasPorDefecto = false;
 
-    if (!fechaInicio) {
+    console.log('📋 Parámetros recibidos en reporte de eventos:');
+    console.log(`   • fechaIni: ${fechaIni || 'NO PROPORCIONADA'}`);
+    console.log(`   • fechaFinal: ${fechaFinal || 'NO PROPORCIONADA'}`);
+
+    // Si no se pasan fechas, usar valores por defecto (últimos 30 días)
+    if (!fechaInicio || !fechaFin) {
+      usandoFechasPorDefecto = true;
       const hoy = new Date();
-      fechaInicio = hoy.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+      fechaFin = hoy.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+      const inicio = new Date(fechaFin);
+      inicio.setDate(inicio.getDate() - 30);
+      fechaInicio = inicio.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+      
+      console.log('⚠️  Usando fechas por defecto (últimos 30 días)');
+      console.log(`   • fechaInicio por defecto: ${fechaInicio}`);
+      console.log(`   • fechaFin por defecto: ${fechaFin}`);
     }
-    if (!fechaFin) {
-      const fin = new Date(fechaInicio);
-      fin.setDate(fin.getDate() + 7);
-      fechaFin = fin.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+
+    // Validar formato de fechas
+    const fechaRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!fechaRegex.test(fechaInicio) || !fechaRegex.test(fechaFin)) {
+      throw new Error('Formato de fecha inválido. Use YYYY-MM-DD');
+    }
+
+    // Validar que fecha inicio no sea mayor que fecha fin
+    if (new Date(fechaInicio) > new Date(fechaFin)) {
+      throw new Error('La fecha de inicio no puede ser mayor que la fecha de fin');
     }
 
     console.log('🔄 Ejecutando consulta de ingresos por evento...');
+    console.log(`📅 Período: ${fechaInicio} a ${fechaFin}`);
+    if (usandoFechasPorDefecto) {
+      console.log('📅 Usando período por defecto (últimos 30 días)');
+    } else {
+      console.log('📅 Usando fechas proporcionadas como parámetros');
+    }
 
     // --- CONSULTA CORREGIDA PARA MOSTRAR EVENTOS CON VENTAS EN EL RANGO ---
     const queryDetalle = `
@@ -78,18 +95,47 @@ async function run(fechaIni, fechaFinal) {
       numero_eventos: detalle.length
     });
 
+    // Calcular rankings y análisis de tendencias
+    const top_eventos = [...detalle]
+      .sort((a, b) => b.total_ingresos_evento - a.total_ingresos_evento)
+      .slice(0, 5);
+
+    const top_productos = [...detalle]
+      .sort((a, b) => b.total_ingresos_productos - a.total_ingresos_productos)
+      .slice(0, 5);
+
+    // Análisis de tendencias
+    const analisis_tendencias = {
+      tipo_dominante: resumen.gran_total_entradas > resumen.gran_total_productos ? 'Entradas' : 'Productos',
+      promedio_entradas_evento: resumen.numero_eventos > 0 ? Math.round(resumen.total_entradas_vendidas / resumen.numero_eventos) : 0,
+      promedio_productos_evento: resumen.numero_eventos > 0 ? Math.round(resumen.total_ventas_productos / resumen.numero_eventos) : 0,
+      participacion_entradas: resumen.gran_total_general > 0 ? Math.round((resumen.gran_total_entradas / resumen.gran_total_general) * 100) : 0
+    };
+
+    console.log('📊 Datos procesados correctamente');
+    console.log(`   • Total eventos: ${resumen.numero_eventos}`);
+    console.log(`   • Total ingresos: Bs. ${resumen.gran_total_general}`);
+
     return {
       detalle,
       resumen,
+      top_eventos,
+      top_productos,
+      analisis_tendencias,
       fechaInicio: new Date(fechaInicio).toLocaleDateString('es-ES'),
       fechaFin: new Date(fechaFin).toLocaleDateString('es-ES'),
       fechaGeneracion: new Date().toLocaleDateString('es-ES'),
-      horaGeneracion: new Date().toLocaleTimeString('es-ES')
+      horaGeneracion: new Date().toLocaleTimeString('es-ES'),
+      parametros: {
+        fechaInicioOriginal: fechaInicio,
+        fechaFinOriginal: fechaFin,
+        usandoFechasPorDefecto: usandoFechasPorDefecto
+      }
     };
 
   } catch (error) {
     console.error('❌ Error ejecutando la consulta para el reporte de ingresos:', error);
-    throw error;
+    throw new Error(`Error en reporte de ventas de eventos: ${error.message}`);
   }
 }
 

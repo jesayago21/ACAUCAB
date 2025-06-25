@@ -156,7 +156,7 @@ router.get('/reporte-comparativa-cerveza', (req, res) => {
     
     let args = '';
     if (fechaInicio && fechaFin) {
-        args = ` --fechas ${fechaInicio} ${fechaFin}`;
+        args = ` ${fechaInicio} ${fechaFin}`;
     }
     
     exec(`node "${scriptPath}"${args}`, (error, stdout, stderr) => {

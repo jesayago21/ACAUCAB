@@ -2,11 +2,49 @@ const pool = require('../../../backend/config/db');
 
 async function run(fechaInicio = null, fechaFin = null) {
     try {
-        console.log('🔍 DEBUG - Parámetros recibidos en comparativa cerveza:');
-        console.log(`   • fechaInicio: ${fechaInicio || 'NULL'}`);
-        console.log(`   • fechaFin: ${fechaFin || 'NULL'}`);
-        
-        // Construir la consulta con filtros de fecha opcionales
+        // Validar y procesar las fechas
+        let fechaIni = fechaInicio;
+        let fechaFinParam = fechaFin;
+        let usandoFechasPorDefecto = false;
+
+        console.log('📋 Parámetros recibidos en reporte de cerveza:');
+        console.log(`   • fechaInicio: ${fechaInicio || 'NO PROPORCIONADA'}`);
+        console.log(`   • fechaFin: ${fechaFin || 'NO PROPORCIONADA'}`);
+
+        // Si no se pasan fechas, usar valores por defecto (últimos 30 días)
+        if (!fechaIni || !fechaFinParam) {
+            usandoFechasPorDefecto = true;
+            const hoy = new Date();
+            fechaFinParam = hoy.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+            const inicio = new Date(fechaFinParam);
+            inicio.setDate(inicio.getDate() - 30);
+            fechaIni = inicio.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+            
+            console.log('⚠️  Usando fechas por defecto (últimos 30 días)');
+            console.log(`   • fechaIni por defecto: ${fechaIni}`);
+            console.log(`   • fechaFin por defecto: ${fechaFinParam}`);
+        }
+
+        // Validar formato de fechas
+        const fechaRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!fechaRegex.test(fechaIni) || !fechaRegex.test(fechaFinParam)) {
+            throw new Error('Formato de fecha inválido. Use YYYY-MM-DD');
+        }
+
+        // Validar que fecha inicio no sea mayor que fecha fin
+        if (new Date(fechaIni) > new Date(fechaFinParam)) {
+            throw new Error('La fecha de inicio no puede ser mayor que la fecha de fin');
+        }
+
+        console.log('🔄 Ejecutando consulta de comparativa de cerveza...');
+        console.log(`📅 Período: ${fechaIni} a ${fechaFinParam}`);
+        if (usandoFechasPorDefecto) {
+            console.log('📅 Usando período por defecto (últimos 30 días)');
+        } else {
+            console.log('📅 Usando fechas proporcionadas como parámetros');
+        }
+
+        // Construir la consulta con filtros de fecha
         let query = `
             SELECT 
                 fecha,
@@ -22,45 +60,18 @@ async function run(fechaInicio = null, fechaFin = null) {
                 mes,
                 periodo
             FROM v_comparativa_ingresos_cerveza
+            WHERE fecha BETWEEN $1 AND $2
         `;
         
-        const params = [];
-        
-        // Agregar filtros de fecha si se proporcionan
-        if (fechaInicio && fechaFin) {
-            query += ` WHERE fecha BETWEEN $1 AND $2`;
-            params.push(fechaInicio, fechaFin);
-            console.log(`   • Aplicando filtro: BETWEEN ${fechaInicio} AND ${fechaFin}`);
-        } else if (fechaInicio) {
-            query += ` WHERE fecha >= $1`;
-            params.push(fechaInicio);
-            console.log(`   • Aplicando filtro: >= ${fechaInicio}`);
-        } else if (fechaFin) {
-            query += ` WHERE fecha <= $1`;
-            params.push(fechaFin);
-            console.log(`   • Aplicando filtro: <= ${fechaFin}`);
-        } else {
-            console.log(`   • Sin filtros de fecha - consultando todos los datos`);
-        }
+        const params = [fechaIni, fechaFinParam];
         
         query += ` ORDER BY fecha DESC, canal_venta, categoria_cerveza`;
         
-        console.log('🔍 DEBUG - Consulta final:');
-        console.log(`   • Query: ${query}`);
-        console.log(`   • Params: [${params.join(', ')}]`);
-        
+        console.log('🔍 Ejecutando consulta SQL con parámetros:', params);
         const result = await pool.query(query, params);
         const ventas = result.rows;
         
-        console.log(`✅ Consulta ejecutada. Filas obtenidas: ${ventas.length}`);
-        
-        // Mostrar algunas fechas para verificar el filtrado
-        if (ventas.length > 0) {
-            console.log('🔍 DEBUG - Primeras 3 fechas en los resultados:');
-            ventas.slice(0, 3).forEach((venta, index) => {
-                console.log(`   • ${index + 1}. ${venta.fecha} - ${venta.cerveza}`);
-            });
-        }
+        console.log(`✅ Consulta completada. Se encontraron ${ventas.length} registros.`);
         
         // Procesar los datos
         const resumen = {
@@ -183,13 +194,9 @@ async function run(fechaInicio = null, fechaFin = null) {
         const data = {
             fechaGeneracion: new Date().toLocaleDateString('es-ES'),
             horaGeneracion: new Date().toLocaleTimeString('es-ES'),
-            periodoReporte: fechaInicio && fechaFin ? 
-                `Del ${new Date(fechaInicio).toLocaleDateString('es-ES')} al ${new Date(fechaFin).toLocaleDateString('es-ES')}` : 
-                fechaInicio ? 
-                `Desde ${new Date(fechaInicio).toLocaleDateString('es-ES')}` :
-                fechaFin ? 
-                `Hasta ${new Date(fechaFin).toLocaleDateString('es-ES')}` :
-                'Todos los períodos',
+            periodoReporte: usandoFechasPorDefecto ? 
+                `Período por defecto: Del ${new Date(fechaIni).toLocaleDateString('es-ES')} al ${new Date(fechaFinParam).toLocaleDateString('es-ES')}` :
+                `Del ${new Date(fechaIni).toLocaleDateString('es-ES')} al ${new Date(fechaFinParam).toLocaleDateString('es-ES')}`,
             resumen: {
                 total_ventas: resumen.total_ventas,
                 total_ingresos: resumen.total_ingresos.toFixed(2),
@@ -233,6 +240,13 @@ async function run(fechaInicio = null, fechaFin = null) {
                 canal_preferido_lager: resumen.lager.ventas_fisica > resumen.lager.ventas_online ? 'Física' : 'Online',
                 categoria_dominante: resumen.ale.total_ingresos > resumen.lager.total_ingresos ? 'Ale' : 'Lager',
                 diferencia_porcentual: Math.abs(porcentaje_ale - porcentaje_lager).toFixed(1)
+            },
+            parametros: {
+                fechaInicioOriginal: fechaInicio,
+                fechaFinOriginal: fechaFin,
+                fechaInicioProcesada: fechaIni,
+                fechaFinProcesada: fechaFinParam,
+                usandoFechasPorDefecto: usandoFechasPorDefecto
             }
         };
         
