@@ -77,10 +77,20 @@ const getAvailableProducts = async (req, res) => {
     
     const { rows } = await db.query(queryText, queryParams);
     
+    // Mapear los resultados para asegurar tipos de datos correctos
+    const productos = rows.map(row => ({
+      ...row,
+      precio: parseFloat(row.precio) || 0,
+      porcentaje_descuento: row.porcentaje_descuento ? parseFloat(row.porcentaje_descuento) : null,
+      grado_alcohol: parseInt(row.grado_alcohol) || 0,
+      cantidad_unidades: parseInt(row.cantidad_unidades) || 0,
+      cantidad_disponible: parseInt(row.cantidad_disponible) || 0
+    }));
+    
     res.status(200).json({
       success: true,
       message: 'Productos obtenidos exitosamente',
-      productos: rows
+      productos: productos
     });
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -227,7 +237,20 @@ const getProductsWithOffers = async (req, res) => {
     
     const queryParams = tienda_id ? [tienda_id] : [];
     const { rows } = await db.query(queryText, queryParams);
-    res.status(200).json(rows);
+    
+    // Mapear los resultados para asegurar tipos de datos correctos
+    const productos = rows.map(row => ({
+      ...row,
+      precio: parseFloat(row.precio) || 0,
+      precio_oferta: parseFloat(row.precio_oferta) || 0,
+      porcentaje_descuento: parseFloat(row.porcentaje_descuento) || 0,
+      grado_alcohol: parseInt(row.grado_alcohol) || 0,
+      cantidad_unidades: parseInt(row.cantidad_unidades) || 0,
+      cantidad_disponible: parseInt(row.cantidad_disponible) || 0,
+      tiene_oferta: true // Siempre true para esta función
+    }));
+    
+    res.status(200).json(productos);
   } catch (error) {
     console.error('Error fetching products with offers:', error);
     res.status(500).json({ message: 'Error interno del servidor' });
@@ -461,7 +484,7 @@ const createVentaFisica = async (req, res) => {
         UPDATE inventario_tienda 
         SET cantidad = cantidad - $1 
         WHERE clave = $2;
-      `;
+      `;//
       
       await db.query(updateInventarioQuery, [item.cantidad, inventarioTienda.clave]);
     }
@@ -500,6 +523,23 @@ const createVentaFisica = async (req, res) => {
         case 'Tarjeta de credito':
         case 'Tarjeta de debito':
           const esPreferido = metodoPago.detalles?.guardar_como_favorito || false;
+          
+          /** Convertir fecha de vencimiento de formato YYYY-MM a fecha completa del último día del mes */
+          let fechaVencimientoCompleta = null;
+          if (metodoPago.detalles?.fecha_vencimiento) {
+            const fechaVencimiento = metodoPago.detalles.fecha_vencimiento;
+            // Si viene en formato YYYY-MM (ej: 2028-06), convertir al último día del mes
+            if (fechaVencimiento.match(/^\d{4}-\d{2}$/)) {
+              // Crear fecha del último día del mes
+              const [year, month] = fechaVencimiento.split('-');
+              const ultimoDiaDelMes = new Date(parseInt(year), parseInt(month), 0).getDate();
+              fechaVencimientoCompleta = `${year}-${month}-${ultimoDiaDelMes.toString().padStart(2, '0')}`;
+            } else {
+              // Si ya viene completa, usarla tal como está
+              fechaVencimientoCompleta = fechaVencimiento;
+            }
+          }
+          
           insertMetodoPagoQuery = `
             INSERT INTO metodo_de_pago (moneda, fk_cliente, metodo_preferido, numero_tarjeta, fecha_vencimiento, banco, tipo)
             VALUES ('VES', $1, $2, $3, $4, $5, $6)
@@ -509,7 +549,7 @@ const createVentaFisica = async (req, res) => {
             cliente_id,
             esPreferido,
             metodoPago.detalles?.numero_tarjeta || null,
-            metodoPago.detalles?.fecha_vencimiento || null,
+            fechaVencimientoCompleta,
             metodoPago.detalles?.banco || null,
             metodoPago.tipo
           ];
@@ -532,7 +572,25 @@ const createVentaFisica = async (req, res) => {
       const metodoPagoId = metodoPagoResult.rows[0].clave;
 
       // Obtener tasa de cambio apropiada según el método
-      const monedaPago = metodoPago.tipo === 'Puntos' ? 'PUNTOS' : 'VES';
+      console.log(metodoPago);
+      let monedaPago;
+      if (metodoPago.tipo === 'Puntos') {
+        monedaPago = 'PUNTOS';
+      } else if (metodoPago.tipo === 'Tarjeta de credito' || metodoPago.tipo === 'Tarjeta de debito') {
+        // Para tarjetas, usar VES por defecto si no se especifica la moneda
+        monedaPago = metodoPago.detalles?.moneda || 'VES';
+      } else if (metodoPago.detalles?.moneda) {
+        // Para otros métodos, usar la moneda especificada
+        if (['VES', 'EUR', 'USD'].includes(metodoPago.detalles.moneda)) {
+          monedaPago = metodoPago.detalles.moneda;
+        } else {
+          throw new Error(`Moneda no soportada: ${metodoPago.detalles.moneda}`);
+        }
+      } else {
+        // Si no hay moneda especificada, usar VES por defecto
+        monedaPago = 'VES';
+      }
+
       const tasaQuery = `
         SELECT clave FROM tasa_cambio 
         WHERE moneda = $1
@@ -659,10 +717,20 @@ const getProductByEAN = async (req, res) => {
       });
     }
     
+    // Mapear el resultado para asegurar tipos de datos correctos
+    const producto = {
+      ...rows[0],
+      precio: parseFloat(rows[0].precio) || 0,
+      porcentaje_descuento: rows[0].porcentaje_descuento ? parseFloat(rows[0].porcentaje_descuento) : null,
+      grado_alcohol: parseInt(rows[0].grado_alcohol) || 0,
+      cantidad_unidades: parseInt(rows[0].cantidad_unidades) || 0,
+      cantidad_disponible: parseInt(rows[0].cantidad_disponible) || 0
+    };
+    
     res.status(200).json({
       success: true,
       message: 'Producto encontrado',
-      producto: rows[0]
+      producto: producto
     });
     
   } catch (error) {

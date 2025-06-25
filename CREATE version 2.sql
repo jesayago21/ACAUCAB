@@ -1,37 +1,42 @@
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tipo_moneda') THEN
-        CREATE TYPE tipo_moneda AS ENUM (
-            'USD',
-            'EUR',
-            'VES',
-            'PUNTOS'
-        );
-    END IF;
-END
-$$;
+/* Tablas creadas, cheqquear en:
 
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tipo_metodo_pago') THEN
-        CREATE TYPE tipo_metodo_pago AS ENUM (
-            'Efectivo',
-            'Cheque',
-            'Tarjeta de credito',
-            'Tarjeta de debito',
-            'Puntos'
-        );
-    END IF;
-END
-$$;
+https://www.canva.com/design/DAGqE0e9XEM/PXLuCVMecbLF0AXxoVMUxw/edit?utm_content=DAGqE0e9XEM&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
 
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tipo_cliente') THEN
-        CREATE TYPE tipo_cliente AS ENUM ('natural', 'juridico');
-    END IF;
-END
-$$;
+*/
+
+
+
+CREATE type tipo_moneda AS ENUM (
+
+'USD',
+
+'EUR',
+
+'VES',
+
+'PUNTOS'
+
+);
+
+
+
+CREATE type tipo_metodo_pago AS ENUM (
+
+'Efectivo',
+
+'Cheque',
+
+'Tarjeta de credito',
+
+'Tarjeta de debito',
+
+'Puntos'
+
+);
+
+
+
+CREATE TYPE tipo_cliente AS ENUM ('natural', 'juridico');
 
 CREATE TABLE IF NOT EXISTS receta (
     clave SERIAL,
@@ -270,14 +275,16 @@ CREATE TABLE IF NOT EXISTS metodo_de_pago (
     moneda tipo_moneda NOT NULL DEFAULT 'VES',
     fk_cliente INT,
     metodo_preferido BOOLEAN NOT NULL DEFAULT FALSE,
-    valor INT,
-    numero_cheque INT,
+    valor DECIMAL(15,2),
+    numero_cheque BIGINT,
     fecha_vencimiento DATE,
     banco VARCHAR(50),
     numero_tarjeta BIGINT,
     tipo tipo_metodo_pago NOT NULL,
     CONSTRAINT pk_metodo_de_pago PRIMARY KEY (clave),
     CONSTRAINT fk_cliente_metodo_de_pago FOREIGN KEY (fk_cliente) REFERENCES cliente(clave),
+    CONSTRAINT chk_numero_cheque CHECK (numero_cheque IS NULL OR (numero_cheque > 99999999 and numero_cheque < 1000000000)),
+    CONSTRAINT chk_numero_tarjeta CHECK (numero_tarjeta IS NULL OR (numero_tarjeta > 999999999999999 and numero_tarjeta < 10000000000000000)),
 
     
     CONSTRAINT chk_tipo_metodo_de_pago CHECK (
@@ -347,7 +354,7 @@ CREATE TABLE IF NOT EXISTS presentacion (
     EAN_13 BIGINT NOT NULL,
     nombre VARCHAR (50) NOT NULL,
     cantidad_unidades INT NOT NULL,
-    precio INT NOT NULL,
+    precio DECIMAL(10,2) NOT NULL,
     fk_cerveza INT NOT NULL,
     CONSTRAINT pk_presentacion PRIMARY KEY (clave),
     CONSTRAINT fk_cerveza_presentacion FOREIGN KEY (fk_cerveza) REFERENCES cerveza(clave), 
@@ -559,7 +566,7 @@ CREATE TABLE IF NOT EXISTS detalle_compra (
     fk_almacen INT NOT NULL,
     fk_compra INT NOT NULL,
     cantidad INT NOT NULL,
-    precio_unitario INT NOT NULL,
+    precio_unitario DECIMAL(10,2) NOT NULL,
     CONSTRAINT pk_detalle_compra PRIMARY KEY (clave),
     CONSTRAINT fk_almacen_detalle_compra FOREIGN KEY (fk_almacen) REFERENCES almacen(clave),
     CONSTRAINT fk_compra_detalle_compra FOREIGN KEY (fk_compra) REFERENCES compra(clave),
@@ -571,7 +578,7 @@ CREATE TABLE IF NOT EXISTS detalle_compra (
 CREATE TABLE IF NOT EXISTS detalle_venta_fisica (
     clave SERIAL,
     cantidad INT NOT NULL,
-    precio_unitario INT NOT NULL,
+    precio_unitario DECIMAL(10,2) NOT NULL,
     fk_venta_tienda_fisica INT NOT NULL,
     fk_inventario_tienda INT NOT NULL,
     CONSTRAINT pk_detalle_venta_fisica PRIMARY KEY (clave),
@@ -586,7 +593,7 @@ CREATE TABLE IF NOT EXISTS detalle_venta_online (
     fk_venta_online INT NOT NULL,
     fk_almacen INT NOT NULL,
     cantidad INT NOT NULL,
-    precio_unitario INT NOT NULL,
+    precio_unitario DECIMAL(10,2) NOT NULL,
     CONSTRAINT pk_detalle_venta_online PRIMARY KEY (clave),
     CONSTRAINT fk_venta_online_detalle_venta_online FOREIGN KEY (fk_venta_online) REFERENCES venta_online(clave),
     CONSTRAINT fk_almacen_detalle_venta_online FOREIGN KEY (fk_almacen) REFERENCES almacen(clave),
@@ -597,7 +604,7 @@ CREATE TABLE IF NOT EXISTS detalle_venta_online (
 CREATE TABLE IF NOT EXISTS detalle_venta_evento (
     clave SERIAL,
     cantidad INT NOT NULL,
-    precio_unitario INT NOT NULL,
+    precio_unitario DECIMAL(10,2) NOT NULL,
     fk_venta_evento INT NOT NULL,
     fk_inventario_evento INT NOT NULL,
     CONSTRAINT pk_detalle_venta_evento PRIMARY KEY (clave),
@@ -617,7 +624,7 @@ CREATE TABLE IF NOT EXISTS cuota (
 CREATE TABLE IF NOT EXISTS pago (
     clave SERIAL,
     fecha_pago DATE NOT NULL,
-    monto_total DECIMAL(10,2) NOT NULL,
+    monto_total DECIMAL(15,2) NOT NULL,
     fk_tasa_cambio INT NOT NULL,
     fk_metodo_de_pago INT NOT NULL,
     fk_venta_tienda_fisica INT,
