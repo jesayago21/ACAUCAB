@@ -413,7 +413,7 @@ WITH tiempos_entrega AS (
     SELECT 
       vo.clave AS id_venta,
       vo.fecha AS fecha_venta,
-      EXTRACT(DOW FROM vo.fecha) AS dia_semana,
+      EXTRACT(DOW FROM vo.fecha)::int AS dia_semana,
       TO_CHAR(vo.fecha, 'Day') AS nombre_dia,
       -- Tiempo desde "listo para entrega" hasta "entregado"
       CASE 
@@ -458,3 +458,211 @@ SELECT
 FROM tiempos_entrega
 GROUP BY dia_semana, nombre_dia
 ORDER BY dia_semana;
+CREATE OR REPLACE FUNCTION fn_tiempo_entrega_resumen(fecha_ini date, fecha_fin date)
+RETURNS TABLE (
+  dia_semana int,
+  nombre_dia text,
+  total_pedidos int,
+  pedidos_entregados int,
+  tiempo_entrega_promedio_horas numeric,
+  tiempo_preparacion_promedio_horas numeric,
+  tiempo_total_promedio_horas numeric,
+  tiempo_entrega_minimo_horas numeric,
+  tiempo_entrega_maximo_horas numeric,
+  total_ventas_dia numeric,
+  fecha_venta_min date,
+  fecha_venta_max date
+) AS $$
+BEGIN
+  RETURN QUERY
+  WITH tiempos_entrega AS (
+    SELECT 
+      vo.clave AS id_venta,
+      vo.fecha AS fecha_venta,
+      EXTRACT(DOW FROM vo.fecha)::int AS dia_semana,
+      TO_CHAR(vo.fecha, 'Day') AS nombre_dia,
+      CASE 
+        WHEN h_listo.fecha IS NOT NULL AND h_entregado.fecha IS NOT NULL 
+        THEN EXTRACT(EPOCH FROM (h_entregado.fecha - h_listo.fecha)) / 3600
+        ELSE NULL
+      END AS tiempo_entrega_horas,
+      CASE 
+        WHEN h_procesando.fecha IS NOT NULL AND h_listo.fecha IS NOT NULL 
+        THEN EXTRACT(EPOCH FROM (h_listo.fecha - h_procesando.fecha)) / 3600
+        ELSE NULL
+      END AS tiempo_preparacion_horas,
+      CASE 
+        WHEN h_procesando.fecha IS NOT NULL AND h_entregado.fecha IS NOT NULL 
+        THEN EXTRACT(EPOCH FROM (h_entregado.fecha - h_procesando.fecha)) / 3600
+        ELSE NULL
+      END AS tiempo_total_horas,
+      vo.monto_total
+    FROM venta_online vo
+    LEFT JOIN usuario u ON u.clave = vo.fk_usuario
+    LEFT JOIN historico h_listo ON h_listo.fk_venta_online = vo.clave AND h_listo.fk_estatus = 8
+    LEFT JOIN historico h_entregado ON h_entregado.fk_venta_online = vo.clave AND h_entregado.fk_estatus = 9
+    LEFT JOIN historico h_procesando ON h_procesando.fk_venta_online = vo.clave AND h_procesando.fk_estatus = 7
+    WHERE h_listo.fecha IS NOT NULL
+      AND vo.fecha BETWEEN fecha_ini AND fecha_fin
+  )
+  SELECT 
+    te.dia_semana,
+    te.nombre_dia,
+    COUNT(*)::int AS total_pedidos,
+    COUNT(CASE WHEN te.tiempo_entrega_horas IS NOT NULL THEN 1 END)::int AS pedidos_entregados,
+    ROUND(AVG(te.tiempo_entrega_horas)::numeric, 2) AS tiempo_entrega_promedio_horas,
+    ROUND(AVG(te.tiempo_preparacion_horas)::numeric, 2) AS tiempo_preparacion_promedio_horas,
+    ROUND(AVG(te.tiempo_total_horas)::numeric, 2) AS tiempo_total_promedio_horas,
+    ROUND(MIN(te.tiempo_entrega_horas)::numeric, 2) AS tiempo_entrega_minimo_horas,
+    ROUND(MAX(te.tiempo_entrega_horas)::numeric, 2) AS tiempo_entrega_maximo_horas,
+    ROUND(SUM(te.monto_total)::numeric, 2) AS total_ventas_dia,
+    MIN(te.fecha_venta) AS fecha_venta_min,
+    MAX(te.fecha_venta) AS fecha_venta_max
+  FROM tiempos_entrega te
+  GROUP BY te.dia_semana, te.nombre_dia
+  ORDER BY te.dia_semana;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE VIEW vw_tiempos_entrega_detalle AS
+WITH tiempos_entrega AS (
+    SELECT 
+      vo.clave AS id_venta,
+      vo.fecha AS fecha_venta,
+      EXTRACT(DOW FROM vo.fecha) AS dia_semana,
+      TO_CHAR(vo.fecha, 'Day') AS nombre_dia,
+      TO_CHAR(vo.fecha, 'DD/MM/YYYY') AS fecha_formateada,
+      -- Tiempo desde "listo para entrega" hasta "entregado"
+      CASE 
+        WHEN h_listo.fecha IS NOT NULL AND h_entregado.fecha IS NOT NULL 
+        THEN EXTRACT(EPOCH FROM (h_entregado.fecha - h_listo.fecha)) / 3600 -- en horas
+        ELSE NULL
+      END AS tiempo_entrega_horas,
+      -- Tiempo desde "procesando" hasta "listo para entrega"
+      CASE 
+        WHEN h_procesando.fecha IS NOT NULL AND h_listo.fecha IS NOT NULL 
+        THEN EXTRACT(EPOCH FROM (h_listo.fecha - h_procesando.fecha)) / 3600 -- en horas
+        ELSE NULL
+      END AS tiempo_preparacion_horas,
+      -- Tiempo total desde "procesando" hasta "entregado"
+      CASE 
+        WHEN h_procesando.fecha IS NOT NULL AND h_entregado.fecha IS NOT NULL 
+        THEN EXTRACT(EPOCH FROM (h_entregado.fecha - h_procesando.fecha)) / 3600 -- en horas
+        ELSE NULL
+      END AS tiempo_total_horas,
+      vo.monto_total,
+      u.username AS cliente,
+      h_listo.fecha AS fecha_listo,
+      h_entregado.fecha AS fecha_entregado,
+      h_procesando.fecha AS fecha_procesando
+    FROM venta_online vo
+    LEFT JOIN usuario u ON u.clave = vo.fk_usuario
+    -- Estado "listo para entrega" (estatus 8)
+    LEFT JOIN historico h_listo ON h_listo.fk_venta_online = vo.clave 
+      AND h_listo.fk_estatus = 8
+    -- Estado "entregado" (estatus 9)
+    LEFT JOIN historico h_entregado ON h_entregado.fk_venta_online = vo.clave 
+      AND h_entregado.fk_estatus = 9
+    -- Estado "procesando" (estatus 7)
+    LEFT JOIN historico h_procesando ON h_procesando.fk_venta_online = vo.clave 
+      AND h_procesando.fk_estatus = 7
+    WHERE h_listo.fecha IS NOT NULL -- Solo pedidos que llegaron a "listo para entrega"
+)
+SELECT * FROM tiempos_entrega;
+
+-- Vista optimizada para reporte de tiempo de entrega (combina resumen y detalle)
+CREATE OR REPLACE VIEW vw_tiempo_entrega_optimizada AS
+WITH tiempos_entrega AS (
+    SELECT 
+      vo.clave AS id_venta,
+      vo.fecha AS fecha_venta,
+      EXTRACT(DOW FROM vo.fecha)::int AS dia_semana,
+      TO_CHAR(vo.fecha, 'Day') AS nombre_dia,
+      TO_CHAR(vo.fecha, 'DD/MM/YYYY') AS fecha_formateada,
+      -- Tiempo desde "listo para entrega" hasta "entregado"
+      CASE 
+        WHEN h_listo.fecha IS NOT NULL AND h_entregado.fecha IS NOT NULL 
+        THEN EXTRACT(EPOCH FROM (h_entregado.fecha - h_listo.fecha)) / 3600
+        ELSE NULL
+      END AS tiempo_entrega_horas,
+      -- Tiempo desde "procesando" hasta "listo para entrega"
+      CASE 
+        WHEN h_procesando.fecha IS NOT NULL AND h_listo.fecha IS NOT NULL 
+        THEN EXTRACT(EPOCH FROM (h_listo.fecha - h_procesando.fecha)) / 3600
+        ELSE NULL
+      END AS tiempo_preparacion_horas,
+      -- Tiempo total desde "procesando" hasta "entregado"
+      CASE 
+        WHEN h_procesando.fecha IS NOT NULL AND h_entregado.fecha IS NOT NULL 
+        THEN EXTRACT(EPOCH FROM (h_entregado.fecha - h_procesando.fecha)) / 3600
+        ELSE NULL
+      END AS tiempo_total_horas,
+      vo.monto_total,
+      u.username AS cliente,
+      h_listo.fecha AS fecha_listo,
+      h_entregado.fecha AS fecha_entregado,
+      h_procesando.fecha AS fecha_procesando
+    FROM venta_online vo
+    LEFT JOIN usuario u ON u.clave = vo.fk_usuario
+    LEFT JOIN historico h_listo ON h_listo.fk_venta_online = vo.clave AND h_listo.fk_estatus = 8
+    LEFT JOIN historico h_entregado ON h_entregado.fk_venta_online = vo.clave AND h_entregado.fk_estatus = 9
+    LEFT JOIN historico h_procesando ON h_procesando.fk_venta_online = vo.clave AND h_procesando.fk_estatus = 7
+    WHERE h_listo.fecha IS NOT NULL
+)
+SELECT 
+  'resumen' AS tipo_dato,
+  dia_semana,
+  nombre_dia,
+  COUNT(*) AS total_pedidos,
+  COUNT(CASE WHEN tiempo_entrega_horas IS NOT NULL THEN 1 END) AS pedidos_entregados,
+  ROUND(AVG(tiempo_entrega_horas)::numeric, 2) AS tiempo_entrega_promedio_horas,
+  ROUND(AVG(tiempo_preparacion_horas)::numeric, 2) AS tiempo_preparacion_promedio_horas,
+  ROUND(AVG(tiempo_total_horas)::numeric, 2) AS tiempo_total_promedio_horas,
+  ROUND(MIN(tiempo_entrega_horas)::numeric, 2) AS tiempo_entrega_minimo_horas,
+  ROUND(MAX(tiempo_entrega_horas)::numeric, 2) AS tiempo_entrega_maximo_horas,
+  ROUND(SUM(monto_total)::numeric, 2) AS total_ventas_dia,
+  MIN(fecha_venta) AS fecha_venta_min,
+  MAX(fecha_venta) AS fecha_venta_max,
+  NULL AS id_venta,
+  NULL AS fecha_venta,
+  NULL AS fecha_formateada,
+  NULL AS tiempo_entrega_horas,
+  NULL AS tiempo_preparacion_horas,
+  NULL AS tiempo_total_horas,
+  NULL AS monto_total,
+  NULL AS cliente,
+  NULL AS fecha_listo,
+  NULL AS fecha_entregado,
+  NULL AS fecha_procesando
+FROM tiempos_entrega
+GROUP BY dia_semana, nombre_dia
+
+UNION ALL
+
+SELECT 
+  'detalle' AS tipo_dato,
+  dia_semana,
+  nombre_dia,
+  NULL AS total_pedidos,
+  NULL AS pedidos_entregados,
+  NULL AS tiempo_entrega_promedio_horas,
+  NULL AS tiempo_preparacion_promedio_horas,
+  NULL AS tiempo_total_promedio_horas,
+  NULL AS tiempo_entrega_minimo_horas,
+  NULL AS tiempo_entrega_maximo_horas,
+  NULL AS total_ventas_dia,
+  NULL AS fecha_venta_min,
+  NULL AS fecha_venta_max,
+  id_venta,
+  fecha_venta,
+  fecha_formateada,
+  tiempo_entrega_horas,
+  tiempo_preparacion_horas,
+  tiempo_total_horas,
+  monto_total,
+  cliente,
+  fecha_listo,
+  fecha_entregado,
+  fecha_procesando
+FROM tiempos_entrega
+ORDER BY tipo_dato, dia_semana, fecha_venta DESC;

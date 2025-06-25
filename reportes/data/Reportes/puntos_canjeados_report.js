@@ -10,11 +10,21 @@ const pool = require('../../../backend/config/db');
 
  */
 
-async function run() {
+async function run(fechaIni, fechaFinal) {
   try {
-    // Parámetros del reporte (puedes modificar estas fechas)
-    const fechaInicio = '2025-06-17';
-    const fechaFin = '2025-06-21';
+    // Si no se pasan fechas, usa valores por defecto
+    let fechaInicio = fechaIni;
+    let fechaFin = fechaFinal;
+
+    if (!fechaInicio) {
+      const hoy = new Date();
+      fechaInicio = hoy.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+    }
+    if (!fechaFin) {
+      const fin = new Date(fechaInicio);
+      fin.setDate(fin.getDate() + 7);
+      fechaFin = fin.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+    }
 
     // Consulta principal - Detalle por cliente
     const queryDetalle = `

@@ -145,23 +145,25 @@ AFTER UPDATE ON almacen
 FOR EACH ROW
 EXECUTE FUNCTION generar_orden_compra_automatica();
 
-/*
 -- Trigger para validar que solo el jefe de compras pueda cambiar el estatus de una orden de compra
--- Esta versión usa una variable de sesión para identificar al usuario actual
+-- Versión simplificada y funcional
+
 CREATE OR REPLACE FUNCTION validar_cambio_estatus_compra()
 RETURNS TRIGGER AS $$
 DECLARE
-    usuario_actual_id INT;
+    usuario_actual_id INTEGER;
     es_jefe_compras BOOLEAN;
+    es_administrador BOOLEAN;
+    estatus_actual VARCHAR(50);
+    estatus_nuevo VARCHAR(50);
 BEGIN
     -- Solo validar si es una compra
     IF NEW.fk_compra IS NOT NULL THEN
         -- Obtener el ID del usuario actual desde la variable de sesión
-        -- Si no está definida, usar NULL (permitir la operación)
-        usuario_actual_id := NULLIF(current_setting('app.current_user_id', true), '')::INT;
+        usuario_actual_id := NULLIF(current_setting('app.current_user_id', true), '')::INTEGER;
         
-        -- Si tenemos un usuario identificado, verificar su rol
-        IF usuario_actual_id IS NOT NULL THEN
+        -- Si tenemos un usuario identificado, verificar sus permisos
+        IF usuario_actual_id IS NOT NULL AND usuario_actual_id > 0 THEN
             -- Verificar si el usuario tiene el rol de jefe de compras
             SELECT EXISTS (
                 SELECT 1
@@ -171,9 +173,32 @@ BEGIN
                 AND r.nombre = 'Jefe de Compras'
             ) INTO es_jefe_compras;
             
-            -- Si no es jefe de compras, lanzar excepción
-            IF NOT es_jefe_compras THEN
-                RAISE EXCEPTION 'Solo el jefe de compras puede cambiar el estatus de una orden de compra. Usuario actual: %', usuario_actual_id;
+            -- Verificar si el usuario es administrador
+            SELECT EXISTS (
+                SELECT 1
+                FROM usuario u
+                JOIN rol r ON r.clave = u.fk_rol
+                WHERE u.clave = usuario_actual_id
+                AND r.nombre = 'Administrador'
+            ) INTO es_administrador;
+            
+            -- Obtener los estatus para el mensaje de error
+            IF TG_OP = 'UPDATE' THEN
+                SELECT estado INTO estatus_actual
+                FROM estatus 
+                WHERE clave = OLD.fk_estatus;
+            END IF;
+            
+            SELECT estado INTO estatus_nuevo
+            FROM estatus 
+            WHERE clave = NEW.fk_estatus;
+            
+            -- Si no es jefe de compras ni administrador, lanzar excepción
+            IF NOT (es_jefe_compras OR es_administrador) THEN
+                RAISE EXCEPTION 'Acceso denegado: Solo el jefe de compras o administrador puede cambiar el estatus de una orden de compra. Usuario ID: %, Estatus anterior: %, Estatus nuevo: %', 
+                usuario_actual_id, 
+                COALESCE(estatus_actual, 'N/A'), 
+                COALESCE(estatus_nuevo, 'N/A');
             END IF;
         END IF;
     END IF;
@@ -182,11 +207,27 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Trigger para validar cambios de estatus
 CREATE TRIGGER tr_validar_cambio_estatus_compra
 BEFORE INSERT OR UPDATE ON historico
 FOR EACH ROW
 EXECUTE FUNCTION validar_cambio_estatus_compra();
-*/
+
+-- Función para establecer el usuario actual en la sesión
+CREATE OR REPLACE FUNCTION establecer_usuario_actual(user_id INTEGER)
+RETURNS VOID AS $$
+BEGIN
+    PERFORM set_config('app.current_user_id', user_id::TEXT, false);
+END;
+$$ LANGUAGE plpgsql;
+
+-- Función para limpiar el usuario actual de la sesión
+CREATE OR REPLACE FUNCTION limpiar_usuario_actual()
+RETURNS VOID AS $$
+BEGIN
+    PERFORM set_config('app.current_user_id', '', false);
+END;
+$$ LANGUAGE plpgsql;
 
 -- Trigger para generar órdenes de reposición automáticas
 CREATE OR REPLACE FUNCTION generar_orden_reposicion()
