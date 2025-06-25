@@ -15,12 +15,21 @@ const pool = require('../../../backend/config/db');
  */
 
 
-async function run() {
+async function run(fechaIni, fechaFinal) {
   try {
-    // --- PARÁMETROS DEL REPORTE ---
-    // Estas fechas pueden ser sobrescritas por el script generador.
-    const fechaInicio = '2024-06-01';
-    const fechaFin = '2025-07-01';
+    // Si no se pasan fechas, usa valores por defecto
+    let fechaInicio = fechaIni;
+    let fechaFin = fechaFinal;
+
+    if (!fechaInicio) {
+      const hoy = new Date();
+      fechaInicio = hoy.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+    }
+    if (!fechaFin) {
+      const fin = new Date(fechaInicio);
+      fin.setDate(fin.getDate() + 7);
+      fechaFin = fin.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+    }
 
     console.log('🔄 Ejecutando consulta de ingresos por evento...');
 

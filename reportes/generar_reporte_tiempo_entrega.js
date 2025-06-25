@@ -14,6 +14,7 @@ function formatCurrency(value) {
     return !isNaN(number) ? number.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '0.00';
 }
 
+// Reporte HTML con fechas por defecto
 async function generarReporte() {
     try {
         await jsreport.init();
@@ -71,13 +72,60 @@ async function generarReporte() {
         }
 
     } catch (error) {
-        console.error('❌ Error generando el reporte:', error.message, error.stack);
+        console.error('❌ Error generando el reporte:', error.message);
+        if (error.stack) {
+            console.error('Stack trace:', error.stack);
+        }
     } finally {
         await jsreport.close();
     }
 }
 
-// Función para generar reporte en PDF
+// Reporte HTML con fechas personalizadas
+async function generarReporteConFechas(fechaInicio, fechaFin) {
+    try {
+        await jsreport.init();
+
+        console.log(`🔄 Generando reporte de Tiempo de Entrega de Pedidos Online para el período: ${fechaInicio} - ${fechaFin}`);
+
+        const data = await run(fechaInicio, fechaFin);
+
+        const result = await jsreport.render({
+            template: {
+                content: fs.readFileSync(templatePath, 'utf8'),
+                engine: 'handlebars',
+                recipe: 'html',
+                helpers: `
+                    function formatCurrency(value) {
+                        const number = Number(value);
+                        return !isNaN(number) ? number.toFixed(2).replace(/\\B(?=(\\d{3})+(?!\\d))/g, ",") : '0.00';
+                    }
+                    function eq(a, b) { return a === b; }
+                    function gte(a, b) { return a >= b; }
+                `
+            },
+            data: data
+        });
+
+        if (!fs.existsSync(outputDir)) {
+            fs.mkdirSync(outputDir, { recursive: true });
+        }
+
+        const outputPath = path.join(outputDir, `reporte_tiempo_entrega_${fechaInicio}_${fechaFin}.html`);
+        fs.writeFileSync(outputPath, result.content);
+        console.log(`ARCHIVO_REPORTE: ${outputPath}`);
+
+        console.log('✅ Reporte generado exitosamente!');
+        console.log(`📁 Archivo guardado en: ${outputPath}`);
+
+    } catch (error) {
+        console.error('❌ Error generando el reporte:', error.message);
+    } finally {
+        await jsreport.close();
+    }
+}
+
+// Reporte PDF con fechas por defecto
 async function generarReportePDF() {
     try {
         await jsreport.init();
@@ -126,7 +174,7 @@ async function generarReportePDF() {
         console.log(`📁 Archivo guardado en: ${outputPath}`);
 
     } catch (error) {
-        console.error('❌ Error generando el reporte PDF:', error.message, error.stack);
+        console.error('❌ Error generando el reporte PDF:', error.message);
     } finally {
         await jsreport.close();
     }
@@ -137,11 +185,14 @@ const args = process.argv.slice(2);
 
 if (args.length === 0) {
     generarReporte();
+} else if (args[0] === '--fechas' && args.length === 3) {
+    generarReporteConFechas(args[1], args[2]);
 } else if (args[0] === '--pdf') {
     generarReportePDF();
 } else {
     console.log('📖 Uso del script:');
-    console.log('   node generar_reporte_tiempo_entrega.js                    # Reporte HTML');
+    console.log('   node generar_reporte_tiempo_entrega.js                    # Reporte HTML con fechas por defecto');
+    console.log('   node generar_reporte_tiempo_entrega.js --fechas 2025-06-01 2025-07-01  # Fechas personalizadas');
     console.log('   node generar_reporte_tiempo_entrega.js --pdf              # Reporte en PDF');
     console.log('');
     console.log('📊 Descripción:');
@@ -150,5 +201,6 @@ if (args.length === 0) {
 
 module.exports = {
     generarReporte,
+    generarReporteConFechas,
     generarReportePDF
 };

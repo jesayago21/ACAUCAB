@@ -4,76 +4,39 @@ const pool = require('../../../backend/config/db');
 /**
  * Función principal que ejecuta las consultas y estructura los datos para el reporte de tiempo de entrega.
  */
-async function run() {
+async function run(fechaIni, fechaFinal) {
   try {
-    // --- PARÁMETROS DEL REPORTE ---
-    // Estas fechas pueden ser sobrescritas por el script generador.
-    const fechaInicio = '2025-06-01';
-    const fechaFin = '2025-07-01';
+    // Si no se pasan fechas, usa valores por defecto
+    let fechaInicio = fechaIni;
+    let fechaFin = fechaFinal;
+
+    if (!fechaInicio) {
+      const hoy = new Date();
+      fechaInicio = hoy.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+    }
+    if (!fechaFin) {
+      const fin = new Date(fechaInicio);
+      fin.setDate(fin.getDate() + 7);
+      fechaFin = fin.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+    }
 
     console.log('🔄 Ejecutando consulta de tiempo de entrega de pedidos online...');
 
     // --- CONSULTA PARA CALCULAR TIEMPO DE ENTREGA ---
     const queryTiempoEntrega = `
-      SELECT *
-      FROM vw_tiempo_entrega_resumen
-      WHERE fecha_venta_min >= $1 AND fecha_venta_max <= $2
-      ORDER BY dia_semana
-    `;
+      SELECT * 
+      FROM fn_tiempo_entrega_resumen($1, $2)
+      `;
 
     const tiempoEntregaResult = await pool.query(queryTiempoEntrega, [fechaInicio, fechaFin]);
     console.log(`✅ Consulta completada. Se encontraron datos para ${tiempoEntregaResult.rows.length} días de la semana.`);
 
     // --- CONSULTA PARA DETALLE DE PEDIDOS ---
     const queryDetallePedidos = `
-      WITH tiempos_entrega AS (
-        SELECT 
-          vo.clave AS id_venta,
-          vo.fecha AS fecha_venta,
-          EXTRACT(DOW FROM vo.fecha) AS dia_semana,
-          TO_CHAR(vo.fecha, 'Day') AS nombre_dia,
-          TO_CHAR(vo.fecha, 'DD/MM/YYYY') AS fecha_formateada,
-          -- Tiempo desde "listo para entrega" hasta "entregado"
-          CASE 
-            WHEN h_listo.fecha IS NOT NULL AND h_entregado.fecha IS NOT NULL 
-            THEN EXTRACT(EPOCH FROM (h_entregado.fecha - h_listo.fecha)) / 3600 -- en horas
-            ELSE NULL
-          END AS tiempo_entrega_horas,
-          -- Tiempo desde "procesando" hasta "listo para entrega"
-          CASE 
-            WHEN h_procesando.fecha IS NOT NULL AND h_listo.fecha IS NOT NULL 
-            THEN EXTRACT(EPOCH FROM (h_listo.fecha - h_procesando.fecha)) / 3600 -- en horas
-            ELSE NULL
-          END AS tiempo_preparacion_horas,
-          -- Tiempo total desde "procesando" hasta "entregado"
-          CASE 
-            WHEN h_procesando.fecha IS NOT NULL AND h_entregado.fecha IS NOT NULL 
-            THEN EXTRACT(EPOCH FROM (h_entregado.fecha - h_procesando.fecha)) / 3600 -- en horas
-            ELSE NULL
-          END AS tiempo_total_horas,
-          vo.monto_total,
-          u.username AS cliente,
-          h_listo.fecha AS fecha_listo,
-          h_entregado.fecha AS fecha_entregado,
-          h_procesando.fecha AS fecha_procesando
-        FROM venta_online vo
-        LEFT JOIN usuario u ON u.clave = vo.fk_usuario
-        -- Estado "listo para entrega" (estatus 8)
-        LEFT JOIN historico h_listo ON h_listo.fk_venta_online = vo.clave 
-          AND h_listo.fk_estatus = 8
-        -- Estado "entregado" (estatus 9)
-        LEFT JOIN historico h_entregado ON h_entregado.fk_venta_online = vo.clave 
-          AND h_entregado.fk_estatus = 9
-        -- Estado "procesando" (estatus 7)
-        LEFT JOIN historico h_procesando ON h_procesando.fk_venta_online = vo.clave 
-          AND h_procesando.fk_estatus = 7
-        WHERE vo.fecha BETWEEN $1 AND $2
-          AND h_listo.fecha IS NOT NULL -- Solo pedidos que llegaron a "listo para entrega"
-        ORDER BY vo.fecha DESC, vo.clave DESC
-        LIMIT 50 -- Limitar a los últimos 50 pedidos para el detalle
-      )
-      SELECT * FROM tiempos_entrega;
-    `;
+      SELECT *
+      FROM vw_tiempos_entrega_detalle
+      WHERE fecha_venta BETWEEN $1 AND $2
+`;
 
     const detallePedidosResult = await pool.query(queryDetallePedidos, [fechaInicio, fechaFin]);
 
