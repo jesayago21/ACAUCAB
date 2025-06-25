@@ -341,7 +341,7 @@ const VentasTiendaManagement: React.FC<VentasTiendaManagementProps> = ({
                     </button>
                 </div>
                 {canCreate && (
-                    <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center">
+                    <button  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center hidden">
                         <span className="mr-2">+</span>
                         Nueva Venta
                     </button>

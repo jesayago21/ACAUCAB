@@ -469,4 +469,96 @@ router.get('/parroquias/:municipioId', clientController.getParroquiasPorMunicipi
  */
 router.get('/:clienteId/puntos', clientController.obtenerPuntosCliente);
 
+/**
+ * @swagger
+ * /api/clientes/verificar-por-tipo:
+ *   post:
+ *     summary: Verificar cliente por tipo de documento específico (V o J)
+ *     description: Busca un cliente existente de forma específica por V (cédula natural) o J (RIF jurídico)
+ *     tags: [Clientes]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - tipo_documento
+ *               - numero_documento
+ *             properties:
+ *               tipo_documento:
+ *                 type: string
+ *                 enum: [V, J]
+ *                 description: Tipo de documento (V para venezolano/natural, J para jurídico)
+ *                 example: "V"
+ *               numero_documento:
+ *                 type: string
+ *                 description: Número de documento sin el prefijo V/J
+ *                 example: "12345678"
+ *           examples:
+ *             cliente_natural:
+ *               summary: Cliente natural
+ *               value:
+ *                 tipo_documento: "V"
+ *                 numero_documento: "12345678"
+ *             cliente_juridico:
+ *               summary: Cliente jurídico
+ *               value:
+ *                 tipo_documento: "J"
+ *                 numero_documento: "123456789"
+ *     responses:
+ *       200:
+ *         description: Cliente encontrado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Cliente natural encontrado"
+ *                 found:
+ *                   type: boolean
+ *                   example: true
+ *                 cliente:
+ *                   oneOf:
+ *                     - $ref: '#/components/schemas/ClienteNatural'
+ *                     - $ref: '#/components/schemas/ClienteJuridico'
+ *       404:
+ *         description: Cliente no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Cliente natural no encontrado"
+ *                 found:
+ *                   type: boolean
+ *                   example: false
+ *                 tipo_documento:
+ *                   type: string
+ *                   example: "V"
+ *                 numero_documento:
+ *                   type: string
+ *                   example: "12345678"
+ *       400:
+ *         description: Datos inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Tipo de documento inválido. Debe ser V o J"
+ *                 found:
+ *                   type: boolean
+ *                   example: false
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.post('/verificar-por-tipo', clientController.verificarClientePorTipo);
+
 module.exports = router; 
