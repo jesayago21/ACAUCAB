@@ -607,19 +607,3 @@ Para configurar Sentry (opcional):
 ✅ **Status**: Funcional con backend conectado y precisión decimal implementada
 
 <!-- Ejemplo para que funcione el reporte colocando las fechas desde un input -->
-
-<input type="date" id="fechaInicio">
-<input type="date" id="fechaFin">
-<button onclick="generarReporte2()">Generar Reporte</button>
-
-<script>
-function generarReporte2() {
-    const fechaInicio = document.getElementById('fechaInicio').value;
-    const fechaFin = document.getElementById('fechaFin').value;
-    if (!fechaInicio || !fechaFin) {
-        alert('Debes seleccionar ambas fechas');
-        return;
-    }
-    window.open(`/api/reportes/reporte-evento?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`, '_blank');
-}
-</script>
