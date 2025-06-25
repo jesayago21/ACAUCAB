@@ -1,9 +1,13 @@
 const pool = require('../../../backend/config/db');
 
-async function run() {
+async function run(fechaInicio = null, fechaFin = null) {
     try {
-        // Consulta simplificada usando la vista
-        const query = `
+        console.log('🔍 DEBUG - Parámetros recibidos en comparativa cerveza:');
+        console.log(`   • fechaInicio: ${fechaInicio || 'NULL'}`);
+        console.log(`   • fechaFin: ${fechaFin || 'NULL'}`);
+        
+        // Construir la consulta con filtros de fecha opcionales
+        let query = `
             SELECT 
                 fecha,
                 canal_venta,
@@ -18,11 +22,45 @@ async function run() {
                 mes,
                 periodo
             FROM v_comparativa_ingresos_cerveza
-            ORDER BY fecha DESC, canal_venta, categoria_cerveza
         `;
         
-        const result = await pool.query(query);
+        const params = [];
+        
+        // Agregar filtros de fecha si se proporcionan
+        if (fechaInicio && fechaFin) {
+            query += ` WHERE fecha BETWEEN $1 AND $2`;
+            params.push(fechaInicio, fechaFin);
+            console.log(`   • Aplicando filtro: BETWEEN ${fechaInicio} AND ${fechaFin}`);
+        } else if (fechaInicio) {
+            query += ` WHERE fecha >= $1`;
+            params.push(fechaInicio);
+            console.log(`   • Aplicando filtro: >= ${fechaInicio}`);
+        } else if (fechaFin) {
+            query += ` WHERE fecha <= $1`;
+            params.push(fechaFin);
+            console.log(`   • Aplicando filtro: <= ${fechaFin}`);
+        } else {
+            console.log(`   • Sin filtros de fecha - consultando todos los datos`);
+        }
+        
+        query += ` ORDER BY fecha DESC, canal_venta, categoria_cerveza`;
+        
+        console.log('🔍 DEBUG - Consulta final:');
+        console.log(`   • Query: ${query}`);
+        console.log(`   • Params: [${params.join(', ')}]`);
+        
+        const result = await pool.query(query, params);
         const ventas = result.rows;
+        
+        console.log(`✅ Consulta ejecutada. Filas obtenidas: ${ventas.length}`);
+        
+        // Mostrar algunas fechas para verificar el filtrado
+        if (ventas.length > 0) {
+            console.log('🔍 DEBUG - Primeras 3 fechas en los resultados:');
+            ventas.slice(0, 3).forEach((venta, index) => {
+                console.log(`   • ${index + 1}. ${venta.fecha} - ${venta.cerveza}`);
+            });
+        }
         
         // Procesar los datos
         const resumen = {
@@ -145,6 +183,13 @@ async function run() {
         const data = {
             fechaGeneracion: new Date().toLocaleDateString('es-ES'),
             horaGeneracion: new Date().toLocaleTimeString('es-ES'),
+            periodoReporte: fechaInicio && fechaFin ? 
+                `Del ${new Date(fechaInicio).toLocaleDateString('es-ES')} al ${new Date(fechaFin).toLocaleDateString('es-ES')}` : 
+                fechaInicio ? 
+                `Desde ${new Date(fechaInicio).toLocaleDateString('es-ES')}` :
+                fechaFin ? 
+                `Hasta ${new Date(fechaFin).toLocaleDateString('es-ES')}` :
+                'Todos los períodos',
             resumen: {
                 total_ventas: resumen.total_ventas,
                 total_ingresos: resumen.total_ingresos.toFixed(2),

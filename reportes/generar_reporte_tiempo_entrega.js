@@ -14,6 +14,24 @@ function formatCurrency(value) {
     return !isNaN(number) ? number.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '0.00';
 }
 
+// Función para obtener parámetros de fecha desde línea de comandos
+function obtenerParametrosFecha() {
+    const args = process.argv.slice(2);
+    let fechaInicio = null;
+    let fechaFin = null;
+
+    // Buscar parámetros de fecha
+    for (let i = 0; i < args.length; i++) {
+        if (args[i] === '--fecha-inicio' && i + 1 < args.length) {
+            fechaInicio = args[i + 1];
+        } else if (args[i] === '--fecha-fin' && i + 1 < args.length) {
+            fechaFin = args[i + 1];
+        }
+    }
+
+    return { fechaInicio, fechaFin };
+}
+
 // Reporte HTML con fechas por defecto
 async function generarReporte() {
     try {
@@ -90,6 +108,10 @@ async function generarReporteConFechas(fechaInicio, fechaFin) {
 
         const data = await run(fechaInicio, fechaFin);
 
+        console.log('✅ Datos obtenidos correctamente');
+        console.log(`📊 Total Pedidos: ${data.resumen?.total_pedidos || 0}`);
+        console.log(`🚚 Pedidos Entregados: ${data.resumen?.total_pedidos_entregados || 0}`);
+
         const result = await jsreport.render({
             template: {
                 content: fs.readFileSync(templatePath, 'utf8'),
@@ -117,9 +139,13 @@ async function generarReporteConFechas(fechaInicio, fechaFin) {
 
         console.log('✅ Reporte generado exitosamente!');
         console.log(`📁 Archivo guardado en: ${outputPath}`);
+        console.log(`📅 Período: ${data.fechaInicio} - ${data.fechaFin}`);
 
     } catch (error) {
         console.error('❌ Error generando el reporte:', error.message);
+        if (error.stack) {
+            console.error('Stack trace:', error.stack);
+        }
     } finally {
         await jsreport.close();
     }
@@ -175,6 +201,9 @@ async function generarReportePDF() {
 
     } catch (error) {
         console.error('❌ Error generando el reporte PDF:', error.message);
+        if (error.stack) {
+            console.error('Stack trace:', error.stack);
+        }
     } finally {
         await jsreport.close();
     }
@@ -189,10 +218,19 @@ if (args.length === 0) {
     generarReporteConFechas(args[1], args[2]);
 } else if (args[0] === '--pdf') {
     generarReportePDF();
+} else if (args.includes('--fecha-inicio') || args.includes('--fecha-fin')) {
+    const { fechaInicio, fechaFin } = obtenerParametrosFecha();
+    if (fechaInicio && fechaFin) {
+        generarReporteConFechas(fechaInicio, fechaFin);
+    } else {
+        console.log('❌ Error: Debes especificar tanto --fecha-inicio como --fecha-fin');
+        console.log('📖 Ejemplo: node generar_reporte_tiempo_entrega.js --fecha-inicio 2025-06-01 --fecha-fin 2025-06-30');
+    }
 } else {
     console.log('📖 Uso del script:');
     console.log('   node generar_reporte_tiempo_entrega.js                    # Reporte HTML con fechas por defecto');
     console.log('   node generar_reporte_tiempo_entrega.js --fechas 2025-06-01 2025-07-01  # Fechas personalizadas');
+    console.log('   node generar_reporte_tiempo_entrega.js --fecha-inicio 2025-06-01 --fecha-fin 2025-06-30  # Fechas con parámetros');
     console.log('   node generar_reporte_tiempo_entrega.js --pdf              # Reporte en PDF');
     console.log('');
     console.log('📊 Descripción:');

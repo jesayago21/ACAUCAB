@@ -8,13 +8,23 @@ const templatePath = path.resolve(__dirname, 'data/Reportes/comparativa_ingresos
 const dataScriptPath = path.resolve(__dirname, 'data/Reportes/comparativa_ingresos_cerveza_report.js');
 const { run } = require(dataScriptPath);
 
-async function generarReporte() {
+async function generarReporte(fechaInicio = null, fechaFin = null) {
     try {
         await jsreport.init();
 
         console.log('🔄 Generando reporte de comparativa de ingresos por tipo de cerveza...');
+        
+        if (fechaInicio && fechaFin) {
+            console.log(`📅 Período: Del ${fechaInicio} al ${fechaFin}`);
+        } else if (fechaInicio) {
+            console.log(`📅 Desde: ${fechaInicio}`);
+        } else if (fechaFin) {
+            console.log(`📅 Hasta: ${fechaFin}`);
+        } else {
+            console.log('📅 Período: Todos los datos disponibles');
+        }
 
-        const data = await run();
+        const data = await run(fechaInicio, fechaFin);
 
         console.log('✅ Datos obtenidos correctamente');
         console.log(`📊 Total de ventas analizadas: ${data.resumen?.total_ventas || 0}`);
@@ -49,7 +59,7 @@ async function generarReporte() {
 
         console.log('✅ Reporte HTML generado exitosamente!');
         console.log(`📁 Archivo guardado en: ${outputPath}`);
-        console.log(`📅 Fecha de generación: ${data.fechaGeneracion}`);
+        console.log(`📅 Fecha de generación: ${data.fechaGeneracion} ${data.horaGeneracion}`);
 
         if (data.resumen) {
             console.log('\n📈 RESUMEN DEL REPORTE:');
@@ -79,9 +89,19 @@ async function generarReporte() {
 const args = process.argv.slice(2);
 
 if (args.length === 0) {
+    // Sin parámetros: generar reporte con todos los datos
     generarReporte();
+} else if (args.length === 1) {
+    // Un parámetro: fecha de inicio
+    generarReporte(args[0]);
+} else if (args.length === 2) {
+    // Dos parámetros: fecha de inicio y fin
+    generarReporte(args[0], args[1]);
 } else {
-    // ...otros modos si los tienes
+    console.log('❌ Uso incorrecto. Opciones:');
+    console.log('   node generar_reporte_comparativa_cerveza.js                    # Todos los datos');
+    console.log('   node generar_reporte_comparativa_cerveza.js 2024-01-01        # Desde fecha');
+    console.log('   node generar_reporte_comparativa_cerveza.js 2024-01-01 2024-12-31  # Rango de fechas');
 }
 
 module.exports = {

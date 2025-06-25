@@ -265,15 +265,15 @@
         <div class="meta-info">
             <div>
                 <i>📅</i>
-                <span>Generado el: {{fechaGeneracion}} a las {{horaGeneracion}}</span>
+                <span>Generado el: 24/06/2025 a las 22:32:13</span>
             </div>
             <div>
                 <i>📊</i>
-                <span>Total de pedidos: {{resumen.total_pedidos}}</span>
+                <span>Total de pedidos: 5</span>
             </div>
             <div>
                 <i>📋</i>
-                <span>Período: {{fechaInicio}} - {{fechaFin}}</span>
+                <span>Período: 28/02/2025 - 09/06/2025</span>
             </div>
         </div>
         
@@ -283,19 +283,19 @@
                 <h2>Resumen General del Período</h2>
                 <div class="resumen-grid">
                     <div class="resumen-item">
-                        <h3>{{resumen.total_pedidos}}</h3>
+                        <h3>5</h3>
                         <p>Total Pedidos</p>
                     </div>
                     <div class="resumen-item">
-                        <h3>{{resumen.total_pedidos_entregados}}</h3>
+                        <h3>4</h3>
                         <p>Pedidos Entregados</p>
                     </div>
                     <div class="resumen-item">
-                        <h3>{{resumen.porcentaje_entregados}}%</h3>
+                        <h3>80%</h3>
                         <p>Tasa de Entrega</p>
                     </div>
                     <div class="resumen-item">
-                        <h3>Bs. {{resumen.total_ventas}}</h3>
+                        <h3>Bs. 1201.5</h3>
                         <p>Total Ventas</p>
                     </div>
                 </div>
@@ -307,17 +307,17 @@
                 <div class="stats-grid">
                     <div class="stat-card">
                         <h3>Tiempo Promedio de Entrega</h3>
-                        <div class="stat-value">{{resumen.promedio_entrega_general}}h</div>
+                        <div class="stat-value">7.27h</div>
                         <div class="stat-subtitle">Desde "Listo para Entrega" hasta "Entregado"</div>
                     </div>
                     <div class="stat-card">
                         <h3>Tiempo Promedio de Preparación</h3>
-                        <div class="stat-value">{{resumen.promedio_preparacion_general}}h</div>
+                        <div class="stat-value">1.62h</div>
                         <div class="stat-subtitle">Desde "Procesando" hasta "Listo para Entrega"</div>
                     </div>
                     <div class="stat-card">
                         <h3>Tiempo Total Promedio</h3>
-                        <div class="stat-value">{{resumen.promedio_total_general}}h</div>
+                        <div class="stat-value">8.72h</div>
                         <div class="stat-subtitle">Desde "Procesando" hasta "Entregado"</div>
                     </div>
                 </div>
@@ -333,7 +333,6 @@
             
             <!-- Análisis por Día de la Semana -->
             <h2 class="section-title">Análisis por Día de la Semana</h2>
-            {{#if resumenPorDia.length}}
             <div class="table-container">
                 <table>
                     <thead>
@@ -350,88 +349,67 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {{#each resumenPorDia}}
                         <tr>
-                            <td class="day-header">{{nombre_dia}}</td>
-                            <td class="amount">{{total_pedidos}}</td>
-                            <td class="amount">{{pedidos_entregados}}</td>
-                            <td class="time {{#if tiempo_entrega_promedio_horas}}{{#if (gte tiempo_entrega_promedio_horas 4)}}efficiency-low{{else if (gte tiempo_entrega_promedio_horas 2)}}efficiency-medium{{else}}efficiency-high{{/if}}{{/if}}">
-                                {{#if tiempo_entrega_promedio_horas}}{{tiempo_entrega_promedio_horas}}{{else}}-{{/if}}
+                            <td class="day-header">Tuesday</td>
+                            <td class="amount">2</td>
+                            <td class="amount">2</td>
+                            <td class="time efficiency-low">
+                                12.21
                             </td>
-                            <td class="time {{#if tiempo_preparacion_promedio_horas}}{{#if (gte tiempo_preparacion_promedio_horas 2)}}efficiency-low{{else if (gte tiempo_preparacion_promedio_horas 1)}}efficiency-medium{{else}}efficiency-high{{/if}}{{/if}}">
-                                {{#if tiempo_preparacion_promedio_horas}}{{tiempo_preparacion_promedio_horas}}{{else}}-{{/if}}
+                            <td class="time efficiency-medium">
+                                1.63
                             </td>
-                            <td class="time {{#if tiempo_total_promedio_horas}}{{#if (gte tiempo_total_promedio_horas 6)}}efficiency-low{{else if (gte tiempo_total_promedio_horas 3)}}efficiency-medium{{else}}efficiency-high{{/if}}{{/if}}">
-                                {{#if tiempo_total_promedio_horas}}{{tiempo_total_promedio_horas}}{{else}}-{{/if}}
+                            <td class="time efficiency-low">
+                                13.83
                             </td>
-                            <td class="time">{{#if tiempo_entrega_minimo_horas}}{{tiempo_entrega_minimo_horas}}{{else}}-{{/if}}</td>
-                            <td class="time">{{#if tiempo_entrega_maximo_horas}}{{tiempo_entrega_maximo_horas}}{{else}}-{{/if}}</td>
-                            <td class="amount">Bs. {{total_ventas_dia}}</td>
+                            <td class="time">5.25</td>
+                            <td class="time">19.17</td>
+                            <td class="amount">Bs. 370.5</td>
                         </tr>
-                        {{/each}}
+                        <tr>
+                            <td class="day-header">Wednesday</td>
+                            <td class="amount">2</td>
+                            <td class="amount">1</td>
+                            <td class="time efficiency-low">
+                                5.58
+                            </td>
+                            <td class="time efficiency-medium">
+                                1.25
+                            </td>
+                            <td class="time efficiency-low">
+                                6.33
+                            </td>
+                            <td class="time">5.58</td>
+                            <td class="time">5.58</td>
+                            <td class="amount">Bs. 381</td>
+                        </tr>
+                        <tr>
+                            <td class="day-header">Thursday</td>
+                            <td class="amount">1</td>
+                            <td class="amount">1</td>
+                            <td class="time efficiency-low">
+                                4.02
+                            </td>
+                            <td class="time efficiency-medium">
+                                1.98
+                            </td>
+                            <td class="time efficiency-low">
+                                6
+                            </td>
+                            <td class="time">4.02</td>
+                            <td class="time">4.02</td>
+                            <td class="amount">Bs. 450</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
-            {{else}}
-            <div class="no-data">
-                <h3>No se encontraron datos</h3>
-                <p>No hay registros de pedidos online con estados de entrega para el período especificado.</p>
-            </div>
-            {{/if}}
             
             <!-- Detalle de Pedidos Recientes -->
             <h2 class="section-title">Detalle de Pedidos Recientes</h2>
-            {{#if detallePedidos.length}}
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID Pedido</th>
-                            <th>Fecha</th>
-                            <th>Día</th>
-                            <th>Cliente</th>
-                            <th class="time">Tiempo Entrega (h)</th>
-                            <th class="time">Tiempo Prep. (h)</th>
-                            <th class="time">Tiempo Total (h)</th>
-                            <th class="amount">Monto</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#each detallePedidos}}
-                        <tr>
-                            <td>#{{id_venta}}</td>
-                            <td>{{fecha_formateada}}</td>
-                            <td>{{nombre_dia}}</td>
-                            <td>{{cliente}}</td>
-                            <td class="time {{#if tiempo_entrega_horas}}{{#if (gte tiempo_entrega_horas 4)}}efficiency-low{{else if (gte tiempo_entrega_horas 2)}}efficiency-medium{{else}}efficiency-high{{/if}}{{/if}}">
-                                {{#if tiempo_entrega_horas}}{{tiempo_entrega_horas}}{{else}}-{{/if}}
-                            </td>
-                            <td class="time {{#if tiempo_preparacion_horas}}{{#if (gte tiempo_preparacion_horas 2)}}efficiency-low{{else if (gte tiempo_preparacion_horas 1)}}efficiency-medium{{else}}efficiency-high{{/if}}{{/if}}">
-                                {{#if tiempo_preparacion_horas}}{{tiempo_preparacion_horas}}{{else}}-{{/if}}
-                            </td>
-                            <td class="time {{#if tiempo_total_horas}}{{#if (gte tiempo_total_horas 6)}}efficiency-low{{else if (gte tiempo_total_horas 3)}}efficiency-medium{{else}}efficiency-high{{/if}}{{/if}}">
-                                {{#if tiempo_total_horas}}{{tiempo_total_horas}}{{else}}-{{/if}}
-                            </td>
-                            <td class="amount">Bs. {{monto_total}}</td>
-                            <td>
-                                {{#if tiempo_entrega_horas}}
-                                    <span class="efficiency-high">Entregado</span>
-                                {{else}}
-                                    <span class="efficiency-medium">En Proceso</span>
-                                {{/if}}
-                            </td>
-                        </tr>
-                        {{/each}}
-                    </tbody>
-                </table>
-            </div>
-            {{else}}
             <div class="no-data">
                 <h3>No hay pedidos recientes</h3>
                 <p>No se encontraron pedidos detallados para mostrar.</p>
             </div>
-            {{/if}}
         </div>
     </div>
 </body>
