@@ -30,6 +30,7 @@
         .amount { text-align: right; font-weight: 600; font-family: 'Courier New', Courier, monospace; }
         .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #dee2e6; color: #6c757d; font-size: 0.9em; }
         .no-data { text-align: center; padding: 40px; color: #6c757d; font-style: italic; }
+        .chart-container { margin: 30px 0; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
@@ -44,15 +45,15 @@
         <div class="report-info">
             <div class="info-item">
                 <div class="info-label">Período</div>
-                <div class="info-value">31/5/2025 - 30/6/2025</div>
+                <div class="info-value">31/5/2024 - 30/6/2025</div>
             </div>
             <div class="info-item">
                 <div class="info-label">Fecha de Generación</div>
-                <div class="info-value">22/6/2025</div>
+                <div class="info-value">24/6/2025</div>
             </div>
             <div class="info-item">
                 <div class="info-label">Hora de Generación</div>
-                <div class="info-value">21:34:18</div>
+                <div class="info-value">20:57:23</div>
             </div>
         </div>
 
@@ -65,21 +66,29 @@
                     <div class="summary-label">Eventos Analizados</div>
                 </div>
                 <div class="summary-item">
-                    <div class="summary-value">Bs. 801.50</div>
+                    <div class="summary-value">Bs. 2,095.75</div>
                     <div class="summary-label">Total Ingresos (Entradas)</div>
                 </div>
                 <div class="summary-item">
-                    <div class="summary-value">Bs. 6,178.60</div>
+                    <div class="summary-value">Bs. 6,670.05</div>
                     <div class="summary-label">Total Ingresos (Productos)</div>
                 </div>
                 <div class="summary-item">
-                    <div class="summary-value">Bs. 6,980.10</div>
+                    <div class="summary-value">Bs. 8,765.80</div>
                     <div class="summary-label">Ingresos Totales</div>
                 </div>
             </div>
         </div>
 
-        <!-- Detalle por Evento -->
+        <!-- Contenedor para Gráfica -->
+        <div class="chart-container" style="margin: 30px 0; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <h2 class="section-title" style="color: #007bff; font-size: 1.5em; margin-bottom: 20px;">Análisis de Ventas de Eventos</h2>
+            <div style="position: relative; height: 400px;">
+                <canvas id="eventoChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Detalle de Ventas de Entradas -->
         <h2 class="section-title">Detalle por Evento</h2>
         <div class="table-container">
             <table>
@@ -103,9 +112,9 @@
                     <tr>
                         <td>Cena Maridaje Amazónico</td>
                         <td>22/10/2024</td>
-                        <td class="amount">Bs. 190.75</td>
-                        <td class="amount">Bs. 846.85</td>
-                        <td class="amount"><b>Bs. 1,037.60</b></td>
+                        <td class="amount">Bs. 502.25</td>
+                        <td class="amount">Bs. 1,162.65</td>
+                        <td class="amount"><b>Bs. 1,664.90</b></td>
                     </tr>
                     <tr>
                         <td>Curso Elaboración Anzoátegui</td>
@@ -117,9 +126,9 @@
                     <tr>
                         <td>Tour Cervecero Selva</td>
                         <td>3/9/2024</td>
-                        <td class="amount">Bs. 110.00</td>
-                        <td class="amount">Bs. 971.80</td>
-                        <td class="amount"><b>Bs. 1,081.80</b></td>
+                        <td class="amount">Bs. 310.50</td>
+                        <td class="amount">Bs. 1,162.25</td>
+                        <td class="amount"><b>Bs. 1,472.75</b></td>
                     </tr>
                     <tr>
                         <td>Lanzamiento Costa Caribe</td>
@@ -131,9 +140,9 @@
                     <tr>
                         <td>Concurso Homebrew Orinoquía</td>
                         <td>12/8/2024</td>
-                        <td class="amount">Bs. 165.00</td>
-                        <td class="amount">Bs. 817.60</td>
-                        <td class="amount"><b>Bs. 982.60</b></td>
+                        <td class="amount">Bs. 425.75</td>
+                        <td class="amount">Bs. 1,102.80</td>
+                        <td class="amount"><b>Bs. 1,528.55</b></td>
                     </tr>
                     <tr>
                         <td>Taller de Cata Costera</td>
@@ -145,9 +154,9 @@
                     <tr>
                         <td>Taller de Cata Selvática</td>
                         <td>5/7/2024</td>
-                        <td class="amount">Bs. 225.75</td>
+                        <td class="amount">Bs. 541.75</td>
                         <td class="amount">Bs. 962.50</td>
-                        <td class="amount"><b>Bs. 1,188.25</b></td>
+                        <td class="amount"><b>Bs. 1,504.25</b></td>
                     </tr>
                     <tr>
                         <td>Festival Cervecero de Barcelona</td>
@@ -159,9 +168,9 @@
                     <tr>
                         <td>Festival Cervecero Amazonas</td>
                         <td>15/6/2024</td>
-                        <td class="amount">Bs. 110.00</td>
-                        <td class="amount">Bs. 1,457.35</td>
-                        <td class="amount"><b>Bs. 1,567.35</b></td>
+                        <td class="amount">Bs. 315.50</td>
+                        <td class="amount">Bs. 1,157.35</td>
+                        <td class="amount"><b>Bs. 1,472.85</b></td>
                     </tr>
                 </tbody>
             </table>

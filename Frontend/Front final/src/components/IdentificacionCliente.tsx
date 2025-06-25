@@ -61,7 +61,7 @@ export default function IdentificacionCliente({
 
     try {
       const numeroLimpio = numeroDocumento.replace(/\D/g, '');
-      const resultado = await clienteService.verificarCliente(numeroLimpio);
+      const resultado = await clienteService.verificarClientePorTipo(tipoDocumento, numeroLimpio);
       
       if (resultado.found && resultado.cliente) {
         setEstado('encontrado');
@@ -73,14 +73,14 @@ export default function IdentificacionCliente({
       } else {
         setEstado('no_encontrado');
         setCliente(null);
-        setMensaje('Cliente no registrado. ¿Desea registrarse?');
+        setMensaje(`Cliente ${tipoDocumento === 'V' ? 'natural' : 'jurídico'} no registrado. ¿Desea registrarse?`);
       }
     } catch (error) {
       // Si es un 404 (cliente no encontrado), mostrar opción de registro
       if (error instanceof Error && error.message.includes('404')) {
         setEstado('no_encontrado');
         setCliente(null);
-        setMensaje('Cliente no registrado. ¿Desea registrarse?');
+        setMensaje(`Cliente ${tipoDocumento === 'V' ? 'natural' : 'jurídico'} no registrado. ¿Desea registrarse?`);
       } else {
         setEstado('error');
         setCliente(null);

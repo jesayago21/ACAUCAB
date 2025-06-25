@@ -557,6 +557,197 @@ const obtenerPuntosCliente = async (req, res) => {
   }
 };
 
+/**
+ * Verificar cliente por tipo de documento específico (V o J)
+ * Busca un cliente existente por V (cédula) o J (RIF) de forma específica
+ */
+const verificarClientePorTipo = async (req, res) => {
+  const { tipo_documento, numero_documento } = req.body;
+  
+  if (!tipo_documento || !['V', 'J'].includes(tipo_documento)) {
+    return res.status(400).json({ 
+      message: 'Tipo de documento inválido. Debe ser V o J',
+      found: false 
+    });
+  }
+
+  if (!numero_documento) {
+    return res.status(400).json({ 
+      message: 'Número de documento es requerido',
+      found: false 
+    });
+  }
+
+  try {
+    let queryText;
+    let queryParams;
+
+    if (tipo_documento === 'V') {
+      // Buscar cliente natural por cédula
+      queryText = `
+        SELECT 
+          c.clave,
+          c.rif,
+          c.puntos_acumulados,
+          c.tipo,
+          c.ci,
+          c.primer_nombre,
+          c.segundo_nombre,
+          c.primer_apellido,
+          c.segundo_apellido,
+          c.direccion_habitacion,
+          l1.nombre AS lugar_habitacion
+        FROM cliente c
+        LEFT JOIN lugar l1 ON c.fk_direccion_habitacion = l1.clave  
+        WHERE c.tipo = 'natural' AND c.ci = $1
+        LIMIT 1;
+      `;
+      queryParams = [parseInt(numero_documento)];
+    } else {
+      // Buscar cliente jurídico por RIF
+      queryText = `
+        SELECT 
+          c.clave,
+          c.rif,
+          c.puntos_acumulados,
+          c.tipo,
+          c.razon_social,
+          c.denominacion_comercial,
+          c.url_pagina_web,
+          c.capital_disponible,
+          c.direccion_fiscal,
+          c.direccion_fisica,
+          l2.nombre AS lugar_fiscal,
+          l3.nombre AS lugar_fisico
+        FROM cliente c
+        LEFT JOIN lugar l2 ON c.fk_direccion_fiscal = l2.clave
+        LEFT JOIN lugar l3 ON c.fk_direccion_fisica = l3.clave
+        WHERE c.tipo = 'juridico' AND c.rif = $1
+        LIMIT 1;
+      `;
+      queryParams = [parseInt(numero_documento)];
+    }
+    
+    const { rows } = await db.query(queryText, queryParams);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ 
+        message: `Cliente ${tipo_documento === 'V' ? 'natural' : 'jurídico'} no encontrado`,
+        found: false,
+        tipo_documento,
+        numero_documento
+      });
+    }
+
+    const cliente = rows[0];
+    
+    // Obtener correo electrónico del cliente
+    const correoQuery = `
+      SELECT direccion_email 
+      FROM correo_electronico 
+      WHERE fk_cliente = $1;
+    `;
+    const { rows: correoRows } = await db.query(correoQuery, [cliente.clave]);
+    
+    // Obtener teléfonos del cliente
+    const telefonosQuery = `
+      SELECT clave, codigo, numero, extension 
+      FROM telefono 
+      WHERE fk_cliente = $1;
+    `;
+    const { rows: telefonosRows } = await db.query(telefonosQuery, [cliente.clave]);
+
+    // Obtener personas de contacto si es cliente jurídico
+    let personasContacto = [];
+    if (tipo_documento === 'J') {
+      const personasQuery = `
+        SELECT 
+          pc.clave,
+          pc.primer_nombre,
+          pc.primer_apellido,
+          ce.direccion_email,
+          t.codigo,
+          t.numero,
+          t.extension
+        FROM persona_contacto pc
+        LEFT JOIN correo_electronico ce ON ce.fk_persona_contacto = pc.clave
+        LEFT JOIN telefono t ON t.fk_persona_contacto = pc.clave
+        WHERE pc.fk_cliente = $1;
+      `;
+      const { rows: personasRows } = await db.query(personasQuery, [cliente.clave]);
+      
+      // Agrupar personas de contacto con sus datos
+      const personasMap = new Map();
+      personasRows.forEach(persona => {
+        if (!personasMap.has(persona.clave)) {
+          personasMap.set(persona.clave, {
+            clave: persona.clave,
+            primer_nombre: persona.primer_nombre,
+            primer_apellido: persona.primer_apellido,
+            correo: { direccion_email: persona.direccion_email },
+            telefono: {
+              codigo: persona.codigo,
+              numero: persona.numero,
+              extension: persona.extension
+            }
+          });
+        }
+      });
+      personasContacto = Array.from(personasMap.values());
+    }
+    
+    // Formatear respuesta según el tipo de cliente
+    const clienteFormateado = {
+      clave: cliente.clave,
+      tipo_documento: tipo_documento,
+      numero_documento: numero_documento,
+      documento_completo: `${tipo_documento}-${numero_documento}`,
+      rif: cliente.rif,
+      tipo: cliente.tipo,
+      puntos_acumulados: cliente.puntos_acumulados,
+      correo: correoRows[0] || null,
+      telefonos: telefonosRows,
+      ...(tipo_documento === 'V' ? {
+        ci: cliente.ci,
+        primer_nombre: cliente.primer_nombre,
+        segundo_nombre: cliente.segundo_nombre,
+        primer_apellido: cliente.primer_apellido,
+        segundo_apellido: cliente.segundo_apellido,
+        direccion_habitacion: cliente.direccion_habitacion,
+        lugar_habitacion: cliente.lugar_habitacion,
+        // Campos calculados para compatibilidad
+        nombre: cliente.primer_nombre,
+        apellido: cliente.primer_apellido,
+        direccion: cliente.direccion_habitacion,
+        lugar: cliente.lugar_habitacion
+      } : {
+        razon_social: cliente.razon_social,
+        denominacion_comercial: cliente.denominacion_comercial,
+        url_pagina_web: cliente.url_pagina_web,
+        capital_disponible: cliente.capital_disponible,
+        direccion_fiscal: cliente.direccion_fiscal,
+        direccion_fisica: cliente.direccion_fisica,
+        lugar_fiscal: cliente.lugar_fiscal,
+        lugar_fisico: cliente.lugar_fisico,
+        personas_contacto: personasContacto
+      })
+    };
+
+    res.status(200).json({
+      message: `Cliente ${tipo_documento === 'V' ? 'natural' : 'jurídico'} encontrado`,
+      found: true,
+      cliente: clienteFormateado
+    });
+
+  } catch (error) {
+    console.error('Error al verificar cliente por tipo:', error);
+    res.status(500).json({ 
+      message: 'Error interno del servidor',
+      found: false 
+    });
+  }
+};
+
 module.exports = {
   identificarCliente,
   crearCliente,
@@ -564,5 +755,6 @@ module.exports = {
   getLugaresPlanos,
   getMunicipiosPorEstado,
   getParroquiasPorMunicipio,
-  obtenerPuntosCliente
+  obtenerPuntosCliente,
+  verificarClientePorTipo
 }; 

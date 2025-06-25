@@ -17,6 +17,33 @@ export interface UseCarritoReturn {
 export function useCarrito(): UseCarritoReturn {
   const [items, setItems] = useState<ItemCarrito[]>([]);
 
+  /** Cargar items del localStorage al inicializar */
+  useEffect(() => {
+    try {
+      const carritoGuardado = localStorage.getItem('acaucab_carrito');
+      if (carritoGuardado) {
+        const itemsGuardados = JSON.parse(carritoGuardado);
+        if (Array.isArray(itemsGuardados)) {
+          console.log('🔄 Cargando carrito desde localStorage:', itemsGuardados.length, 'items');
+          setItems(itemsGuardados);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error cargando carrito desde localStorage:', error);
+      localStorage.removeItem('acaucab_carrito');
+    }
+  }, []);
+
+  /** Guardar items en localStorage cada vez que cambien */
+  useEffect(() => {
+    try {
+      localStorage.setItem('acaucab_carrito', JSON.stringify(items));
+      console.log('💾 Carrito guardado en localStorage:', items.length, 'items');
+    } catch (error) {
+      console.error('❌ Error guardando carrito en localStorage:', error);
+    }
+  }, [items]);
+
   /** Calcular totales usando useMemo para optimización */
   const { totalItems, totalPrecio, puntosGanados } = useMemo(() => {
     const totalItems = items.reduce((sum, item) => sum + item.cantidad, 0);
@@ -65,13 +92,22 @@ export function useCarrito(): UseCarritoReturn {
       return;
     }
 
+    if (cantidad <= 0) {
+      console.warn('⚠️ AGREGAR ITEM - Cantidad inválida:', cantidad);
+      return;
+    }
+
     setItems(prevItems => {
       console.log('📦 AGREGAR ITEM - Items previos:', prevItems.length);
       
-      const itemExistente = prevItems.find(item => obtenerIdProducto(item.producto) === productoId);
+      // Buscar item existente usando clave del producto para evitar duplicados
+      const itemExistenteIndex = prevItems.findIndex(item => 
+        obtenerIdProducto(item.producto) === productoId
+      );
       
-      if (itemExistente) {
+      if (itemExistenteIndex !== -1) {
         console.log('🔄 AGREGAR ITEM - Item existente encontrado, actualizando cantidad');
+        const itemExistente = prevItems[itemExistenteIndex];
         const nuevaCantidad = itemExistente.cantidad + cantidad;
         
         if (nuevaCantidad > stockDisponible) {
@@ -79,15 +115,12 @@ export function useCarrito(): UseCarritoReturn {
           return prevItems;
         }
         
-        const nuevosItems = prevItems.map(item =>
-          obtenerIdProducto(item.producto) === productoId
-            ? {
-                ...item,
-                cantidad: nuevaCantidad,
-                subtotal: parseFloat((nuevaCantidad * item.precio_unitario).toFixed(2))
-              }
-            : item
-        );
+        const nuevosItems = [...prevItems];
+        nuevosItems[itemExistenteIndex] = {
+          ...itemExistente,
+          cantidad: nuevaCantidad,
+          subtotal: parseFloat((nuevaCantidad * itemExistente.precio_unitario).toFixed(2))
+        };
         
         console.log('✅ AGREGAR ITEM - Item actualizado exitosamente');
         return nuevosItems;
@@ -160,7 +193,14 @@ export function useCarrito(): UseCarritoReturn {
 
   /** Limpiar carrito */
   const limpiarCarrito = useCallback(() => {
+    console.log('🧹 Limpiando carrito completo');
     setItems([]);
+    try {
+      localStorage.removeItem('acaucab_carrito');
+      console.log('✅ Carrito limpiado del localStorage');
+    } catch (error) {
+      console.error('❌ Error limpiando carrito del localStorage:', error);
+    }
   }, []);
 
   /** Obtener item específico del carrito */

@@ -8,6 +8,17 @@ const templatePath = path.resolve(__dirname, 'data/Reportes/puntos_canjeados_tem
 const dataScriptPath = path.resolve(__dirname, 'data/Reportes/puntos_canjeados_report.js');
 const { run } = require(dataScriptPath);
 
+function getHelpersString() {
+    return `
+        function eq(a, b) { return a === b; }
+        function formatCurrency(value) {
+            if (typeof value === 'string') value = parseFloat(value.replace(',', '.'));
+            if (isNaN(value)) return '0,00';
+            return value.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+    `;
+}
+
 async function generarReporte() {
     try {
         await jsreport.init();
@@ -25,11 +36,7 @@ async function generarReporte() {
                 content: fs.readFileSync(templatePath, 'utf8'),
                 engine: 'handlebars',
                 recipe: 'html',
-                helpers: `
-                    function eq(a, b) {
-                        return a === b;
-                    }
-                `
+                helpers: getHelpersString()
             },
             data: data
         });
@@ -86,11 +93,7 @@ async function generarReporteConFechas(fechaInicio, fechaFin) {
                 content: fs.readFileSync(templatePath, 'utf8'),
                 engine: 'handlebars',
                 recipe: 'html',
-                helpers: `
-                    function eq(a, b) {
-                        return a === b;
-                    }
-                `,
+                helpers: getHelpersString(),
             },
             data: data
         });
@@ -127,11 +130,7 @@ async function generarReportePDF() {
                 content: fs.readFileSync(templatePath, 'utf8'),
                 engine: 'handlebars',
                 recipe: 'chrome-pdf',
-                helpers: `
-                    function eq(a, b) {
-                        return a === b;
-                    }
-                `,
+                helpers: getHelpersString(),
                 chrome: {
                     format: 'A4',
                     marginTop: '1cm',
@@ -175,9 +174,13 @@ if (args.length === 0) {
     generarReportePDF();
 } else {
     console.log('📖 Uso del script:');
-    console.log('   node generar_reporte_puntos.js                    # Reporte con fechas por defecto (2024)');
+    console.log('   node generar_reporte_puntos.js                    # Reporte con fechas por defecto (últimos 30 días)');
     console.log('   node generar_reporte_puntos.js --fechas 2024-01-01 2024-12-31  # Fechas personalizadas');
     console.log('   node generar_reporte_puntos.js --pdf              # Reporte en PDF');
+    console.log('');
+    console.log('📊 Descripción:');
+    console.log('   Análisis de puntos canjeados por clientes.');
+    console.log('   Por defecto analiza los últimos 30 días si no se especifican fechas.');
     console.log('');
     console.log('📅 Ejemplos:');
     console.log('   node generar_reporte_puntos.js --fechas 2024-11-01 2024-11-30  # Noviembre 2024');

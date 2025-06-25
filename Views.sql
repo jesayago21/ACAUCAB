@@ -1,4 +1,16 @@
-CREATE VIEW vista_recetas_tipo_cerveza AS
+-- =====================================================
+-- VISTAS DEL SISTEMA ACAUCAB
+-- =====================================================
+-- Este archivo contiene todas las vistas organizadas por categorías
+-- Última actualización: 2025-01-27
+-- =====================================================
+
+-- =====================================================
+-- 1. VISTAS GENERALES DEL SISTEMA
+-- =====================================================
+
+-- Vista de recetas con sus pasos e ingredientes
+CREATE OR REPLACE VIEW vista_recetas_tipo_cerveza AS
 SELECT
     r.nombre AS "Nombre de la Receta",
     ir.numero_paso AS "Paso N°",
@@ -17,13 +29,12 @@ LEFT JOIN -- Usamos LEFT JOIN para incluir los pasos de proceso sin ingrediente 
 ORDER BY
     ir.numero_paso, ir.clave;
 
-
-CREATE VIEW vista_horario_empleado AS
+-- Vista de horarios de empleados
+CREATE OR REPLACE VIEW vista_horario_empleado AS
 SELECT
     CONCAT(e.primer_nombre, ' ', e.primer_apellido) AS "Nombre del Empleado",
     c.clave AS "ID del Contrato",
     h.dia AS "Días del Horario",
-    -- Usamos TO_CHAR para formatear la hora a un formato más legible
     TO_CHAR(h.fecha_hora_inicio, 'HH12:MI AM') AS "Hora de Inicio",
     TO_CHAR(h.fecha_hora_fin, 'HH12:MI AM') AS "Hora de Fin",
     CASE
@@ -41,8 +52,33 @@ JOIN
 ORDER BY
     "Nombre del Empleado";
 
--- Vista para verificar la relación entre eventos y miembros (muchos a muchos)
-CREATE VIEW v_eventos_miembros AS
+-- Vista de historial de pagos
+CREATE OR REPLACE VIEW v_historial_pagos AS
+SELECT
+    h.clave AS "ID Historial",
+    h.fecha AS "Fecha del Evento",
+    e.estado AS "Estado Asignado",
+    CASE
+        WHEN h.fk_compra IS NOT NULL THEN 'Orden de Compra'
+        WHEN h.fk_reposicion IS NOT NULL THEN 'Orden de Reposición'
+        WHEN h.fk_cuota IS NOT NULL THEN 'Cuota de Afiliación'
+        WHEN h.fk_venta_online IS NOT NULL THEN 'Venta Online'
+        ELSE 'Desconocido'
+    END AS "Tipo de Entidad",
+    COALESCE(h.fk_compra, h.fk_reposicion, h.fk_cuota, h.fk_venta_online) AS "ID de la Entidad"
+FROM
+    historico AS h
+JOIN
+    estatus AS e ON h.fk_estatus = e.clave
+ORDER BY
+    "Tipo de Entidad", "ID de la Entidad", h.fecha;
+
+-- =====================================================
+-- 2. VISTAS DE RELACIONES MUCHOS A MUCHOS
+-- =====================================================
+
+-- Vista de eventos y miembros
+CREATE OR REPLACE VIEW v_eventos_miembros AS
 SELECT 
     e.nombre AS nombre_evento,
     e.fecha_inicio,
@@ -53,8 +89,8 @@ FROM evento e
 JOIN eve_mie em ON e.clave = em.fk_evento
 JOIN miembro m ON m.rif = em.fk_miembro;
 
--- Vista para verificar la relación entre características y tipos de cerveza (muchos a muchos)
-CREATE VIEW v_caracteristicas_tipo_cerveza AS
+-- Vista de características y tipos de cerveza
+CREATE OR REPLACE VIEW v_caracteristicas_tipo_cerveza AS
 SELECT 
     tc.nombre AS tipo_cerveza,
     c.nombre AS caracteristica,
@@ -66,8 +102,8 @@ FROM tipo_cerveza tc
 JOIN car_tip ct ON tc.clave = ct.fk_tipo_cerveza
 JOIN caracteristica c ON c.clave = ct.fk_caracteristica;
 
--- Vista para verificar la relación entre roles y privilegios (muchos a muchos)
-CREATE VIEW v_roles_privilegios AS
+-- Vista de roles y privilegios
+CREATE OR REPLACE VIEW v_roles_privilegios AS
 SELECT 
     r.nombre AS rol,
     p.nombre AS privilegio,
@@ -77,8 +113,8 @@ FROM rol r
 JOIN rol_pri rp ON r.clave = rp.fk_rol
 JOIN privilegio p ON p.clave = rp.fk_privilegio;
 
--- Vista para verificar la relación entre empleados y beneficios (muchos a muchos)
-CREATE VIEW v_empleados_beneficios AS
+-- Vista de empleados y beneficios
+CREATE OR REPLACE VIEW v_empleados_beneficios AS
 SELECT 
     e.primer_nombre || ' ' || e.primer_apellido AS nombre_empleado,
     e.ci,
@@ -88,8 +124,8 @@ FROM empleado e
 JOIN emp_ben eb ON e.ci = eb.fk_empleado
 JOIN tipo_beneficio tb ON tb.clave = eb.fk_tipo_beneficio;
 
--- Vista para verificar la relación entre invitados y eventos (muchos a muchos)
-CREATE VIEW v_invitados_eventos AS
+-- Vista de invitados y eventos
+CREATE OR REPLACE VIEW v_invitados_eventos AS
 SELECT 
     i.primer_nombre || ' ' || i.primer_apellido AS nombre_invitado,
     ti.nombre AS tipo_invitado,
@@ -101,8 +137,8 @@ JOIN inv_eve ie ON i.ci = ie.fk_invitado
 JOIN evento e ON e.clave = ie.fk_evento
 JOIN tipo_invitado ti ON ti.clave = i.fk_tipo_invitado;
 
--- Vista para verificar la relación entre contratos y horarios (muchos a muchos)
-CREATE VIEW v_contratos_horarios AS
+-- Vista de contratos y horarios
+CREATE OR REPLACE VIEW v_contratos_horarios AS
 SELECT 
     e.primer_nombre || ' ' || e.primer_apellido AS nombre_empleado,
     c.fecha_inicio AS inicio_contrato,
@@ -116,8 +152,12 @@ JOIN con_hor ch ON c.clave = ch.fk_contrato
 JOIN horario h ON h.clave = ch.fk_horario
 JOIN empleado e ON e.ci = c.fk_empleado;
 
--- Vista para verificar las características de las cervezas
-CREATE VIEW v_caracteristicas_cerveza AS
+-- =====================================================
+-- 3. VISTAS DE PRODUCTOS E INVENTARIO
+-- =====================================================
+
+-- Vista de características de las cervezas
+CREATE OR REPLACE VIEW v_caracteristicas_cerveza AS
 SELECT 
     c.nombre AS cerveza,
     c.grado_alcohol,
@@ -130,8 +170,8 @@ JOIN car_cer cc ON c.clave = cc.fk_cerveza
 JOIN caracteristica car ON car.clave = cc.fk_caracteristica
 JOIN miembro m ON m.rif = c.fk_miembro;
 
--- Vista para verificar el inventario completo
-CREATE VIEW v_inventario_completo AS
+-- Vista de inventario completo
+CREATE OR REPLACE VIEW v_inventario_completo AS
 SELECT 
     c.nombre AS cerveza,
     p.nombre AS presentacion,
@@ -143,8 +183,12 @@ JOIN presentacion p ON p.clave = a.fk_presentacion
 JOIN cerveza c ON c.clave = p.fk_cerveza
 JOIN miembro m ON m.rif = c.fk_miembro;
 
--- Vista para verificar las ventas online con sus detalles
-CREATE VIEW v_ventas_online_detalladas AS
+-- =====================================================
+-- 4. VISTAS DE VENTAS Y PAGOS
+-- =====================================================
+
+-- Vista de ventas online detalladas
+CREATE OR REPLACE VIEW v_ventas_online_detalladas AS
 SELECT 
     vo.fecha,
     vo.monto_total,
@@ -161,8 +205,8 @@ JOIN presentacion p ON p.clave = a.fk_presentacion
 JOIN cerveza c ON c.clave = p.fk_cerveza
 JOIN usuario u ON u.clave = vo.fk_usuario;
 
--- Vista para verificar los pagos y métodos de pago
-CREATE VIEW v_pagos_detallados AS
+-- Vista de pagos detallados
+CREATE OR REPLACE VIEW v_pagos_detallados AS
 SELECT 
     p.fecha_pago,
     p.monto_total,
@@ -180,30 +224,15 @@ FROM pago p
 JOIN metodo_de_pago mp ON mp.clave = p.fk_metodo_de_pago
 JOIN tasa_cambio tc ON tc.clave = p.fk_tasa_cambio;
 
-CREATE VIEW v_historial_pagos AS
-SELECT
-    h.clave AS "ID Historial",
-    h.fecha AS "Fecha del Evento",
-    e.estado AS "Estado Asignado",
-    -- Usamos CASE para identificar a qué entidad pertenece el registro del historial.
-    CASE
-        WHEN h.fk_compra IS NOT NULL THEN 'Orden de Compra'
-        WHEN h.fk_reposicion IS NOT NULL THEN 'Orden de Reposición'
-        WHEN h.fk_cuota IS NOT NULL THEN 'Cuota de Afiliación'
-        WHEN h.fk_venta_online IS NOT NULL THEN 'Venta Online'
-        ELSE 'Desconocido'
-    END AS "Tipo de Entidad",
-    -- Usamos COALESCE para mostrar el ID de la entidad afectada.
-    COALESCE(h.fk_compra, h.fk_reposicion, h.fk_cuota, h.fk_venta_online) AS "ID de la Entidad"
-FROM
-    historico AS h
-JOIN
-    estatus AS e ON h.fk_estatus = e.clave
-ORDER BY
-    "Tipo de Entidad", "ID de la Entidad", h.fecha;
+-- =====================================================
+-- 5. VISTAS DE REPORTES
+-- =====================================================
 
--- Vista para comparativa de ingresos por tipo de cerveza (Ale vs Lager) por canal de venta
-CREATE VIEW v_comparativa_ingresos_cerveza AS
+-- =====================================================
+-- 5.1 REPORTE: COMPARATIVA DE INGRESOS POR TIPO DE CERVEZA
+-- =====================================================
+
+CREATE OR REPLACE VIEW v_comparativa_ingresos_cerveza AS
 WITH ventas_consolidadas AS (
     -- Ventas físicas
     SELECT 
@@ -272,10 +301,11 @@ FROM ventas_consolidadas
 WHERE categoria_cerveza IN ('Ale', 'Lager')
 ORDER BY fecha DESC, canal_venta, categoria_cerveza;
 
+-- =====================================================
+-- 5.2 REPORTE: PUNTOS CANJEADOS
+-- =====================================================
 
--- Vistas de los reportes
-------------------------------------------------------------------------
--- Reporte 1: Puntos canjeados
+-- Vista detallada de puntos canjeados
 CREATE OR REPLACE VIEW vw_puntos_canjeados_detalle AS
 SELECT
   c.rif,
@@ -295,26 +325,19 @@ JOIN cliente c ON c.clave = u.fk_cliente
 WHERE
   md.tipo = 'Puntos'
   AND tc.moneda = 'PUNTOS'
+  AND tc.fecha_inicio <= p.fecha_pago 
+  AND (tc.fecha_fin IS NULL OR tc.fecha_fin >= p.fecha_pago)
   AND c.tipo IN ('natural', 'juridico')
 GROUP BY c.rif, c.razon_social, c.primer_nombre, c.primer_apellido, c.tipo
 HAVING SUM(p.monto_total) > 0;
 
+-- Vista resumen de puntos canjeados
 CREATE OR REPLACE VIEW vw_puntos_canjeados_resumen AS
 SELECT
   COUNT(DISTINCT c.rif) AS total_clientes_afiliados,
   COUNT(p.clave) AS total_pagos_puntos,
-  SUM(
-    CASE 
-      WHEN md.tipo = 'Puntos' THEN p.monto_total
-      ELSE 0
-    END
-  ) AS total_puntos_canjeados,
-  SUM(
-    CASE 
-      WHEN md.tipo = 'Puntos' THEN p.monto_total * tc.monto_equivalencia
-      ELSE 0
-    END
-  ) AS total_bolivares,
+  SUM(p.monto_total) AS total_puntos_canjeados,
+  SUM(p.monto_total * tc.monto_equivalencia) AS total_bolivares,
   MIN(p.fecha_pago) AS primera_fecha_pago,
   MAX(p.fecha_pago) AS ultima_fecha_pago
 FROM pago p
@@ -330,22 +353,13 @@ WHERE
   AND (tc.fecha_fin IS NULL OR tc.fecha_fin >= p.fecha_pago)
   AND c.tipo IN ('natural', 'juridico');
 
-  CREATE OR REPLACE VIEW vw_puntos_canjeados_por_tipo AS
+-- Vista de puntos canjeados por tipo de cliente
+CREATE OR REPLACE VIEW vw_puntos_canjeados_por_tipo AS
 SELECT
   c.tipo AS tipo_cliente,
   COUNT(DISTINCT c.rif) AS cantidad_clientes,
-  SUM(
-    CASE 
-      WHEN md.tipo = 'Puntos' THEN p.monto_total
-      ELSE 0
-    END
-  ) AS total_puntos_canjeados,
-  SUM(
-    CASE 
-      WHEN md.tipo = 'Puntos' THEN p.monto_total * tc.monto_equivalencia
-      ELSE 0
-    END
-  ) AS total_bolivares
+  SUM(p.monto_total) AS total_puntos_canjeados,
+  SUM(p.monto_total * tc.monto_equivalencia) AS total_bolivares
 FROM pago p
 JOIN metodo_de_pago md ON md.clave = p.fk_metodo_de_pago
 JOIN tasa_cambio tc ON tc.clave = p.fk_tasa_cambio
@@ -360,7 +374,36 @@ WHERE
   AND c.tipo IN ('natural', 'juridico')
 GROUP BY c.tipo;
 
--- Reporte 2: Ventas de eventos
+-- Vista optimizada para reportes con filtros de fecha
+CREATE OR REPLACE VIEW vw_puntos_canjeados_completa AS
+SELECT
+  p.clave AS id_pago,
+  p.fecha_pago,
+  p.monto_total AS puntos_canjeados,
+  p.monto_total * tc.monto_equivalencia AS bolivares_equivalentes,
+  c.rif,
+  COALESCE(c.razon_social, c.primer_nombre || ' ' || c.primer_apellido) AS cliente,
+  c.tipo AS tipo_cliente,
+  tc.monto_equivalencia AS tasa_cambio,
+  v.monto_total AS monto_venta,
+  v.fecha AS fecha_venta
+FROM pago p
+JOIN metodo_de_pago md ON md.clave = p.fk_metodo_de_pago
+JOIN tasa_cambio tc ON tc.clave = p.fk_tasa_cambio
+JOIN venta_online v ON v.clave = p.fk_venta_online
+JOIN usuario u ON u.clave = v.fk_usuario
+JOIN cliente c ON c.clave = u.fk_cliente
+WHERE
+  md.tipo = 'Puntos'
+  AND tc.moneda = 'PUNTOS'
+  AND tc.fecha_inicio <= p.fecha_pago 
+  AND (tc.fecha_fin IS NULL OR tc.fecha_fin >= p.fecha_pago)
+  AND c.tipo IN ('natural', 'juridico');
+
+-- =====================================================
+-- 5.3 REPORTE: VENTAS DE EVENTOS
+-- =====================================================
+
 CREATE OR REPLACE VIEW vw_venta_evento_entrada AS
 SELECT
   e.clave AS id_evento,
@@ -388,7 +431,11 @@ SELECT
     WHERE ve.fk_evento = e.clave
   ), 0) AS cantidad_ventas_productos
 FROM evento e;
--- Reporte 3: Analisis IBU
+
+-- =====================================================
+-- 5.4 REPORTE: ANÁLISIS IBU
+-- =====================================================
+
 CREATE OR REPLACE VIEW vw_analisis_ibu AS
 SELECT 
     m.denominacion_comercial AS productor,
@@ -407,7 +454,12 @@ WHERE tc.clave IN (26, 39)  -- American Pale Ale (26) y American Amber Ale (39)
     AND (ca.nombre = 'Amargor (IBU)' OR ca.nombre IS NULL)
 ORDER BY m.denominacion_comercial, tc.nombre, cc.valor DESC;
 
--- Reporte 4: Tiempo de entrega
+-- =====================================================
+-- 5.5 REPORTE: TIEMPO DE ENTREGA
+-- =====================================================
+
+-- Vista resumen de tiempo de entrega
+DROP VIEW IF EXISTS vw_tiempo_entrega_resumen;
 CREATE OR REPLACE VIEW vw_tiempo_entrega_resumen AS
 WITH tiempos_entrega AS (
     SELECT 
@@ -458,6 +510,9 @@ SELECT
 FROM tiempos_entrega
 GROUP BY dia_semana, nombre_dia
 ORDER BY dia_semana;
+
+-- Función para tiempo de entrega con filtros de fecha
+DROP FUNCTION IF EXISTS fn_tiempo_entrega_resumen(date, date);
 CREATE OR REPLACE FUNCTION fn_tiempo_entrega_resumen(fecha_ini date, fecha_fin date)
 RETURNS TABLE (
   dia_semana int,
@@ -524,6 +579,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Vista detallada de tiempos de entrega
 CREATE OR REPLACE VIEW vw_tiempos_entrega_detalle AS
 WITH tiempos_entrega AS (
     SELECT 

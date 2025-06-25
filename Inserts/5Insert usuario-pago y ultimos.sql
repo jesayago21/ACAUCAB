@@ -1,53 +1,53 @@
-INSERT INTO usuario (clave, username, contrasena, fk_rol, fk_empleado, fk_miembro, fk_cliente) VALUES
-(1, 'admin', 'admin', 4, 678901234, NULL, NULL),
-(2, 'supervisor', 'supervisor123', 2, 234567890, NULL, NULL),
-(3, 'soporte', 'soporte123', 5, 567890123, NULL, NULL),
-(4, 'gerente', 'gerente123', 4, 345678901, NULL, NULL),
-(5, 'analista', 'analista123', 5, 901234567, NULL, NULL),
-(6, 'cliente1', 'cliente123', 6, NULL, NULL, 1),
-(7, 'miembro1', 'miembro123', 7, NULL, 234567890, NULL),
-(8, 'empleado1', 'empleado123', 5, 123456789, NULL, NULL),
-(9, 'repartidor1', 'repartidor123', 5, 456789012, NULL, NULL),
-(10, 'vendedor1', 'vendedor123', 5, 789012345, NULL, NULL),
-(12, 'cliente2', 'cliente2', 6, NULL, NULL, 2),
-(13, 'cliente3', 'cliente3', 6, NULL, NULL, 3),
-(14, 'cliente4', 'cliente4', 6, NULL, NULL, 4),
-(15, 'cliente5', 'cliente5', 6, NULL, NULL, 5),
-(16, 'cliente6', 'cliente6', 6, NULL, NULL, 6),
-(17, 'cliente7', 'cliente7', 6, NULL, NULL, 7),
-(18, 'cliente8', 'cliente8', 6, NULL, NULL, 8),
-(19, 'cliente9', 'cliente9', 6, NULL, NULL, 9),
-(20, 'cliente10', 'cliente10', 6, NULL, NULL, 10),
-(21, 'cliente11', 'cliente11', 6, NULL, NULL, 11),
-(22, 'cliente12', 'cliente12', 6, NULL, NULL, 12),
-(23, 'cliente13', 'cliente13', 6, NULL, NULL, 13),
-(24, 'cliente14', 'cliente14', 6, NULL, NULL, 14),
-(25, 'cliente15', 'cliente15', 6, NULL, NULL, 15),
-(26, 'cliente16', 'cliente16', 6, NULL, NULL, 16),
-(27, 'cliente17', 'cliente17', 6, NULL, NULL, 17),
-(28, 'cliente18', 'cliente18', 6, NULL, NULL, 18),
-(29, 'cliente19', 'cliente19', 6, NULL, NULL, 19),
-(30, 'cliente20', 'cliente20', 6, NULL, NULL, 20),
-(31, 'cliente21', 'cliente21', 6, NULL, NULL, 21),
-(32, 'cliente22', 'cliente22', 6, NULL, NULL, 22),
-(33, 'cliente23', 'cliente23', 6, NULL, NULL, 23),
-(34, 'cliente24', 'cliente24', 6, NULL, NULL, 24),
-(35, 'cliente25', 'cliente25', 6, NULL, NULL, 25),
-(36, 'cliente26', 'cliente26', 6, NULL, NULL, 26),
-(37, 'cliente27', 'cliente27', 6, NULL, NULL, 27),
-(38, 'cliente28', 'cliente28', 6, NULL, NULL, 28),
-(39, 'cliente29', 'cliente29', 6, NULL, NULL, 29),
-(40, 'cliente30', 'cliente30', 6, NULL, NULL, 30),
-(41, 'cliente31', 'cliente31', 6, NULL, NULL, 31),
-(42, 'cliente32', 'cliente32', 6, NULL, NULL, 32),
-(43, 'cliente33', 'cliente33', 6, NULL, NULL, 33),
-(44, 'cliente34', 'cliente34', 6, NULL, NULL, 34),
-(45, 'cliente35', 'cliente35', 6, NULL, NULL, 35),
-(46, 'cliente36', 'cliente36', 6, NULL, NULL, 36),
-(47, 'cliente37', 'cliente37', 6, NULL, NULL, 37),
-(48, 'cliente38', 'cliente38', 6, NULL, NULL, 38),
-(49, 'cliente39', 'cliente39', 6, NULL, NULL, 39),
-(50, 'cliente40', 'cliente40', 6, NULL, NULL, 40);
+INSERT INTO usuario ( username, contrasena, fk_rol, fk_empleado, fk_miembro, fk_cliente) VALUES
+( 'admin', 'admin', 4, 678901234, NULL, NULL),
+( 'supervisor', 'supervisor123', 2, 234567890, NULL, NULL),
+( 'soporte', 'soporte123', 5, 567890123, NULL, NULL),
+( 'gerente', 'gerente123', 4, 345678901, NULL, NULL),
+( 'analista', 'analista123', 5, 901234567, NULL, NULL),
+( 'cliente1', 'cliente123', 6, NULL, NULL, 1),
+( 'miembro1', 'miembro123', 7, NULL, 234567890, NULL),
+( 'empleado1', 'empleado123', 5, 123456789, NULL, NULL),
+( 'repartidor1', 'repartidor123', 5, 456789012, NULL, NULL),
+( 'vendedor1', 'vendedor123', 5, 789012345, NULL, NULL),
+( 'cliente2', 'cliente2', 6, NULL, NULL, 2),
+( 'cliente3', 'cliente3', 6, NULL, NULL, 3),
+( 'cliente4', 'cliente4', 6, NULL, NULL, 4),
+( 'cliente5', 'cliente5', 6, NULL, NULL, 5),
+( 'cliente6', 'cliente6', 6, NULL, NULL, 6),
+( 'cliente7', 'cliente7', 6, NULL, NULL, 7),
+( 'cliente8', 'cliente8', 6, NULL, NULL, 8),
+( 'cliente9', 'cliente9', 6, NULL, NULL, 9),
+( 'cliente10', 'cliente10', 6, NULL, NULL, 10),
+( 'cliente11', 'cliente11', 6, NULL, NULL, 11),
+( 'cliente12', 'cliente12', 6, NULL, NULL, 12),
+( 'cliente13', 'cliente13', 6, NULL, NULL, 13),
+( 'cliente14', 'cliente14', 6, NULL, NULL, 14),
+( 'cliente15', 'cliente15', 6, NULL, NULL, 15),
+( 'cliente16', 'cliente16', 6, NULL, NULL, 16),
+( 'cliente17', 'cliente17', 6, NULL, NULL, 17),
+( 'cliente18', 'cliente18', 6, NULL, NULL, 18),
+( 'cliente19', 'cliente19', 6, NULL, NULL, 19),
+( 'cliente20', 'cliente20', 6, NULL, NULL, 20),
+( 'cliente21', 'cliente21', 6, NULL, NULL, 21),
+( 'cliente22', 'cliente22', 6, NULL, NULL, 22),
+( 'cliente23', 'cliente23', 6, NULL, NULL, 23),
+( 'cliente24', 'cliente24', 6, NULL, NULL, 24),
+( 'cliente25', 'cliente25', 6, NULL, NULL, 25),
+( 'cliente26', 'cliente26', 6, NULL, NULL, 26),
+( 'cliente27', 'cliente27', 6, NULL, NULL, 27),
+( 'cliente28', 'cliente28', 6, NULL, NULL, 28),
+( 'cliente29', 'cliente29', 6, NULL, NULL, 29),
+( 'cliente30', 'cliente30', 6, NULL, NULL, 30),
+( 'cliente31', 'cliente31', 6, NULL, NULL, 31),
+( 'cliente32', 'cliente32', 6, NULL, NULL, 32),
+( 'cliente33', 'cliente33', 6, NULL, NULL, 33),
+( 'cliente34', 'cliente34', 6, NULL, NULL, 34),
+( 'cliente35', 'cliente35', 6, NULL, NULL, 35),
+( 'cliente36', 'cliente36', 6, NULL, NULL, 36),
+( 'cliente37', 'cliente37', 6, NULL, NULL, 37),
+( 'cliente38', 'cliente38', 6, NULL, NULL, 38),
+( 'cliente39', 'cliente39', 6, NULL, NULL, 39),
+( 'cliente40', 'cliente40', 6, NULL, NULL, 40);
 
 INSERT INTO venta_entrada (fecha, monto_total, fk_evento, fk_cliente, fk_usuario) VALUES
 ('2025-06-17', 50.00, 1, 1, NULL),
@@ -63,14 +63,14 @@ INSERT INTO venta_entrada (fecha, monto_total, fk_evento, fk_cliente, fk_usuario
 
 INSERT INTO venta_tienda_fisica (clave, fecha, total_venta, fk_tienda_fisica, fk_cliente) VALUES
 (1, '2025-06-17', 150.75, 1, 1),
-(2, '2025-06-17', 230.00, 2, 2),
-(3, '2025-06-18', 85.50, 3, 3),
+(2, '2025-06-17', 230.00, 1, 2),
+(3, '2025-06-18', 85.50, 1, 3),
 (4, '2025-06-18', 310.20, 1, 4),
-(5, '2025-06-19', 190.00, 2, 5),
-(6, '2025-06-19', 65.40, 3, 1),
+(5, '2025-06-19', 190.00, 1, 5),
+(6, '2025-06-19', 65.40, 1, 1),
 (7, '2025-06-20', 450.00, 1, 2),
-(8, '2025-06-20', 120.00, 2, 3),
-(9, '2025-06-21', 75.80, 3, 4),
+(8, '2025-06-20', 120.00, 1, 3),
+(9, '2025-06-21', 75.80, 1, 4),
 (10, '2025-06-21', 200.00, 1, 5);
 
 INSERT INTO tienda_online (clave, nombre, url_web) VALUES
@@ -152,11 +152,11 @@ INSERT INTO venta_online (clave, fecha, monto_total, direccion_envio, fk_lugar, 
 INSERT INTO inventario_tienda (clave, fk_lugar_tienda, fk_presentacion, fk_tienda_fisica, cantidad) VALUES
 (1, 1, 1, 1, 150),
 (2, 2, 2, 1, 200),
-(3, 3, 3, 2, 80),
-(4, 4, 4, 2, 120),
+(3, 3, 3, 1, 80),
+(4, 4, 4, 1, 120),
 (5, 5, 5, 1, 250),
-(6, 6, 1, 3, 90),
-(7, 7, 2, 4, 180),
+(6, 6, 1, 1, 90),
+(7, 7, 2, 1, 180),
 (8, 8, 3, 1, 70),
 (9, 9, 4, 1, 300),
 (10, 10, 5, 1, 110);
@@ -223,25 +223,24 @@ INSERT INTO tasa_cambio (moneda, monto_equivalencia, fecha_inicio, fecha_fin) VA
 ('USD', 38.10, '2024-03-01', '2024-03-31'),
 ('EUR', 41.80, '2024-03-01', '2024-03-31'),
 ('USD', 38.90, '2024-04-01', '2025-06-16'),
-('EUR', 42.50, '2024-04-01', '2025-06-16'), 
-('USD', 39.50, '2025-06-17', NULL); 
+('EUR', 42.50, '2025-04-01',NULL ), 
+('USD', 105.19, '2025-06-17', NULL); 
 -- Insertar tasa de cambio para puntos (ejemplo: 1 punto = 10 Bs)
 INSERT INTO tasa_cambio (moneda, monto_equivalencia, fecha_inicio) 
-VALUES ('PUNTOS', 10.00, CURRENT_DATE)
+VALUES ('PUNTOS', 1.00, CURRENT_DATE)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO metodo_de_pago (moneda, metodo_preferido, fk_cliente, valor, numero_cheque, fecha_vencimiento, banco, numero_tarjeta, tipo) VALUES
 ('VES', FALSE, NULL, 50000, NULL, NULL, NULL, NULL, 'Efectivo'), -- Efectivo, no preferido, sin usuario
 ('USD', TRUE, 1, NULL, NULL, '2027-12-31', 'Banco Mercantil', 4111222233334444, 'Tarjeta de credito'), -- Tarjeta de crédito preferida para el usuario 1
-('VES', FALSE, NULL, NULL, 10001, NULL, 'Banco de Venezuela', NULL, 'Cheque'), -- Cheque, no preferido, sin usuario
-('EUR', FALSE, NULL, NULL, NULL, '2026-08-30', 'BBVA Banco Provincial', 4555666677778888, 'Tarjeta de debito'), -- Tarjeta de débito, no preferida, **sin usuario** para cumplir la restricción
+('VES', FALSE, NULL, NULL, 100000001, NULL, 'Banco de Venezuela', NULL, 'Cheque'), -- Cheque, no preferido, sin usuario
+('EUR', FALSE, 2, NULL, NULL, '2026-08-30', 'BBVA Banco Provincial', 4555666677778888, 'Tarjeta de debito'), -- Tarjeta de débito, no preferida, **sin usuario** para cumplir la restricción
 ('VES', FALSE, NULL, NULL, NULL, NULL, NULL, NULL, 'Puntos'), -- Puntos, no preferido, sin usuario
 ('USD', TRUE, 3, NULL, NULL, '2028-04-15', 'Banco Exterior', 4999000011112222, 'Tarjeta de credito'), -- Tarjeta de crédito preferida para el usuario 3
 ('VES', FALSE, NULL, 10000, NULL, NULL, NULL, NULL, 'Efectivo'), -- Otro efectivo, no preferido, sin usuario
-('VES', FALSE, NULL, NULL, 10002, NULL, 'Banco Nacional de Crédito', NULL, 'Cheque'), -- Otro cheque, no preferido, sin usuario
-('USD', FALSE, NULL, NULL, NULL, '2026-11-20', 'Banesco', 5111222233334444, 'Tarjeta de debito'), -- Tarjeta de débito, no preferida, **sin usuario**
+('VES', FALSE, NULL, NULL, 100000002, NULL, 'Banco Nacional de Crédito', NULL, 'Cheque'), -- Otro cheque, no preferido, sin usuario
+('USD', FALSE, 2, NULL, NULL, '2026-11-20', 'Banesco', 5111222233334444, 'Tarjeta de debito'), -- Tarjeta de débito, no preferida, **sin usuario**
 ('EUR', TRUE, 5, NULL, NULL, '2029-01-01', 'BOD', 5222333344445555, 'Tarjeta de credito'); -- Tarjeta de crédito preferida para el usuario 5
--- INSERT de métodos de pago favoritos de ejemplo
 -- Estos son para probar la funcionalidad de métodos favoritos en el frontend
 
 -- Métodos favoritos para cliente ID 1 (José Francisco)

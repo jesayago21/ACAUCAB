@@ -60,10 +60,18 @@ export default function ProductCard({
 
   /** Calcular precio con descuento usando los datos del backend */
   const tieneOferta = producto.tiene_oferta && producto.porcentaje_descuento && producto.porcentaje_descuento > 0;
-  const precioOriginal = parseFloat(producto.precio.toFixed(2));
+  
+  // Conversión segura del precio a número
+  const precioNumerico = typeof producto.precio === 'string' 
+    ? parseFloat(producto.precio) 
+    : typeof producto.precio === 'number' 
+      ? producto.precio 
+      : 0;
+  
+  const precioOriginal = precioNumerico;
   const precioOferta = tieneOferta 
-    ? parseFloat((producto.precio * (1 - producto.porcentaje_descuento! / 100)).toFixed(2))
-    : parseFloat(producto.precio.toFixed(2));
+    ? precioNumerico * (1 - producto.porcentaje_descuento! / 100)
+    : precioNumerico;
   const porcentajeDescuento = producto.porcentaje_descuento || 0;
 
   /** Manejar cambio de cantidad */

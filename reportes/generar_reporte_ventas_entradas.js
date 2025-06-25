@@ -178,9 +178,13 @@ if (args.length === 0) {
     generarReportePDF();
 } else {
     console.log('📖 Uso del script:');
-    console.log('   node generar_reporte_ventas_entradas.js                    # Reporte con fechas por defecto');
+    console.log('   node generar_reporte_ventas_entradas.js                    # Reporte con fechas por defecto (últimos 30 días)');
     console.log('   node generar_reporte_ventas_entradas.js --fechas 2024-01-01 2024-12-31  # Fechas personalizadas');
     console.log('   node generar_reporte_ventas_entradas.js --pdf              # Reporte en PDF');
+    console.log('');
+    console.log('📊 Descripción:');
+    console.log('   Análisis de ventas de eventos (entradas y productos).');
+    console.log('   Por defecto analiza los últimos 30 días si no se especifican fechas.');
     console.log('');
     console.log('📅 Ejemplos:');
     console.log('   node generar_reporte_ventas_entradas.js --fechas 2024-11-01 2024-11-30  # Noviembre 2024');

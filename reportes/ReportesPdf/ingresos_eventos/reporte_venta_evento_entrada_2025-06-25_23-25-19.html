@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reporte de Puntos Canjeados - ACAUCAB</title>
+    <title>Reporte de Ventas de Eventos - ACAUCAB</title>
     <style>
         * {
             margin: 0;
@@ -107,14 +107,14 @@
             opacity: 0.9;
         }
         
-        .tipo-cliente-section {
+        .tipo-venta-section {
             background: #f8f9fa;
             padding: 25px;
             border-radius: 10px;
             margin-bottom: 30px;
         }
         
-        .tipo-cliente-grid {
+        .tipo-venta-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
@@ -129,12 +129,12 @@
             border-left: 4px solid #667eea;
         }
         
-        .tipo-card.natural {
-            border-left-color: #28a745;
+        .tipo-card.entradas {
+            border-left-color: #e74c3c;
         }
         
-        .tipo-card.juridico {
-            border-left-color: #ffc107;
+        .tipo-card.productos {
+            border-left-color: #3498db;
         }
         
         .tipo-card h3 {
@@ -157,13 +157,12 @@
             color: white;
         }
         
-        .tipo-card.natural .icon {
-            background: #28a745;
+        .tipo-card.entradas .icon {
+            background: #e74c3c;
         }
         
-        .tipo-card.juridico .icon {
-            background: #ffc107;
-            color: #212529;
+        .tipo-card.productos .icon {
+            background: #3498db;
         }
         
         .stats-grid {
@@ -231,29 +230,14 @@
             background: #e3f2fd;
         }
         
-        .badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8em;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        
-        .badge-natural {
-            background: #28a745;
-            color: white;
-        }
-        
-        .badge-juridico {
-            background: #ffc107;
-            color: #212529;
-        }
-        
         .amount {
             text-align: right;
             font-weight: 600;
             font-family: 'Courier New', Courier, monospace;
+        }
+        
+        .center {
+            text-align: center;
         }
         
         .ranking-section {
@@ -363,7 +347,7 @@
         
         @media (max-width: 768px) {
             .resumen-grid,
-            .tipo-cliente-grid,
+            .tipo-venta-grid,
             .tendencias-grid {
                 grid-template-columns: 1fr;
             }
@@ -385,161 +369,129 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Reporte de Puntos Canjeados</h1>
-            <p>Análisis detallado del sistema de puntos y recompensas de clientes</p>
+            <h1>Reporte de Ventas de Eventos</h1>
+            <p>Análisis detallado de ingresos por entradas y productos en eventos</p>
         </div>
         
         <div class="meta-info">
             <div>
                 <i>📅</i>
-                <span>Generado el: {{fechaGeneracion}} a las {{horaGeneracion}}</span>
+                <span>Generado el: 24/6/2025 a las 23:25:18</span>
             </div>
             <div>
                 <i>📊</i>
-                <span>Total de clientes: {{resumen.total_clientes_afiliados}}</span>
+                <span>Total de eventos: 0</span>
             </div>
             <div>
                 <i>📋</i>
-                <span>Período: {{fechaInicio}} - {{fechaFin}}</span>
+                <span>Período: 25/5/2025 - 24/6/2025</span>
             </div>
         </div>
         
         <div class="content">
             <!-- Resumen General -->
             <div class="resumen-section">
-                <h2>Resumen General de Puntos Canjeados</h2>
+                <h2>Resumen General de Ventas de Eventos</h2>
                 <div class="resumen-grid">
                     <div class="resumen-item">
-                        <h3>{{resumen.total_clientes_afiliados}}</h3>
-                        <p>Clientes Afiliados</p>
+                        <h3>0</h3>
+                        <p>Eventos Analizados</p>
                     </div>
                     <div class="resumen-item">
-                        <h3>{{resumen.total_pagos_puntos}}</h3>
-                        <p>Pagos con Puntos</p>
+                        <h3>Bs. 0.00</h3>
+                        <p>Ingresos por Entradas</p>
                     </div>
                     <div class="resumen-item">
-                        <h3>{{resumen.total_puntos_canjeados}}</h3>
-                        <p>Puntos Canjeados</p>
+                        <h3>Bs. 0.00</h3>
+                        <p>Ingresos por Productos</p>
                     </div>
                     <div class="resumen-item">
-                        <h3>Bs. {{resumen.total_bolivares}}</h3>
-                        <p>Valor Total</p>
+                        <h3>Bs. 0.00</h3>
+                        <p>Ingresos Totales</p>
                     </div>
                 </div>
             </div>
             
-            <!-- Análisis por Tipo de Cliente -->
-            <div class="tipo-cliente-section">
-                <h2>Análisis por Tipo de Cliente</h2>
-                <div class="tipo-cliente-grid">
-                    {{#each puntos_por_tipo}}
-                    <div class="tipo-card {{tipo_cliente}}">
+            <!-- Análisis por Tipo de Venta -->
+            <div class="tipo-venta-section">
+                <h2>Análisis por Tipo de Venta</h2>
+                <div class="tipo-venta-grid">
+                    <div class="tipo-card entradas">
                         <h3>
-                            <span class="icon">{{#if (eq tipo_cliente 'natural')}}N{{else}}J{{/if}}</span>
-                            Clientes {{#if (eq tipo_cliente 'natural')}}Naturales{{else}}Jurídicos{{/if}}
+                            <span class="icon">🎫</span>
+                            Ventas de Entradas
                         </h3>
                         <div class="stats-grid">
                             <div class="stat-item">
-                                <div class="value">{{cantidad_clientes}}</div>
-                                <div class="label">Clientes</div>
+                                <div class="value">Bs. 0.00</div>
+                                <div class="label">Ingresos Totales</div>
                             </div>
                             <div class="stat-item">
-                                <div class="value">{{total_puntos_canjeados}}</div>
-                                <div class="label">Puntos Canjeados</div>
+                                <div class="value">0</div>
+                                <div class="label">Entradas Vendidas</div>
                             </div>
                             <div class="stat-item">
-                                <div class="value">Bs. {{total_bolivares}}</div>
-                                <div class="label">Valor Total</div>
+                                <div class="value">0</div>
+                                <div class="label">Promedio por Evento</div>
                             </div>
                             <div class="stat-item">
-                                <div class="value">{{#if cantidad_clientes}}{{round (divide total_puntos_canjeados cantidad_clientes)}}{{else}}0{{/if}}</div>
-                                <div class="label">Promedio por Cliente</div>
+                                <div class="value">0</div>
+                                <div class="label">Precio Promedio</div>
                             </div>
                         </div>
                     </div>
-                    {{/each}}
+                    
+                    <div class="tipo-card productos">
+                        <h3>
+                            <span class="icon">🍺</span>
+                            Ventas de Productos
+                        </h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="value">Bs. 0.00</div>
+                                <div class="label">Ingresos Totales</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="value">0</div>
+                                <div class="label">Ventas Realizadas</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="value">0</div>
+                                <div class="label">Promedio por Evento</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="value">0</div>
+                                <div class="label">Ticket Promedio</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
-            <!-- Detalle de Clientes -->
+            <!-- Detalle de Eventos -->
             <div class="detalle-section">
-                <h2>Detalle de Clientes con Puntos Canjeados</h2>
-                {{#if detalle.length}}
-                <table class="detalle-table">
-                    <thead>
-                        <tr>
-                            <th>Cliente</th>
-                            <th>Tipo</th>
-                            <th>Pagos con Puntos</th>
-                            <th>Puntos Canjeados</th>
-                            <th>Valor en Bs.</th>
-                            <th>Primera Fecha</th>
-                            <th>Última Fecha</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#each detalle}}
-                        <tr>
-                            <td>{{cliente}}</td>
-                            <td><span class="badge badge-{{tipo_cliente}}">{{tipo_cliente}}</span></td>
-                            <td class="center">{{cantidad_pagos_puntos}}</td>
-                            <td class="center">{{total_puntos_canjeados}}</td>
-                            <td class="amount">Bs. {{total_bolivares}}</td>
-                            <td>{{primera_fecha_pago}}</td>
-                            <td>{{ultima_fecha_pago}}</td>
-                        </tr>
-                        {{/each}}
-                    </tbody>
-                </table>
-                {{else}}
+                <h2>Detalle de Ventas por Evento</h2>
                 <div class="no-data">
-                    <h3>No se encontraron canjes de puntos</h3>
-                    <p>No hay registros de puntos canjeados para el período especificado.</p>
+                    <h3>No se encontraron eventos</h3>
+                    <p>No hay registros de eventos con ingresos para el período especificado.</p>
                 </div>
-                {{/if}}
             </div>
             
             <!-- Rankings -->
             <div class="ranking-section">
                 <div class="ranking-card">
                     <div class="ranking-header">
-                        <h3>Top 5 Clientes por Puntos Canjeados</h3>
+                        <h3>Top 5 Eventos por Ingresos Totales</h3>
                     </div>
                     <div class="ranking-content">
-                        {{#each top_clientes}}
-                        <div class="ranking-item">
-                            <div class="ranking-info">
-                                <div class="ranking-name">{{cliente}}</div>
-                                <div class="ranking-details">
-                                    <span class="badge badge-{{tipo_cliente}}">{{tipo_cliente}}</span> | {{cantidad_pagos_puntos}} pagos
-                                </div>
-                            </div>
-                            <div class="ranking-value">
-                                {{total_puntos_canjeados}} pts
-                            </div>
-                        </div>
-                        {{/each}}
                     </div>
                 </div>
                 
                 <div class="ranking-card">
                     <div class="ranking-header">
-                        <h3>Top 5 Clientes por Valor</h3>
+                        <h3>Top 5 Eventos por Ventas de Productos</h3>
                     </div>
                     <div class="ranking-content">
-                        {{#each top_valor}}
-                        <div class="ranking-item">
-                            <div class="ranking-info">
-                                <div class="ranking-name">{{cliente}}</div>
-                                <div class="ranking-details">
-                                    <span class="badge badge-{{tipo_cliente}}">{{tipo_cliente}}</span> | {{total_puntos_canjeados}} puntos
-                                </div>
-                            </div>
-                            <div class="ranking-value">
-                                Bs. {{total_bolivares}}
-                            </div>
-                        </div>
-                        {{/each}}
                     </div>
                 </div>
             </div>
@@ -550,23 +502,23 @@
                 <div class="tendencias-grid">
                     <div class="tendencia-item">
                         <h4>Tipo Dominante</h4>
-                        <div class="value">{{analisis_tendencias.tipo_dominante}}</div>
+                        <div class="value">Productos</div>
                     </div>
                     <div class="tendencia-item">
-                        <h4>Promedio Puntos/Cliente</h4>
-                        <div class="value">{{analisis_tendencias.promedio_puntos_cliente}}</div>
+                        <h4>Promedio Entradas/Evento</h4>
+                        <div class="value">0</div>
                     </div>
                     <div class="tendencia-item">
-                        <h4>Promedio Valor/Cliente</h4>
-                        <div class="value">Bs. {{analisis_tendencias.promedio_valor_cliente}}</div>
+                        <h4>Promedio Productos/Evento</h4>
+                        <div class="value">0</div>
                     </div>
                     <div class="tendencia-item">
-                        <h4>Tasa de Uso</h4>
-                        <div class="value">{{analisis_tendencias.tasa_uso}}%</div>
+                        <h4>Participación Entradas</h4>
+                        <div class="value">0%</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </body>
-</html> 
+</html>

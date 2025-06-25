@@ -228,13 +228,14 @@ if (args.length === 0) {
     }
 } else {
     console.log('📖 Uso del script:');
-    console.log('   node generar_reporte_tiempo_entrega.js                    # Reporte HTML con fechas por defecto');
+    console.log('   node generar_reporte_tiempo_entrega.js                    # Reporte HTML con fechas por defecto (últimos 30 días)');
     console.log('   node generar_reporte_tiempo_entrega.js --fechas 2025-06-01 2025-07-01  # Fechas personalizadas');
     console.log('   node generar_reporte_tiempo_entrega.js --fecha-inicio 2025-06-01 --fecha-fin 2025-06-30  # Fechas con parámetros');
     console.log('   node generar_reporte_tiempo_entrega.js --pdf              # Reporte en PDF');
     console.log('');
     console.log('📊 Descripción:');
     console.log('   Análisis de tiempo de entrega de pedidos online.');
+    console.log('   Por defecto analiza los últimos 30 días si no se especifican fechas.');
 }
 
 module.exports = {

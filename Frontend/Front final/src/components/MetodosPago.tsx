@@ -39,6 +39,7 @@ export default function MetodosPago({
   
   // Estados para formularios
   const [montoEntregado, setMontoEntregado] = useState('');
+  const [montoPagar, setMontoPagar] = useState(''); // Nuevo: monto específico a pagar en efectivo
   const [monedaEfectivo, setMonedaEfectivo] = useState<'VES' | 'USD' | 'EUR'>('VES');
   const [tasasCambio, setTasasCambio] = useState<{ [moneda: string]: TasaCambio }>({});
   const [montoTarjeta, setMontoTarjeta] = useState('');
@@ -121,13 +122,37 @@ export default function MetodosPago({
     });
   };
 
+  /** Calcular vuelto total de todos los pagos en efectivo */
+  const calcularVueltoTotal = (): { totalVuelto: number; detallesVuelto: Array<{moneda: string, vuelto: number}> } => {
+    let totalVueltoEnBs = 0;
+    const detallesVuelto: Array<{moneda: string, vuelto: number}> = [];
+
+    pagosAplicados.forEach(pago => {
+      if (pago.tipo === 'Efectivo' && pago.detalles?.vuelto && pago.detalles.vuelto > 0) {
+        const vueltoEnMoneda = pago.detalles.vuelto;
+        const moneda = pago.detalles.moneda || 'VES';
+        
+        // Convertir vuelto a bolívares para sumar al total
+        const vueltoEnBs = calcularEquivalenteBolivares(vueltoEnMoneda, moneda as 'VES' | 'USD' | 'EUR');
+        totalVueltoEnBs += vueltoEnBs;
+        
+        // Agregar detalle del vuelto en moneda original
+        detallesVuelto.push({
+          moneda,
+          vuelto: vueltoEnMoneda
+        });
+      }
+    });
+
+    return { totalVuelto: totalVueltoEnBs, detallesVuelto };
+  };
+
   /** Aplicar pago */
   const aplicarPago = (tipoPago: PagoAplicado['tipo'], monto: number, detalles?: any) => {
     if (monto <= 0) return;
 
     // Permitir pagar más solo en efectivo
     if (tipoPago !== 'Efectivo' && monto > montoPendiente) {
-      alert('El monto no puede ser mayor al pendiente para este método de pago.');
       return;
     }
     
@@ -145,6 +170,7 @@ export default function MetodosPago({
 
     // Resetear formularios
     setMontoEntregado('');
+    setMontoPagar('');
     setMontoPuntos('');
     setMontoTarjeta('');
     setMontoCheque('');
@@ -175,12 +201,24 @@ export default function MetodosPago({
   /** Aplicar pago con efectivo */
   const handlePagoEfectivo = () => {
     const montoEntregadoNum = parseFloat(montoEntregado) || 0;
-    if (montoEntregadoNum <= 0) return;
+    const montoPagarNum = parseFloat(montoPagar) || 0;
+    
+    if (montoEntregadoNum <= 0 || montoPagarNum <= 0) {
+      return; // Las validaciones ahora se muestran visualmente
+    }
+
+    if (montoPagarNum > montoEntregadoNum) {
+      return; // Las validaciones ahora se muestran visualmente
+    }
 
     const tasa = monedaEfectivo !== 'VES' ? tasasCambio[monedaEfectivo] : null;
     const montoPendienteEnMoneda = tasa ? parseFloat((montoPendiente / tasa.monto_equivalencia).toFixed(2)) : montoPendiente;
 
-    const montoAplicadoEnMoneda = Math.min(montoEntregadoNum, montoPendienteEnMoneda);
+    if (montoPagarNum > montoPendienteEnMoneda) {
+      return; // Las validaciones ahora se muestran visualmente
+    }
+
+    const montoAplicadoEnMoneda = montoPagarNum;
     const vueltoEnMoneda = montoEntregadoNum - montoAplicadoEnMoneda;
 
     const montoAplicadoEnBs = calcularEquivalenteBolivares(montoAplicadoEnMoneda, monedaEfectivo);
@@ -229,6 +267,13 @@ export default function MetodosPago({
       return;
     }
 
+    // Validar que el número de tarjeta tenga exactamente 16 dígitos
+    const numeroLimpio = datosTarjeta.numero.replace(/\s/g, '');
+    if (numeroLimpio.length !== 16 || !/^\d{16}$/.test(numeroLimpio)) {
+      alert('El número de tarjeta debe tener exactamente 16 dígitos');
+      return;
+    }
+
     const monto = parseFloat(montoTarjeta) || 0;
     if (monto <= 0 || monto > montoPendiente) {
       alert('Ingrese un monto válido');
@@ -237,7 +282,7 @@ export default function MetodosPago({
 
     const tipoFinal = subtipoTarjeta === 'credito' ? 'Tarjeta de credito' : 'Tarjeta de debito';
     aplicarPago(tipoFinal as PagoAplicado['tipo'], monto, {
-      numero_tarjeta: datosTarjeta.numero,
+      numero_tarjeta: numeroLimpio,
       fecha_vencimiento: datosTarjeta.vencimiento,
       banco: datosTarjeta.banco,
       guardar_como_favorito: datosTarjeta.guardarComoFavorito
@@ -248,6 +293,12 @@ export default function MetodosPago({
   const handlePagoCheque = () => {
     if (!datosCheque.numero || !datosCheque.banco) {
       alert('Complete todos los datos del cheque');
+      return;
+    }
+
+    // Validar que el número de cheque tenga exactamente 9 dígitos
+    if (datosCheque.numero.length !== 9 || !/^\d{9}$/.test(datosCheque.numero)) {
+      alert('El número de cheque debe tener exactamente 9 dígitos');
       return;
     }
 
@@ -509,32 +560,81 @@ export default function MetodosPago({
                           }
                         </p>
                       </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-[#2C2C2C] mb-2">
+                          Monto a Pagar con este Método ({monedaEfectivo})
+                        </label>
+                        <input
+                          type="number"
+                          min="0.01"
+                          max={monedaEfectivo === 'VES' ? montoPendiente : montoPendienteEnMoneda}
+                          step="0.01"
+                          value={montoPagar}
+                          onChange={(e) => setMontoPagar(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A1B5A0]"
+                          placeholder="Ej: 15 (del billete de $20)"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Puede ser menor al monto entregado si quiere pagar parcialmente
+                        </p>
+                      </div>
                       
-                      {montoEntregadoNum > 0 && (
+                      {montoEntregado && montoPagar && parseFloat(montoEntregado) > 0 && parseFloat(montoPagar) > 0 && (
                         <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded space-y-1">
                           <p className="text-sm text-green-800 font-medium">
-                            Monto a aplicar: {monedaEfectivo} {formatearPrecio(montoAplicadoEnMoneda)}
+                            Monto a aplicar: {monedaEfectivo} {formatearPrecio(parseFloat(montoPagar))}
                           </p>
                           <p className="text-xs text-green-700">
-                            (Equivale a Bs. {formatearPrecio(calcularEquivalenteBolivares(montoAplicadoEnMoneda, monedaEfectivo))})
+                            (Equivale a Bs. {formatearPrecio(calcularEquivalenteBolivares(parseFloat(montoPagar), monedaEfectivo))})
                           </p>
                           
-                          {vueltoEnMoneda > 0.001 && (
+                          {parseFloat(montoEntregado) - parseFloat(montoPagar) > 0.001 && (
                             <div className="pt-2 mt-2 border-t border-green-200">
                               <p className="text-sm text-yellow-800 font-bold">
-                                Vuelto a entregar: {monedaEfectivo} {formatearPrecio(vueltoEnMoneda)}
+                                Vuelto a entregar: {monedaEfectivo} {formatearPrecio(parseFloat(montoEntregado) - parseFloat(montoPagar))}
                               </p>
                               <p className="text-xs text-yellow-700">
-                                (Equivale a Bs. {formatearPrecio(calcularEquivalenteBolivares(vueltoEnMoneda, monedaEfectivo))})
+                                (Equivale a Bs. {formatearPrecio(calcularEquivalenteBolivares(parseFloat(montoEntregado) - parseFloat(montoPagar), monedaEfectivo))})
                               </p>
                             </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Información de validaciones y límites */}
+                      {monedaEfectivo !== 'VES' && (
+                        <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
+                          <p className="text-xs text-blue-800 font-medium">
+                            💱 Monto pendiente en {monedaEfectivo}: {formatearPrecio(parseFloat((montoPendiente / (tasasCambio[monedaEfectivo]?.monto_equivalencia || 1)).toFixed(2)))}
+                          </p>
+                          <p className="text-xs text-blue-700">
+                            Puede pagar hasta este monto en {monedaEfectivo}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Validaciones visuales */}
+                      {montoEntregado && montoPagar && (
+                        <div className="mt-2">
+                          {parseFloat(montoEntregado) <= 0 && (
+                            <p className="text-xs text-red-600">⚠️ Debe ingresar un monto entregado válido</p>
+                          )}
+                          {parseFloat(montoPagar) <= 0 && (
+                            <p className="text-xs text-red-600">⚠️ Debe ingresar un monto a pagar válido</p>
+                          )}
+                          {parseFloat(montoPagar) > parseFloat(montoEntregado) && (
+                            <p className="text-xs text-red-600">⚠️ El monto a pagar no puede ser mayor al entregado</p>
+                          )}
+                          {monedaEfectivo !== 'VES' && parseFloat(montoPagar) > parseFloat((montoPendiente / (tasasCambio[monedaEfectivo]?.monto_equivalencia || 1)).toFixed(2)) && (
+                            <p className="text-xs text-red-600">⚠️ El monto excede lo pendiente en {monedaEfectivo}</p>
                           )}
                         </div>
                       )}
                       
                       <button
                         onClick={handlePagoEfectivo}
-                        disabled={montoEntregadoNum <= 0}
+                        disabled={!montoEntregado || !montoPagar || parseFloat(montoEntregado) <= 0 || parseFloat(montoPagar) <= 0}
                         className="w-full bg-[#3D4A3A] hover:bg-[#2C3631] text-white font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Aplicar Pago en Efectivo
@@ -682,12 +782,23 @@ export default function MetodosPago({
                       </label>
                       <input
                         type="text"
-                        maxLength={16}
+                        maxLength={19}
                         value={datosTarjeta.numero}
-                        onChange={(e) => setDatosTarjeta(prev => ({ ...prev, numero: e.target.value }))}
+                        onChange={(e) => {
+                          // Solo permitir números y espacios, máximo 16 dígitos
+                          const valor = e.target.value.replace(/\D/g, '');
+                          if (valor.length <= 16) {
+                            // Formatear con espacios cada 4 dígitos para mejor UX
+                            const formateado = valor.replace(/(\d{4})(?=\d)/g, '$1 ');
+                            setDatosTarjeta(prev => ({ ...prev, numero: formateado }));
+                          }
+                        }}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A1B5A0]"
                         placeholder="1234 5678 9012 3456"
                       />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Debe tener exactamente 16 dígitos
+                      </p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -776,11 +887,21 @@ export default function MetodosPago({
                       </label>
                       <input
                         type="text"
+                        maxLength={9}
                         value={datosCheque.numero}
-                        onChange={(e) => setDatosCheque(prev => ({ ...prev, numero: e.target.value }))}
+                        onChange={(e) => {
+                          // Solo permitir números, máximo 9 dígitos
+                          const valor = e.target.value.replace(/\D/g, '');
+                          if (valor.length <= 9) {
+                            setDatosCheque(prev => ({ ...prev, numero: valor }));
+                          }
+                        }}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A1B5A0]"
                         placeholder="000001234"
                       />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Debe tener exactamente 9 dígitos
+                      </p>
                     </div>
 
                     <div>
@@ -902,6 +1023,30 @@ export default function MetodosPago({
                   </div>
                 </div>
               )}
+
+              {/* Vuelto Total */}
+              {(() => {
+                const { totalVuelto, detallesVuelto } = calcularVueltoTotal();
+                return totalVuelto > 0.01 && (
+                  <div className="mt-4 pt-4 border-t border-yellow-200 bg-yellow-50 rounded-lg p-3">
+                    <h4 className="text-sm font-semibold text-yellow-800 mb-2">💰 Vuelto Total a Entregar:</h4>
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-yellow-700">Total en Bs.:</span>
+                        <span className="font-bold text-yellow-800">Bs. {formatearPrecio(totalVuelto)}</span>
+                      </div>
+                      {detallesVuelto.length > 0 && (
+                        <div className="text-xs text-yellow-600 mt-2">
+                          <p className="font-medium mb-1">Desglose por moneda:</p>
+                          {detallesVuelto.map((detalle, index) => (
+                            <p key={index}>• {detalle.moneda} {formatearPrecio(detalle.vuelto)}</p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Botón finalizar */}
               <button

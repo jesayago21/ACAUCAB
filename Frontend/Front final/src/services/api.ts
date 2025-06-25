@@ -105,6 +105,21 @@ export const clienteService = {
     return handleResponse<ClienteVerificacion>(response);
   },
 
+  /** Verificar cliente por tipo de documento específico (V o J) */
+  async verificarClientePorTipo(tipoDocumento: 'V' | 'J', numeroDocumento: string): Promise<ClienteVerificacion> {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/clientes/verificar-por-tipo`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        tipo_documento: tipoDocumento, 
+        numero_documento: numeroDocumento 
+      }),
+    });
+    return handleResponse<ClienteVerificacion>(response);
+  },
+
   /** Crear un nuevo cliente natural */
   async crearClienteNatural(cliente: Omit<ClienteNatural, 'clave' | 'puntos_acumulados'>): Promise<ClienteNatural> {
     const response = await fetchWithTimeout(`${API_BASE_URL}/clientes/crear`, {
@@ -193,22 +208,45 @@ export const productoService = {
     const response = await fetchWithTimeout(`${API_BASE_URL}/shop/products?${params.toString()}`);
     const data = await handleResponse<{productos: Producto[]}>(response);
     
+    // Log para debugging
+    console.log('🔍 Datos de productos recibidos del backend:', data);
+    if (data.productos && data.productos.length > 0) {
+      console.log('📦 Primer producto de ejemplo:', data.productos[0]);
+    }
+    
     const timestamp = Date.now();
     
     // Mapear las propiedades para compatibilidad con componentes existentes
-    return data.productos.map((producto, index) => ({
-      ...producto,
-      id: producto.clave,
-      id_presentacion: producto.clave,
-      nombre: `${producto.nombre_cerveza} - ${producto.nombre_presentacion}`,
-      precio_original: parseFloat(producto.precio.toFixed(2)),
-      precio_oferta: producto.tiene_oferta && producto.porcentaje_descuento 
-        ? parseFloat((producto.precio * (1 - producto.porcentaje_descuento / 100)).toFixed(2))
-        : null,
-      stock_disponible: producto.cantidad_disponible,
-      // Generar unique_key verdaderamente único
-      unique_key: `producto-${producto.clave}-${producto.ean_13}-${timestamp}-${index}`
-    }));
+    return data.productos.map((producto, index) => {
+      // Asegurar que el precio sea un número válido
+      const precioNumerico = typeof producto.precio === 'number' 
+        ? producto.precio 
+        : (producto.precio ? parseFloat(producto.precio) : 0) || 0;
+      
+      const porcentajeDescuento = typeof producto.porcentaje_descuento === 'number' 
+        ? producto.porcentaje_descuento 
+        : (producto.porcentaje_descuento ? parseFloat(producto.porcentaje_descuento) : 0) || 0;
+
+      // Validar campos requeridos
+      const nombreCerveza = producto.nombre_cerveza || 'Cerveza';
+      const nombrePresentacion = producto.nombre_presentacion || 'Presentación';
+      const clave = producto.clave || 0;
+      const ean13 = producto.ean_13 || '0';
+
+      return {
+        ...producto,
+        id: clave,
+        id_presentacion: clave,
+        nombre: `${nombreCerveza} - ${nombrePresentacion}`,
+        precio_original: parseFloat(precioNumerico.toFixed(2)),
+        precio_oferta: producto.tiene_oferta && porcentajeDescuento > 0
+          ? parseFloat((precioNumerico * (1 - porcentajeDescuento / 100)).toFixed(2))
+          : null,
+        stock_disponible: producto.cantidad_disponible || 0,
+        // Generar unique_key verdaderamente único
+        unique_key: `producto-${clave}-${ean13}-${timestamp}-${index}`
+      };
+    });
   },
 
   /** Obtener ofertas activas */
@@ -223,19 +261,36 @@ export const productoService = {
     const timestamp = Date.now();
     
     // Mapear las propiedades para compatibilidad con componentes existentes
-    return data.productos.map((producto, index) => ({
-      ...producto,
-      id: producto.clave,
-      id_presentacion: producto.clave,
-      nombre: `${producto.nombre_cerveza} - ${producto.nombre_presentacion}`,
-      precio_original: parseFloat(producto.precio.toFixed(2)),
-      precio_oferta: producto.tiene_oferta && producto.porcentaje_descuento 
-        ? parseFloat((producto.precio * (1 - producto.porcentaje_descuento / 100)).toFixed(2))
-        : null,
-      stock_disponible: producto.cantidad_disponible,
-      // Generar unique_key verdaderamente único para ofertas
-      unique_key: `oferta-${producto.clave}-${producto.ean_13}-${timestamp}-${index}`
-    }));
+    return data.productos.map((producto, index) => {
+      // Asegurar que el precio sea un número válido
+      const precioNumerico = typeof producto.precio === 'number' 
+        ? producto.precio 
+        : (producto.precio ? parseFloat(producto.precio) : 0) || 0;
+      
+      const porcentajeDescuento = typeof producto.porcentaje_descuento === 'number' 
+        ? producto.porcentaje_descuento 
+        : (producto.porcentaje_descuento ? parseFloat(producto.porcentaje_descuento) : 0) || 0;
+
+      // Validar campos requeridos
+      const nombreCerveza = producto.nombre_cerveza || 'Cerveza';
+      const nombrePresentacion = producto.nombre_presentacion || 'Presentación';
+      const clave = producto.clave || 0;
+      const ean13 = producto.ean_13 || '0';
+
+      return {
+        ...producto,
+        id: clave,
+        id_presentacion: clave,
+        nombre: `${nombreCerveza} - ${nombrePresentacion}`,
+        precio_original: parseFloat(precioNumerico.toFixed(2)),
+        precio_oferta: producto.tiene_oferta && porcentajeDescuento > 0
+          ? parseFloat((precioNumerico * (1 - porcentajeDescuento / 100)).toFixed(2))
+          : null,
+        stock_disponible: producto.cantidad_disponible || 0,
+        // Generar unique_key verdaderamente único para ofertas
+        unique_key: `oferta-${clave}-${ean13}-${timestamp}-${index}`
+      };
+    });
   },
 
   /** Buscar producto específico por EAN */
@@ -251,18 +306,33 @@ export const productoService = {
       const producto = data.producto;
       const timestamp = Date.now();
       
+      // Asegurar que el precio sea un número válido
+      const precioNumerico = typeof producto.precio === 'number' 
+        ? producto.precio 
+        : (producto.precio ? parseFloat(producto.precio) : 0) || 0;
+      
+      const porcentajeDescuento = typeof producto.porcentaje_descuento === 'number' 
+        ? producto.porcentaje_descuento 
+        : (producto.porcentaje_descuento ? parseFloat(producto.porcentaje_descuento) : 0) || 0;
+
+      // Validar campos requeridos
+      const nombreCerveza = producto.nombre_cerveza || 'Cerveza';
+      const nombrePresentacion = producto.nombre_presentacion || 'Presentación';
+      const clave = producto.clave || 0;
+      const ean13 = producto.ean_13 || '0';
+      
       // Mapear las propiedades para compatibilidad con componentes existentes
       return {
         ...producto,
-        id: producto.clave,
-        id_presentacion: producto.clave,
-        nombre: `${producto.nombre_cerveza} - ${producto.nombre_presentacion}`,
-        precio_original: parseFloat(producto.precio.toFixed(2)),
-        precio_oferta: producto.tiene_oferta && producto.porcentaje_descuento 
-          ? parseFloat((producto.precio * (1 - producto.porcentaje_descuento / 100)).toFixed(2))
+        id: clave,
+        id_presentacion: clave,
+        nombre: `${nombreCerveza} - ${nombrePresentacion}`,
+        precio_original: parseFloat(precioNumerico.toFixed(2)),
+        precio_oferta: producto.tiene_oferta && porcentajeDescuento > 0
+          ? parseFloat((precioNumerico * (1 - porcentajeDescuento / 100)).toFixed(2))
           : null,
-        stock_disponible: producto.cantidad_disponible,
-        unique_key: `ean-${producto.clave}-${producto.ean_13}-${timestamp}`
+        stock_disponible: producto.cantidad_disponible || 0,
+        unique_key: `ean-${clave}-${ean13}-${timestamp}`
       };
     } catch (error) {
       console.error('Error buscando producto por EAN:', error);

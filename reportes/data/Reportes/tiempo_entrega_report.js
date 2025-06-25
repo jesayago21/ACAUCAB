@@ -17,16 +17,18 @@ async function run(fechaIni, fechaFinal) {
     console.log(`   • fechaIni: ${fechaIni || 'NO PROPORCIONADA'}`);
     console.log(`   • fechaFinal: ${fechaFinal || 'NO PROPORCIONADA'}`);
 
-    // Si no se pasan fechas, usar valores por defecto (últimos 7 días)
+    // Si no se pasan fechas, usar valores por defecto (últimos 30 días)
     if (!fechaInicio || !fechaFin) {
       usandoFechasPorDefecto = true;
       const hoy = new Date();
-      fechaInicio = hoy.toISOString().slice(0, 10); // 'YYYY-MM-DD'
-      const fin = new Date(fechaInicio);
-      fin.setDate(fin.getDate() + 7);
-      fechaFin = fin.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+      fechaFin = hoy.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+      const inicio = new Date(fechaFin);
+      inicio.setDate(inicio.getDate() - 30);
+      fechaInicio = inicio.toISOString().slice(0, 10); // 'YYYY-MM-DD'
       
-      console.log('⚠️  Usando fechas por defecto (últimos 7 días)');
+      console.log('⚠️  Usando fechas por defecto (últimos 30 días)');
+      console.log(`   • fechaInicio por defecto: ${fechaInicio}`);
+      console.log(`   • fechaFin por defecto: ${fechaFin}`);
     }
 
     // Validar formato de fechas
@@ -43,7 +45,7 @@ async function run(fechaIni, fechaFinal) {
     console.log('🔄 Ejecutando consulta optimizada de tiempo de entrega...');
     console.log(`📅 Período: ${fechaInicio} a ${fechaFin}`);
     if (usandoFechasPorDefecto) {
-      console.log('📅 Usando período por defecto (últimos 7 días)');
+      console.log('📅 Usando período por defecto (últimos 30 días)');
     } else {
       console.log('📅 Usando fechas proporcionadas como parámetros');
     }
