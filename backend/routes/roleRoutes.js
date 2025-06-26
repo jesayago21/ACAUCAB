@@ -271,4 +271,103 @@ router.put('/:id', roleController.updateRole); // Aquí iría authenticateToken 
  */
 router.delete('/:id', roleController.deleteRole); // Aquí iría authenticateToken y authorize(['delete_role'])
 
+/**
+ * @swagger
+ * /api/roles/{id}/privileges:
+ *   put:
+ *     summary: Asigna privilegios a un rol específico
+ *     tags: [Roles]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID del rol al que se asignarán privilegios.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - privilegiosClave
+ *             properties:
+ *               privilegiosClave:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 description: Array de IDs de privilegios a asignar al rol.
+ *                 example: [1, 2, 3, 4]
+ *     responses:
+ *       200:
+ *         description: Privilegios asignados al rol exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 'Privilegios asignados al rol exitosamente.'
+ *       400:
+ *         description: Datos de entrada inválidos.
+ *       401:
+ *         description: No autorizado.
+ *       403:
+ *         description: Acceso denegado.
+ *       404:
+ *         description: Rol no encontrado.
+ *       500:
+ *         description: Error interno del servidor.
+ */
+router.put('/:id/privileges', roleController.assignPrivilegesToRole);
+
+/**
+ * @swagger
+ * /api/roles/{id}/privileges:
+ *   get:
+ *     summary: Obtiene los privilegios asignados a un rol específico
+ *     tags: [Roles]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID del rol del que se obtendrán los privilegios.
+ *     responses:
+ *       200:
+ *         description: Lista de privilegios del rol obtenida exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   clave:
+ *                     type: integer
+ *                     example: 1
+ *                   nombre:
+ *                     type: string
+ *                     example: 'crear_usuario'
+ *                   descripcion:
+ *                     type: string
+ *                     example: 'Permite crear nuevos usuarios'
+ *       401:
+ *         description: No autorizado.
+ *       403:
+ *         description: Acceso denegado.
+ *       404:
+ *         description: Rol no encontrado.
+ *       500:
+ *         description: Error interno del servidor.
+ */
+router.get('/:id/privileges', roleController.getPrivilegesByRoleId);
+
 module.exports = router;

@@ -1000,13 +1000,14 @@ export default function MetodosPago({
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-[#2C2C2C] mb-2">
-                          Vencimiento
+                          Fecha de Vencimiento
                         </label>
                         <input
-                          type="month"
+                          type="date"
                           value={datosTarjeta.vencimiento}
                           onChange={(e) => setDatosTarjeta(prev => ({ ...prev, vencimiento: e.target.value }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A1B5A0]"
+                          min={new Date().toISOString().split('T')[0]}
                         />
                       </div>
 

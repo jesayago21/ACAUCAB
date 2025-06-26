@@ -6,6 +6,7 @@ const roleRoutes = require('./routes/roleRoutes');
 const userRoutes = require('./routes/userRoutes');
 const authRoutes = require('./routes/authRoutes');
 const privilegeRoutes = require('./routes/privilegeRoutes');
+const reposicionRoutes = require('./routes/reposicionRoutes');
 const { specs, swaggerUi } = require('./config/swagger');
 const db = require('./config/db');
 require('dotenv').config();
@@ -16,7 +17,31 @@ const PORT = process.env.PORT || 5000;
 app.set('db', db);
 
 /** Middleware básico */
-app.use(cors()); // Permite peticiones de otros orígenes (tu frontend)
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:4321', 'http://127.0.0.1:4321'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With', 
+    'x-user-id', 
+    'X-User-Id', 
+    'X-User-ID',
+    'x-user-ID'
+  ],
+  credentials: true
+})); // Permite peticiones de otros orígenes (tu frontend)
+
+// Middleware para normalizar headers de usuario
+app.use((req, res, next) => {
+  // Normalizar el header de usuario a lowercase para consistencia
+  const userIdHeader = req.headers['x-user-id'] || req.headers['X-User-ID'] || req.headers['X-User-Id'];
+  if (userIdHeader) {
+    req.headers['x-user-id'] = userIdHeader;
+  }
+  next();
+});
+
 app.use(express.json()); // Para parsear el body de las peticiones como JSON
 
 /** Configuración de Swagger UI */
@@ -53,6 +78,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/privileges', privilegeRoutes);
 app.use('/api/clientes', clientRoutes);
+app.use('/api/reposicion', reposicionRoutes);
 
 /** rutas para los reportes */
 const reportRoutes = require('./routes/reportesRouter');

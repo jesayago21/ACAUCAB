@@ -78,12 +78,13 @@ const canAccessModule = (user: User, module: string): boolean => {
         // Gestión de inventario
         case 'almacen':
             return hasPermission(user, 'consultar almacen');
-        case 'inventario-tienda':
-            return hasPermission(user, 'consultar inventario');
+
         case 'reposiciones':
-            return hasPermission(user, 'consultar reposicion');
+            return hasPermission(user, 'consultar reposicion') ||
+                   user.rol.nombre === 'Jefe de Pasillo';
         case 'estados-reposicion':
-            return hasPermission(user, 'gestionar estados reposicion');
+            return hasPermission(user, 'gestionar estados reposicion') ||
+                   user.rol.nombre === 'Jefe de Pasillo';
 
         // Gestión de ventas (nuevos módulos)
         case 'ventas':
@@ -102,13 +103,13 @@ const canAccessModule = (user: User, module: string): boolean => {
         case 'puntos':
             return hasPermission(user, 'consultar puntos') || hasPermission(user, 'Consultar puntos');
 
-        // Gestión de compras (nuevo módulo)
-        case 'compras-mayoristas':
-            return hasPermission(user, 'consultar compra') || hasPermission(user, 'Consultar compra');
+        // Módulo compras-mayoristas eliminado
 
         // Gestión de reposición (nuevo módulo como hijo de inventario)
         case 'reposicion':
-            return hasPermission(user, 'consultar reposicion') || hasPermission(user, 'Consultar reposicion');
+            return hasPermission(user, 'consultar reposicion') || 
+                   hasPermission(user, 'Consultar reposicion') ||
+                   user.rol.nombre === 'Jefe de Pasillo';
 
         // Módulos legacy (mantener por compatibilidad)
         case 'ventas-fisicas':
@@ -124,14 +125,7 @@ const canAccessModule = (user: User, module: string): boolean => {
         case 'estados-compra':
             return hasPermission(user, 'gestionar estados compra');
 
-        // Gestión de clientes y miembros
-        case 'personas':
-        case 'clientes':
-            return hasPermission(user, 'Consultar cliente');
-        case 'empleados':
-            return hasPermission(user, 'Consultar empleado');
-        case 'miembros':
-            return hasPermission(user, 'Consultar miembro');
+        // Casos eliminados: personas, clientes, empleados, miembros
 
         // Gestión de eventos y ofertas
         case 'eventos':
@@ -210,7 +204,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
             icon: '📦',
             children: [
                 { id: 'almacen', name: 'Almacén', icon: '🏪' },
-                { id: 'inventario-tienda', name: 'Inventario Tienda', icon: '🏬' },
                 { id: 'reposicion', name: 'Reposición', icon: '🔄' },
                 { id: 'estados-reposicion', name: 'Estados de Reposición', icon: '📊' }
             ]
@@ -225,22 +218,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 { id: 'puntos', name: 'Gestión de Puntos', icon: '⭐' }
             ]
         },
-        {
-            id: 'compras-mayoristas',
-            name: 'Compras Mayoristas',
-            icon: '🛒',
-            children: []
-        },
-        {
-            id: 'personas',
-            name: 'Personas',
-            icon: '👤',
-            children: [
-                { id: 'clientes', name: 'Clientes', icon: '👨‍💼' },
-                { id: 'empleados', name: 'Empleados', icon: '👷' },
-                { id: 'miembros', name: 'Miembros', icon: '🤝' }
-            ]
-        },
+
         {
             id: 'eventos-ofertas',
             name: 'Eventos y Ofertas',
@@ -329,7 +307,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                     {visibleModules.map(module => (
                         <div key={module.id} className="mb-2">
                             {/* Módulo principal */}
-                            {module.children.length > 0 && (module.id === 'personas' || module.id === 'productos' || module.id === 'inventario' || module.id === 'ventas' || module.id === 'compras' || module.id === 'eventos-ofertas') ? (
+                            {module.children.length > 0 && (module.id === 'productos' || module.id === 'inventario' || module.id === 'ventas' || module.id === 'compras' || module.id === 'eventos-ofertas') ? (
                                 // Módulos padre que no son clickeables
                                 <div className={`w-full flex items-center p-3 rounded-lg text-gray-400 cursor-default ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
                                     <span className="text-lg">{module.icon}</span>

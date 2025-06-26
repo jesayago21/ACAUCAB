@@ -8,7 +8,7 @@ import VentasManagement from './VentasManagement';
 import VentasWebManagement from './VentasWebManagement';
 import VentasTiendaManagement from './VentasTiendaManagement';
 import PuntosManagement from './PuntosManagement';
-import ComprasManagement from './ComprasManagement';
+
 import ReposicionManagement from './ReposicionManagement';
 import ReportesManagement from './ReportesManagement';
 import type { Usuario } from '../../types/auth';
@@ -128,19 +128,7 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             case 'ventas-eventos':
                 return <ModulePlaceholder title="Ventas en Eventos" user={user} />;
             
-            // Módulos de compras
-            case 'compras-mayoristas':
-                return <ComprasManagement user={user} />;
-            case 'compras':
-                return <ModulePlaceholder title="Órdenes de Compra" user={user} />;
-            
-            // Módulos de personas
-            case 'clientes':
-                return <ModulePlaceholder title="Gestión de Clientes" user={user} />;
-            case 'empleados':
-                return <ModulePlaceholder title="Gestión de Empleados" user={user} />;
-            case 'miembros':
-                return <ModulePlaceholder title="Gestión de Miembros" user={user} />;
+            // Módulos eliminados: compras-mayoristas, clientes, empleados, miembros
             
             // Módulos de eventos y ofertas
             case 'eventos':
@@ -193,11 +181,7 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             'ventas-fisicas': 'Ventas Físicas',
             'ventas-online': 'Ventas Online',
             'ventas-eventos': 'Ventas en Eventos',
-            'compras-mayoristas': 'Compras Mayoristas',
-            'compras': 'Órdenes de Compra',
-            'clientes': 'Gestión de Clientes',
-            'empleados': 'Gestión de Empleados',
-            'miembros': 'Gestión de Miembros',
+
             'eventos': 'Gestión de Eventos',
             'ofertas': 'Gestión de Ofertas',
             'reportes': 'Gestión de Reportes',

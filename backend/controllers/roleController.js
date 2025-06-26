@@ -1,4 +1,4 @@
-const pool = require('../config/db'); // Asegúrate de que esta ruta sea correcta
+const db = require('../config/db'); // Asegúrate de que esta ruta sea correcta
 
 /**
  * Crea un nuevo rol en la base de datos.
@@ -11,8 +11,8 @@ exports.createRole = async (req, res) => {
         return res.status(400).json({ message: 'El nombre del rol es requerido.' });
     }
     try {
-        const result = await pool.query(
-            'INSERT INTO rol (nombre) VALUES ($1, $2) RETURNING id, name',
+        const result = await db.query(
+            'INSERT INTO rol (nombre) VALUES ($1) RETURNING clave, nombre',
             [nombre]
         );
         // Retornamos el rol creado con todos sus campos
@@ -33,7 +33,7 @@ exports.createRole = async (req, res) => {
 exports.getAllRoles = async (req, res) => {
     try {
         // Selecciona clave, nombre y descripcion para mostrar la información completa del rol
-        const result = await pool.query('SELECT clave, nombre FROM rol ORDER BY nombre ASC');
+        const result = await db.query('SELECT clave, nombre FROM rol ORDER BY nombre ASC');
         res.status(200).json(result.rows);
     } catch (error) {
         console.error('Error al obtener los roles:', error);
@@ -52,7 +52,7 @@ exports.getRoleById = async (req, res) => {
 
     try {
         // Selecciona clave, nombre y descripcion para mostrar la información completa del rol
-        const result = await pool.query('SELECT clave, nombre FROM rol WHERE clave = $1', [id]);
+        const result = await db.query('SELECT clave, nombre FROM rol WHERE clave = $1', [id]);
 
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'Rol no encontrado.' });
@@ -69,22 +69,18 @@ exports.getRoleById = async (req, res) => {
  * Requiere 'name' y/o 'description' en el cuerpo de la solicitud.
  */
 exports.updateRole = async (req, res) => {
-    const { clave } = req.params;
+    const { id } = req.params;
     const { nombre } = req.body;
-    const queryParams = [];
-    let paramIndex = 1;
-
-    if (nombre !== undefined) {
-        query += `, nombre = $${paramIndex}`;
-        queryParams.push(nombre);
-        paramIndex++;
+    
+    if (!nombre) {
+        return res.status(400).json({ message: 'El nombre del rol es requerido.' });
     }
 
-    query += ` WHERE clave = $${paramIndex} RETURNING clave, nombre`;
-    queryParams.push(clave);
-
     try {
-        const result = await pool.query(query, queryParams);
+        const result = await db.query(
+            'UPDATE rol SET nombre = $1 WHERE clave = $2 RETURNING clave, nombre',
+            [nombre, id]
+        );
 
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'Rol no encontrado para actualizar.' });
@@ -103,10 +99,10 @@ exports.updateRole = async (req, res) => {
  * Elimina un rol por su ID.
  */
 exports.deleteRole = async (req, res) => {
-    const { clave } = req.params;
+    const { id } = req.params;
 
     try {
-        const result = await pool.query('DELETE FROM rol WHERE clave = $1 RETURNING clave', [clave]);
+        const result = await db.query('DELETE FROM rol WHERE clave = $1 RETURNING clave', [id]);
 
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'Rol no encontrado para eliminar.' });
@@ -124,7 +120,7 @@ exports.deleteRole = async (req, res) => {
 
 
 exports.assignPrivilegesToRole = async (req, res) => {
-    const { rolClave } = req.params;
+    const { id } = req.params;
     const { privilegiosClave } = req.body;
 
     // Validación básica
@@ -132,25 +128,25 @@ exports.assignPrivilegesToRole = async (req, res) => {
         return res.status(400).json({ message: 'El campo "privilegiosClave" debe ser un array de IDs de privilegios.' });
     }
 
-    const client = await pool.connect();
+    const client = await db.getClient();
     try {
         await client.query('BEGIN');
 
         // 1. Verificar si el rol existe
-        const roleExists = await client.query('SELECT 1 FROM rol WHERE clave = $1', [rolClave]);
+        const roleExists = await client.query('SELECT 1 FROM rol WHERE clave = $1', [id]);
         if (roleExists.rows.length === 0) {
             await client.query('ROLLBACK');
             return res.status(404).json({ message: 'Rol no encontrado.' });
         }
 
         // 2. Eliminar todas las asignaciones de privilegios existentes para este rol
-        await client.query('DELETE FROM rol_pri WHERE fk_rol = $1', [rolClave]);
+        await client.query('DELETE FROM rol_pri WHERE fk_rol = $1', [id]);
 
         // 3. Insertar los nuevos privilegios solo si el array no está vacío
         if (privilegiosClave.length > 0) {
             // Construir la parte VALUES de la consulta INSERT dinámicamente
             const values = privilegiosClave.map((privilegioClave, index) => `($1, $${index + 2}, CURRENT_DATE)`).join(',');
-            const queryParams = [rolClave, ...privilegiosClave];
+            const queryParams = [id, ...privilegiosClave];
 
             await client.query(
                 `INSERT INTO rol_pri (fk_rol, fk_privilegio, fecha) VALUES ${values}`,
@@ -174,22 +170,22 @@ exports.assignPrivilegesToRole = async (req, res) => {
 };
 
 exports.getPrivilegesByRoleId = async (req, res) => {
-    const { roleId } = req.params;
+    const { id } = req.params;
 
     try {
         // Verificar si el rol existe
-        const roleExists = await pool.query('SELECT 1 FROM rol WHERE clave = $1', [roleId]);
+        const roleExists = await db.query('SELECT 1 FROM rol WHERE clave = $1', [id]);
         if (roleExists.rows.length === 0) {
             return res.status(404).json({ message: 'Rol no encontrado.' });
         }
 
-        const result = await pool.query(
+        const result = await db.query(
             `SELECT p.clave, p.nombre, p.descripcion
              FROM privilegio p
              JOIN rol_pri rp ON p.clave = rp.fk_privilegio
              WHERE rp.fk_rol = $1
              ORDER BY p.nombre ASC`,
-            [roleId]
+            [id]
         );
         res.status(200).json(result.rows);
     } catch (error) {

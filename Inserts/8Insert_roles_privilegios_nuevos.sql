@@ -176,6 +176,30 @@ SELECT 4, p.clave, CURRENT_DATE FROM privilegio p WHERE p.nombre IN (
     'consultar venta online', 'consultar pago'
 );
 
+-- =====================================================
+-- ROL: JEFE DE PASILLO (Gestión específica de reposiciones)
+-- =====================================================
+
+-- Privilegios para gestión de reposiciones
+INSERT INTO rol_pri (fk_rol, fk_privilegio, fecha) 
+SELECT 8, p.clave, CURRENT_DATE FROM privilegio p WHERE p.nombre IN (
+    'crear reposicion', 'consultar reposicion', 'modificar reposicion',
+    'consultar inventario', 'consultar almacen'
+);
+
+-- Privilegios básicos de empleado
+INSERT INTO rol_pri (fk_rol, fk_privilegio, fecha) 
+SELECT 8, p.clave, CURRENT_DATE FROM privilegio p WHERE p.nombre IN (
+    'consultar empleado', 'modificar empleado', 'consultar contrato',
+    'crear control_entrada', 'consultar vacacion'
+);
+
+-- Privilegios para ver información de productos
+INSERT INTO rol_pri (fk_rol, fk_privilegio, fecha) 
+SELECT 8, p.clave, CURRENT_DATE FROM privilegio p WHERE p.nombre IN (
+    'consultar cerveza', 'consultar presentacion', 'consultar tipo cerveza'
+);
+
 -- Comentario informativo sobre la lógica de permisos especiales:
 -- Los permisos especiales se derivan automáticamente en el backend basándose en combinaciones de permisos atómicos:
 -- 
