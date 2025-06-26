@@ -100,24 +100,4 @@ router.post('/login', authController.login);
  */
 router.post('/verificar-permiso', authController.verificarPermiso);
 
-/**
- * @swagger
- * /api/auth/perfil/{usuario_id}:
- *   get:
- *     summary: Obtener perfil completo del usuario
- *     tags: [Autenticación]
- *     parameters:
- *       - in: path
- *         name: usuario_id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Perfil obtenido exitosamente
- *       404:
- *         description: Usuario no encontrado
- */
-router.get('/perfil/:usuario_id', authController.getPerfilUsuario);
-
 module.exports = router; 

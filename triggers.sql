@@ -234,35 +234,79 @@ CREATE OR REPLACE FUNCTION generar_orden_reposicion()
 RETURNS TRIGGER AS $$
 DECLARE
     v_almacen_id INT;
-    v_usuario_id INT;
+    v_usuario_jefe_pasillo_id INT;
+    v_reposicion_id INT;
+    v_estado_procesando_id INT;
+    v_tienda_id INT;
 BEGIN
-    -- Si la cantidad es menor o igual a 20 unidades
-    IF NEW.cantidad <= 20 THEN
+    -- Si la cantidad cruza el umbral de 20 unidades (y no es una inserción inicial)
+    IF NEW.cantidad <= 20 AND (TG_OP = 'INSERT' OR OLD.cantidad > 20) THEN
+        -- Obtener la tienda física asociada
+        v_tienda_id := NEW.fk_tienda_fisica;
+        
         -- Obtener el almacén correspondiente a la presentación
         SELECT a.clave INTO v_almacen_id
         FROM almacen a
         WHERE a.fk_presentacion = NEW.fk_presentacion;
         
-        -- Obtener un usuario con rol de jefe de pasillo (esto debería ajustarse según tu lógica)
-        SELECT u.clave INTO v_usuario_id
+        -- Obtener un jefe de pasillo de la tienda correspondiente
+        SELECT u.clave INTO v_usuario_jefe_pasillo_id
         FROM usuario u
         JOIN rol r ON r.clave = u.fk_rol
+        JOIN empleado e ON u.fk_empleado = e.ci
+        JOIN contrato c ON e.ci = c.fk_empleado
+        JOIN departamento d ON c.fk_departamento = d.clave
         WHERE r.nombre = 'Jefe de Pasillo'
+        AND d.fk_tienda_fisica = v_tienda_id
+        AND c.fecha_fin IS NULL -- Contrato activo
         LIMIT 1;
         
-        IF v_almacen_id IS NULL OR v_usuario_id IS NULL THEN
-            RAISE EXCEPTION 'No se encontró el almacén o usuario correspondiente para la reposición';
+        -- Si no hay jefe de pasillo, buscar un administrador como fallback
+        IF v_usuario_jefe_pasillo_id IS NULL THEN
+            SELECT u.clave INTO v_usuario_jefe_pasillo_id
+            FROM usuario u
+            JOIN rol r ON r.clave = u.fk_rol
+            WHERE r.nombre = 'Administrador'
+            LIMIT 1;
         END IF;
         
-        -- Crear nueva reposición
+        IF v_almacen_id IS NULL OR v_usuario_jefe_pasillo_id IS NULL THEN
+            RAISE EXCEPTION 'No se encontró el almacén (%) o jefe de pasillo (%) correspondiente para la reposición en tienda %', 
+                v_almacen_id, v_usuario_jefe_pasillo_id, v_tienda_id;
+        END IF;
+        
+        -- Verificar que no existe ya una reposición pendiente para este producto en esta tienda
+        IF EXISTS (
+            SELECT 1 
+            FROM reposicion r
+            JOIN historico h ON r.clave = h.fk_reposicion
+            JOIN estatus e ON h.fk_estatus = e.clave
+            WHERE r.fk_inventario_tienda = NEW.clave
+            AND e.estado IN ('procesando', 'listo para entrega')
+        ) THEN
+            -- Ya existe una reposición pendiente, no crear otra
+            RETURN NEW;
+        END IF;
+        
+        -- Crear nueva reposición (cantidad estándar de 100 unidades)
         INSERT INTO reposicion (fk_almacen, fk_inventario_tienda, fk_usuario, cantidad, fecha)
-        VALUES (v_almacen_id, NEW.clave, v_usuario_id, 100, CURRENT_DATE);  -- La cantidad a reponer debería definirse según la lógica de negocio
+        VALUES (v_almacen_id, NEW.clave, v_usuario_jefe_pasillo_id, 100, CURRENT_DATE)
+        RETURNING clave INTO v_reposicion_id;
+        
+        -- Obtener el ID del estado 'procesando' para reposición
+        SELECT clave INTO v_estado_procesando_id
+        FROM estatus 
+        WHERE estado = 'procesando' AND aplicable_a = 'reposicion' 
+        LIMIT 1;
         
         -- Insertar el primer estado en histórico
-        INSERT INTO historico (fecha, fk_estatus, fk_reposicion)
-        VALUES (CURRENT_DATE, 
-               (SELECT clave FROM estatus WHERE estado = 'procesando' AND aplicable_a = 'reposicion' LIMIT 1),
-               currval('reposicion_clave_seq'));
+        INSERT INTO historico (fecha, fk_estatus, fk_reposicion, comentario)
+        VALUES (CURRENT_TIMESTAMP, v_estado_procesando_id, v_reposicion_id, 
+                'Reposición automática generada - Stock bajo: ' || NEW.cantidad || ' unidades');
+        
+        -- Log para debugging
+        RAISE NOTICE 'Reposición automática creada: ID %, Producto: %, Stock: %, Tienda: %', 
+            v_reposicion_id, NEW.fk_presentacion, NEW.cantidad, v_tienda_id;
     END IF;
     
     RETURN NEW;
@@ -270,7 +314,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER tr_generar_orden_reposicion
-AFTER UPDATE ON inventario_tienda
+AFTER INSERT OR UPDATE ON inventario_tienda
 FOR EACH ROW
 EXECUTE FUNCTION generar_orden_reposicion();
 
@@ -528,3 +572,82 @@ CREATE TRIGGER tr_descontar_puntos_cliente
 AFTER INSERT ON pago
 FOR EACH ROW
 EXECUTE FUNCTION descontar_puntos_cliente();
+
+-- Trigger para validar que solo el jefe de pasillo pueda cambiar el estatus de una reposición
+CREATE OR REPLACE FUNCTION validar_cambio_estatus_reposicion()
+RETURNS TRIGGER AS $$
+DECLARE
+    usuario_actual_id INTEGER;
+    es_jefe_pasillo BOOLEAN := FALSE;
+    es_administrador BOOLEAN := FALSE;
+    tienda_reposicion INT;
+    tienda_usuario INT;
+BEGIN
+    -- Solo validar si es una reposición
+    IF NEW.fk_reposicion IS NOT NULL THEN
+        -- Obtener el ID del usuario actual desde la variable de sesión
+        usuario_actual_id := NULLIF(current_setting('app.current_user_id', true), '')::INTEGER;
+        
+        -- Si tenemos un usuario identificado, verificar sus permisos
+        IF usuario_actual_id IS NOT NULL AND usuario_actual_id > 0 THEN
+            -- Verificar si el usuario es administrador
+            SELECT EXISTS (
+                SELECT 1
+                FROM usuario u
+                JOIN rol r ON r.clave = u.fk_rol
+                WHERE u.clave = usuario_actual_id
+                AND r.nombre = 'Administrador'
+            ) INTO es_administrador;
+            
+            -- Si es administrador, permitir la operación
+            IF es_administrador THEN
+                RETURN NEW;
+            END IF;
+            
+            -- Verificar si el usuario tiene el rol de jefe de pasillo
+            SELECT EXISTS (
+                SELECT 1
+                FROM usuario u
+                JOIN rol r ON r.clave = u.fk_rol
+                WHERE u.clave = usuario_actual_id
+                AND r.nombre = 'Jefe de Pasillo'
+            ) INTO es_jefe_pasillo;
+            
+            -- Si no es jefe de pasillo, lanzar excepción
+            IF NOT es_jefe_pasillo THEN
+                RAISE EXCEPTION 'Acceso denegado: Solo los jefes de pasillo pueden cambiar el estado de las reposiciones. Usuario ID: %', 
+                    usuario_actual_id;
+            END IF;
+            
+            -- Obtener la tienda de la reposición
+            SELECT it.fk_tienda_fisica INTO tienda_reposicion
+            FROM reposicion r
+            JOIN inventario_tienda it ON r.fk_inventario_tienda = it.clave
+            WHERE r.clave = NEW.fk_reposicion;
+            
+            -- Obtener la tienda del usuario (a través de su contrato activo)
+            SELECT d.fk_tienda_fisica INTO tienda_usuario
+            FROM usuario u
+            JOIN empleado e ON u.fk_empleado = e.ci
+            JOIN contrato c ON e.ci = c.fk_empleado
+            JOIN departamento d ON c.fk_departamento = d.clave
+            WHERE u.clave = usuario_actual_id
+            AND c.fecha_fin IS NULL; -- Contrato activo
+            
+            -- Verificar que el jefe de pasillo pertenece a la misma tienda
+            IF tienda_usuario IS NULL OR tienda_usuario != tienda_reposicion THEN
+                RAISE EXCEPTION 'Acceso denegado: Solo puede modificar reposiciones de su tienda asignada. Tienda usuario: %, Tienda reposición: %', 
+                    tienda_usuario, tienda_reposicion;
+            END IF;
+        END IF;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger para validar cambios de estatus en reposiciones
+CREATE TRIGGER tr_validar_cambio_estatus_reposicion
+BEFORE INSERT OR UPDATE ON historico
+FOR EACH ROW
+EXECUTE FUNCTION validar_cambio_estatus_reposicion();

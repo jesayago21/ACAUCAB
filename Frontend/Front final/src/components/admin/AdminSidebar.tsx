@@ -103,7 +103,7 @@ const canAccessModule = (user: User, module: string): boolean => {
             return hasPermission(user, 'consultar puntos') || hasPermission(user, 'Consultar puntos');
 
         // Gestión de compras (nuevo módulo)
-        case 'compras-mayoristas':
+        case 'compras':
             return hasPermission(user, 'consultar compra') || hasPermission(user, 'Consultar compra');
 
         // Gestión de reposición (nuevo módulo como hijo de inventario)
@@ -123,15 +123,6 @@ const canAccessModule = (user: User, module: string): boolean => {
             return hasPermission(user, 'Consultar compra');
         case 'estados-compra':
             return hasPermission(user, 'gestionar estados compra');
-
-        // Gestión de clientes y miembros
-        case 'personas':
-        case 'clientes':
-            return hasPermission(user, 'Consultar cliente');
-        case 'empleados':
-            return hasPermission(user, 'Consultar empleado');
-        case 'miembros':
-            return hasPermission(user, 'Consultar miembro');
 
         // Gestión de eventos y ofertas
         case 'eventos':
@@ -212,6 +203,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 { id: 'almacen', name: 'Almacén', icon: '🏪' },
                 { id: 'inventario-tienda', name: 'Inventario Tienda', icon: '🏬' },
                 { id: 'reposicion', name: 'Reposición', icon: '🔄' },
+                { id: 'compras', name: 'Compras', icon: '🛒' },
                 { id: 'estados-reposicion', name: 'Estados de Reposición', icon: '📊' }
             ]
         },
@@ -223,22 +215,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 { id: 'ventas-web', name: 'Ventas Online', icon: '🌐' },
                 { id: 'ventas-tienda', name: 'Ventas Tienda', icon: '🏪' },
                 { id: 'puntos', name: 'Gestión de Puntos', icon: '⭐' }
-            ]
-        },
-        {
-            id: 'compras-mayoristas',
-            name: 'Compras Mayoristas',
-            icon: '🛒',
-            children: []
-        },
-        {
-            id: 'personas',
-            name: 'Personas',
-            icon: '👤',
-            children: [
-                { id: 'clientes', name: 'Clientes', icon: '👨‍💼' },
-                { id: 'empleados', name: 'Empleados', icon: '👷' },
-                { id: 'miembros', name: 'Miembros', icon: '🤝' }
             ]
         },
         {

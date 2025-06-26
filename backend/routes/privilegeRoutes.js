@@ -82,45 +82,6 @@ router.get('/modules', privilegeController.getPrivilegesByModule);
 
 /**
  * @swagger
- * /api/privileges/{roleId}:
- *   get:
- *     summary: Obtiene todos los privilegios asociados a un rol específico
- *     tags: [Privilegios]
- *     parameters:
- *       - in: path
- *         name: roleId
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID del rol para obtener sus privilegios
- *     responses:
- *       200:
- *         description: Lista de privilegios del rol obtenida exitosamente
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   clave:
- *                     type: integer
- *                     description: ID único del privilegio
- *                   nombre:
- *                     type: string
- *                     description: Nombre del privilegio
- *                   descripcion:
- *                     type: string
- *                     description: Descripción del privilegio
- *       404:
- *         description: Rol no encontrado
- *       500:
- *         description: Error interno del servidor
- */
-router.get('/:roleId', roleController.getPrivilegesByRoleId);
-
-/**
- * @swagger
  * /api/privileges/{id}:
  *   get:
  *     summary: Obtiene un privilegio por su ID

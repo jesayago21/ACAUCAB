@@ -111,6 +111,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ user }) => {
     const [loading, setLoading] = useState(true);
     const [loadingEntities, setLoadingEntities] = useState(false);
     const [error, setError] = useState<string>('');
+    const [successMessage, setSuccessMessage] = useState<string>('');
     const [searchTerm, setSearchTerm] = useState('');
     const [filterByRole, setFilterByRole] = useState('');
     const [filterByType, setFilterByType] = useState('');
@@ -302,7 +303,15 @@ const UserManagement: React.FC<UserManagementProps> = ({ user }) => {
     /** Crear usuario */
     const handleCreateUser = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+        setError('');
+        setSuccessMessage('');
+
+        // Validaciones previas
+        if (!newUser.username || !newUser.contrasena || !newUser.fk_rol) {
+            setError('Por favor, complete todos los campos requeridos');
+            return;
+        }
+
         try {
             const userData = {
                 username: newUser.username,
@@ -323,24 +332,16 @@ const UserManagement: React.FC<UserManagementProps> = ({ user }) => {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || 'Error al crear usuario');
+                throw new Error(errorData.message || 'Error al crear el usuario');
             }
-
-            await loadUsuarios();
+            
+            setNewUser({ username: '', contrasena: '', fk_rol: '', tipo_entidad: 'empleado', fk_empleado: '', fk_miembro: '', fk_cliente: '' });
             setShowCreateForm(false);
-            setNewUser({
-                username: '',
-                contrasena: '',
-                fk_rol: '',
-                tipo_entidad: 'empleado',
-                fk_empleado: '',
-                fk_miembro: '',
-                fk_cliente: ''
-            });
-            // Recargar entidades disponibles después de crear un usuario
-            await loadAvailableEntities();
+            await loadUsuarios(); // Recargar la lista de usuarios
+            setSuccessMessage('¡Usuario creado exitosamente!');
 
         } catch (error: any) {
+            console.error('Error al crear usuario:', error);
             setError(error.message);
         }
     };
@@ -351,6 +352,9 @@ const UserManagement: React.FC<UserManagementProps> = ({ user }) => {
             return;
         }
 
+        setError('');
+        setSuccessMessage('');
+
         try {
             const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
                 method: 'DELETE'
@@ -358,21 +362,14 @@ const UserManagement: React.FC<UserManagementProps> = ({ user }) => {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || 'Error al eliminar usuario');
+                throw new Error(errorData.message || 'Error al eliminar el usuario');
             }
 
-            const result = await response.json();
-            if (result.success) {
-                await loadUsuarios();
-                setError('');
-                // Si se estaban mostrando los detalles del usuario eliminado, ocultarlos
-                if (showUserDetails === userId) {
-                    setShowUserDetails(null);
-                }
-            } else {
-                setError(result.message || 'Error al eliminar el usuario');
-            }
+            await loadUsuarios(); // Recargar la lista de usuarios
+            setSuccessMessage('¡Usuario eliminado exitosamente!');
+
         } catch (error: any) {
+            console.error('Error al eliminar usuario:', error);
             setError(error.message);
         }
     };
@@ -623,7 +620,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ user }) => {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                </div>
+            </div>
         );
     }
 
@@ -637,102 +634,42 @@ const UserManagement: React.FC<UserManagementProps> = ({ user }) => {
     }
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Lista de Usuarios</h2>
-                    <p className="text-gray-600">Gestionar usuarios del sistema con información completa</p>
-                </div>
-                {canCreateTemporal && (
-                    <button
-                        onClick={handleOpenCreateForm}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
-                    >
-                        <span className="mr-2">+</span>
-                        Crear Usuario
-                    </button>
-                )}
-            </div>
+        <div className="p-6 bg-gray-50 min-h-screen font-sans">
+            <header className="mb-8">
+                <h1 className="text-3xl font-bold text-gray-800">Gestión de Usuarios</h1>
+                <p className="text-gray-500 mt-1">Crea, consulta, actualiza y elimina usuarios del sistema.</p>
+            </header>
 
-            {/* Advertencia sobre permisos faltantes */}
-            {missingPermissions.length > 0 && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <div className="flex items-start">
-                        <div className="flex-shrink-0">
-                            <span className="text-yellow-400 text-xl">⚠️</span>
-                        </div>
-                        <div className="ml-3">
-                            <h3 className="text-sm font-medium text-yellow-800">
-                                Permisos limitados detectados
-                            </h3>
-                            <div className="mt-2 text-sm text-yellow-700">
-                                <p>Tu rol actual tiene permisos limitados para gestión de usuarios.</p>
-                                <p className="mt-1">
-                                    <strong>Permisos faltantes:</strong> {missingPermissions.join(', ')}
-                                </p>
-                                <p className="mt-1 text-xs">
-                                    El sistema funciona temporalmente, pero se recomienda agregar estos permisos al rol "Supervisión".
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Mensajes de éxito y error */}
+            {successMessage && <div className="bg-green-100 border-l-4 border-green-500 text-green-800 p-4 mb-4 rounded-md shadow-sm">{successMessage}</div>}
+            {error && <div className="bg-red-100 border-l-4 border-red-500 text-red-800 p-4 mb-4 rounded-md shadow-sm">{error}</div>}
 
-            {/* Mensaje de error */}
-            {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <p className="text-red-700">{error}</p>
-                    <button
-                        onClick={() => setError('')}
-                        className="mt-2 text-red-600 hover:text-red-800 underline"
-                    >
-                        Cerrar
-                    </button>
-                </div>
-            )}
-
-            {/* Filtros */}
-            <div className="bg-white p-4 rounded-lg shadow-md">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Buscar
-                        </label>
+            {/* Panel de Controles y Filtros */}
+            <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 w-full sm:w-auto">
+                        {/* Buscador */}
                         <input
                             type="text"
-                            placeholder="Buscar por nombre, username..."
+                            placeholder="Buscar por nombre de usuario..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="border border-gray-300 rounded-md px-3 py-2 w-full sm:w-64 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
                         />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Filtrar por Rol
-                        </label>
-                        <select
-                            value={filterByRole}
+                        {/* Filtro por Rol */}
+                        <select 
+                            value={filterByRole} 
                             onChange={(e) => setFilterByRole(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
                         >
                             <option value="">Todos los roles</option>
-                            {roles.map(rol => (
-                                <option key={rol.clave} value={rol.nombre}>
-                                    {rol.nombre}
-                                </option>
-                            ))}
+                            {roles.map(rol => <option key={rol.clave} value={rol.nombre}>{rol.nombre}</option>)}
                         </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Filtrar por Tipo
-                        </label>
-                        <select
-                            value={filterByType}
+                         {/* Filtro por Tipo */}
+                        <select 
+                            value={filterByType} 
                             onChange={(e) => setFilterByType(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
                         >
                             <option value="">Todos los tipos</option>
                             <option value="empleado">Empleado</option>
@@ -740,27 +677,23 @@ const UserManagement: React.FC<UserManagementProps> = ({ user }) => {
                             <option value="cliente">Cliente</option>
                         </select>
                     </div>
-                    <div className="flex items-end">
+                    
+                    {/* Botón para Crear Usuario */}
+                    {canCreateTemporal && (
                         <button
-                            onClick={() => {
-                                setSearchTerm('');
-                                setFilterByRole('');
-                                setFilterByType('');
-                            }}
-                            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+                            onClick={handleOpenCreateForm}
+                            className="w-full sm:w-auto bg-indigo-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 ease-in-out shadow-md hover:shadow-lg flex items-center justify-center gap-2"
                         >
-                            Limpiar Filtros
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                            Crear Usuario
                         </button>
-                    </div>
-                </div>
-                <div className="mt-2 text-sm text-gray-600">
-                    Mostrando {filteredUsers.length} de {usuarios.length} usuarios
+                    )}
                 </div>
             </div>
-
-            {/* Formulario de creación */}
+            
+            {/* Formulario de Creación (Modal/Inline) */}
             {showCreateForm && (
-                <div className="bg-white p-6 rounded-lg shadow-md border">
+                <div className="bg-white p-6 rounded-lg shadow-md border mb-6">
                     <h3 className="text-lg font-semibold mb-4">Crear Nuevo Usuario</h3>
                     
                     {/* Indicador de carga de entidades */}
@@ -909,9 +842,9 @@ const UserManagement: React.FC<UserManagementProps> = ({ user }) => {
                 </div>
             )}
 
-            {/* Formulario de edición */}
+            {/* Formulario de Edición (Modal/Inline) */}
             {editingUser && (
-                <div className="bg-white p-6 rounded-lg shadow-md border">
+                <div className="bg-white p-6 rounded-lg shadow-md border mb-6">
                     <h3 className="text-lg font-semibold mb-4">Editar Usuario: {editingUser.username}</h3>
                     
                     {/* Indicador de carga de entidades */}
@@ -1026,7 +959,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ user }) => {
                                     ))}
                                 </select>
                             )}
-                </div>
+                        </div>
 
                         <div className="flex justify-end space-x-3">
                             <button
@@ -1047,117 +980,111 @@ const UserManagement: React.FC<UserManagementProps> = ({ user }) => {
                 </div>
             )}
 
-            {/* Tabla de usuarios */}
+            {/* Contenedor de la Tabla */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Usuario
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Rol
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Tipo y Entidad
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Permisos
+                                </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Usuario
+                                        Acciones
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Rol
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Tipo y Entidad
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Permisos
-                                    </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Acciones
-                                        </th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                            {filteredUsers.map((usuario) => (
-                                <React.Fragment key={usuario.clave}>
-                                    <tr className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center">
-                                                <div>
-                                                    <div className="text-sm font-medium text-gray-900">
-                                                        {usuario.username}
-                                                    </div>
-                                                    <div className="text-sm text-gray-500">
-                                                        ID: {usuario.clave}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                                {usuario.rol}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                        {filteredUsers.map((usuario) => (
+                            <React.Fragment key={usuario.clave}>
+                                <tr className="hover:bg-gray-50">
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="flex items-center">
                                             <div>
                                                 <div className="text-sm font-medium text-gray-900">
-                                                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                                        usuario.tipo_entidad === 'empleado' ? 'bg-blue-100 text-blue-800' :
-                                                        usuario.tipo_entidad === 'miembro' ? 'bg-purple-100 text-purple-800' :
-                                                        'bg-orange-100 text-orange-800'
-                                                    }`}>
-                                                        {usuario.tipo_entidad}
-                                                </span>
+                                                    {usuario.username}
                                                 </div>
-                                                <div className="text-sm text-gray-500 mt-1">
-                                                    {getEntityDisplayName(usuario)}
+                                                <div className="text-sm text-gray-500">
+                                                    ID: {usuario.clave}
                                                 </div>
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="text-sm text-gray-900">
-                                                {usuario.permisos.length} permisos
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                            {usuario.rol}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div>
+                                            <div className="text-sm font-medium text-gray-900">
+                                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                                    usuario.tipo_entidad === 'empleado' ? 'bg-blue-100 text-blue-800' :
+                                                    usuario.tipo_entidad === 'miembro' ? 'bg-purple-100 text-purple-800' :
+                                                    'bg-orange-100 text-orange-800'
+                                                }`}>
+                                                    {usuario.tipo_entidad}
                                             </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                            </div>
+                                            <div className="text-sm text-gray-500 mt-1">
+                                                {getEntityDisplayName(usuario)}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className="text-sm text-gray-900">
+                                            {usuario.permisos.length} permisos
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                        <button
+                                            onClick={() => setShowUserDetails(
+                                                showUserDetails === usuario.clave ? null : usuario.clave
+                                            )}
+                                            className="text-indigo-600 hover:text-indigo-900"
+                                        >
+                                            {showUserDetails === usuario.clave ? 'Ocultar' : 'Ver'} Detalles
+                                        </button>
+                                        {canUpdateTemporal && (
                                             <button
-                                                onClick={() => setShowUserDetails(
-                                                    showUserDetails === usuario.clave ? null : usuario.clave
-                                                )}
-                                                className="text-indigo-600 hover:text-indigo-900"
+                                                className="text-blue-600 hover:text-blue-900"
+                                                onClick={() => handleOpenEditForm(usuario)}
                                             >
-                                                {showUserDetails === usuario.clave ? 'Ocultar' : 'Ver'} Detalles
+                                                Editar
                                             </button>
-                                                                        {canUpdateTemporal && (
-                                                        <button
-                                    className="text-blue-600 hover:text-blue-900"
-                                    onClick={() => handleOpenEditForm(usuario)}
-                                >
-                                    Editar
-                                                        </button>
-                                                    )}
-                                                                        {canDeleteTemporal && (
-                                                        <button
-                                    className="text-red-600 hover:text-red-900"
-                                    onClick={() => handleDeleteUser(usuario.clave)}
-                                >
-                                    Eliminar
-                                                        </button>
-                                                    )}
+                                        )}
+                                        {canDeleteTemporal && (
+                                            <button
+                                                className="text-red-600 hover:text-red-900"
+                                                onClick={() => handleDeleteUser(usuario.clave)}
+                                            >
+                                                Eliminar
+                                            </button>
+                                        )}
+                                    </td>
+                                </tr>
+                                {showUserDetails === usuario.clave && (
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-4">
+                                            {renderUserDetails(usuario)}
                                         </td>
                                     </tr>
-                                    {showUserDetails === usuario.clave && (
-                                        <tr>
-                                            <td colSpan={5} className="px-6 py-4">
-                                                {renderUserDetails(usuario)}
-                                            </td>
-                                        </tr>
-                                        )}
-                                </React.Fragment>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-            </div>
-
-            {filteredUsers.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                    {usuarios.length === 0 ? 'No hay usuarios registrados' : 'No se encontraron usuarios con los filtros aplicados'}
+                                )}
+                            </React.Fragment>
+                        ))}
+                    </tbody>
+                </table>
                 </div>
-            )}
+            </div>
         </div>
     );
 };

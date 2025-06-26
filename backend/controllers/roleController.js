@@ -1,26 +1,19 @@
-const pool = require('../config/db'); // Asegúrate de que esta ruta sea correcta
+const pool = require('../config/db');
 
 /**
- * Crea un nuevo rol en la base de datos.
+ * Crea un nuevo rol.
  */
 exports.createRole = async (req, res) => {
     const { nombre } = req.body;
-
-    // Validación básica
     if (!nombre) {
         return res.status(400).json({ message: 'El nombre del rol es requerido.' });
     }
     try {
-        const result = await pool.query(
-            'INSERT INTO rol (nombre) VALUES ($1, $2) RETURNING id, name',
-            [nombre]
-        );
-        // Retornamos el rol creado con todos sus campos
+        const result = await pool.query('SELECT * FROM crear_rol($1)', [nombre]);
         res.status(201).json(result.rows[0]);
     } catch (error) {
         console.error('Error al crear el rol:', error);
-        // Manejo de error para nombres de rol duplicados
-        if (error.code === '23505') { // Código de error para unique_violation en PostgreSQL
+        if (error.code === '23505') {
             return res.status(409).json({ message: 'Ya existe un rol con este nombre.' });
         }
         res.status(500).json({ message: 'Error interno del servidor al crear el rol.' });
@@ -28,12 +21,11 @@ exports.createRole = async (req, res) => {
 };
 
 /**
- * Obtiene todos los roles de la base de datos.
+ * Obtiene todos los roles.
  */
 exports.getAllRoles = async (req, res) => {
     try {
-        // Selecciona clave, nombre y descripcion para mostrar la información completa del rol
-        const result = await pool.query('SELECT clave, nombre FROM rol ORDER BY nombre ASC');
+        const result = await pool.query('SELECT * FROM obtener_todos_los_roles()');
         res.status(200).json(result.rows);
     } catch (error) {
         console.error('Error al obtener los roles:', error);
@@ -42,57 +34,40 @@ exports.getAllRoles = async (req, res) => {
 };
 
 /**
- * Obtiene un rol específico por su ID.
+ * Obtiene un rol por su ID.
  */
 exports.getRoleById = async (req, res) => {
-    // Asegúrate de que el parámetro de la ruta en roleRoutes.js sea ':clave' o ':id' y lo manejes aquí.
-    // Si en tu ruta pones router.get('/:id', ...), aquí deberías usar const { id } = req.params;
-    // Para consistencia con tu tabla, usaremos 'clave' aquí.
     const { id } = req.params;
-
     try {
-        // Selecciona clave, nombre y descripcion para mostrar la información completa del rol
-        const result = await pool.query('SELECT clave, nombre FROM rol WHERE clave = $1', [id]);
-
+        const result = await pool.query('SELECT * FROM obtener_rol_por_id($1)', [id]);
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'Rol no encontrado.' });
         }
         res.status(200).json(result.rows[0]);
     } catch (error) {
-        console.error('Error al obtener el rol por clave:', error); // Cambiado a 'clave' para consistencia
+        console.error('Error al obtener el rol por ID:', error);
         res.status(500).json({ message: 'Error interno del servidor al obtener el rol.' });
     }
 };
 
 /**
  * Actualiza un rol existente por su ID.
- * Requiere 'name' y/o 'description' en el cuerpo de la solicitud.
  */
 exports.updateRole = async (req, res) => {
-    const { clave } = req.params;
+    const { id } = req.params;
     const { nombre } = req.body;
-    const queryParams = [];
-    let paramIndex = 1;
-
-    if (nombre !== undefined) {
-        query += `, nombre = $${paramIndex}`;
-        queryParams.push(nombre);
-        paramIndex++;
+    if (!nombre) {
+        return res.status(400).json({ message: 'El nombre del rol es requerido.' });
     }
-
-    query += ` WHERE clave = $${paramIndex} RETURNING clave, nombre`;
-    queryParams.push(clave);
-
     try {
-        const result = await pool.query(query, queryParams);
-
+        const result = await pool.query('SELECT * FROM actualizar_rol($1, $2)', [id, nombre]);
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'Rol no encontrado para actualizar.' });
         }
         res.status(200).json(result.rows[0]);
     } catch (error) {
         console.error('Error al actualizar el rol:', error);
-        if (error.code === '23505') { // Código de error para unique_violation
+        if (error.code === '23505') {
             return res.status(409).json({ message: 'Ya existe un rol con este nombre.' });
         }
         res.status(500).json({ message: 'Error interno del servidor al actualizar el rol.' });
@@ -103,97 +78,55 @@ exports.updateRole = async (req, res) => {
  * Elimina un rol por su ID.
  */
 exports.deleteRole = async (req, res) => {
-    const { clave } = req.params;
-
+    const { id } = req.params;
     try {
-        const result = await pool.query('DELETE FROM rol WHERE clave = $1 RETURNING clave', [clave]);
-
-        if (result.rows.length === 0) {
+        const result = await pool.query('SELECT eliminar_rol($1) as clave', [id]);
+        if (result.rows.length === 0 || result.rows[0].clave === null) {
             return res.status(404).json({ message: 'Rol no encontrado para eliminar.' });
         }
         res.status(200).json({ message: 'Rol eliminado exitosamente.', id: result.rows[0].clave });
     } catch (error) {
         console.error('Error al eliminar el rol:', error);
-        // Podrías añadir manejo de error si el rol está siendo referenciado por usuarios
-        if (error.code === '23503') { // Código de error para foreign_key_violation en PostgreSQL
+        if (error.code === '23503') {
             return res.status(409).json({ message: 'No se puede eliminar el rol porque está asociado a uno o más usuarios.' });
         }
         res.status(500).json({ message: 'Error interno del servidor al eliminar el rol.' });
     }
 };
 
-
+/**
+ * Asigna una lista de privilegios a un rol.
+ */
 exports.assignPrivilegesToRole = async (req, res) => {
-    const { rolClave } = req.params;
-    const { privilegiosClave } = req.body;
+    const { roleId } = req.params;
+    const { privilegeIds } = req.body;
 
-    // Validación básica
-    if (!Array.isArray(privilegiosClave)) {
-        return res.status(400).json({ message: 'El campo "privilegiosClave" debe ser un array de IDs de privilegios.' });
+    if (!Array.isArray(privilegeIds)) {
+        return res.status(400).json({ message: 'El campo "privilegeIds" debe ser un array de IDs de privilegios.' });
     }
 
-    const client = await pool.connect();
     try {
-        await client.query('BEGIN');
-
-        // 1. Verificar si el rol existe
-        const roleExists = await client.query('SELECT 1 FROM rol WHERE clave = $1', [rolClave]);
-        if (roleExists.rows.length === 0) {
-            await client.query('ROLLBACK');
-            return res.status(404).json({ message: 'Rol no encontrado.' });
-        }
-
-        // 2. Eliminar todas las asignaciones de privilegios existentes para este rol
-        await client.query('DELETE FROM rol_pri WHERE fk_rol = $1', [rolClave]);
-
-        // 3. Insertar los nuevos privilegios solo si el array no está vacío
-        if (privilegiosClave.length > 0) {
-            // Construir la parte VALUES de la consulta INSERT dinámicamente
-            const values = privilegiosClave.map((privilegioClave, index) => `($1, $${index + 2}, CURRENT_DATE)`).join(',');
-            const queryParams = [rolClave, ...privilegiosClave];
-
-            await client.query(
-                `INSERT INTO rol_pri (fk_rol, fk_privilegio, fecha) VALUES ${values}`,
-                queryParams
-            );
-        }
-
-        await client.query('COMMIT');
+        await pool.query('CALL asignar_privilegios_a_rol($1, $2::INT[])', [roleId, privilegeIds]);
         res.status(200).json({ message: 'Privilegios asignados al rol exitosamente.' });
-
     } catch (error) {
-        await client.query('ROLLBACK');
         console.error('Error asignando privilegios al rol:', error);
         if (error.code === '23503') { // foreign_key_violation
-            return res.status(400).json({ message: 'Uno o más IDs de privilegios proporcionados no son válidos.' });
+            return res.status(400).json({ message: 'Uno o más IDs de rol o privilegios proporcionados no son válidos.' });
         }
         res.status(500).json({ message: 'Error interno del servidor al asignar privilegios.' });
-    } finally {
-        client.release();
     }
 };
 
+/**
+ * Obtiene todos los privilegios asociados a un rol.
+ */
 exports.getPrivilegesByRoleId = async (req, res) => {
     const { roleId } = req.params;
-
     try {
-        // Verificar si el rol existe
-        const roleExists = await pool.query('SELECT 1 FROM rol WHERE clave = $1', [roleId]);
-        if (roleExists.rows.length === 0) {
-            return res.status(404).json({ message: 'Rol no encontrado.' });
-        }
-
-        const result = await pool.query(
-            `SELECT p.clave, p.nombre, p.descripcion
-             FROM privilegio p
-             JOIN rol_pri rp ON p.clave = rp.fk_privilegio
-             WHERE rp.fk_rol = $1
-             ORDER BY p.nombre ASC`,
-            [roleId]
-        );
+        const result = await pool.query('SELECT * FROM obtener_privilegios_por_rol_id($1)', [roleId]);
         res.status(200).json(result.rows);
     } catch (error) {
-        console.error('Error obteniendo privilegios por clave de rol:', error);
+        console.error('Error obteniendo privilegios por ID de rol:', error);
         res.status(500).json({ message: 'Error interno del servidor al obtener privilegios por rol.' });
     }
 };

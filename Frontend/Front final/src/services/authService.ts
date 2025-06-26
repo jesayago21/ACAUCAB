@@ -60,6 +60,11 @@ export const login = async (credentials: LoginCredentials): Promise<LoginRespons
 
     const data: LoginResponse = await response.json();
     console.log('✅ Login exitoso:', { success: data.success, hasUser: !!data.user });
+
+    if (data.success && data.user && data.token) {
+      authStorage.saveAuthData(data.user, data.token);
+    }
+    
     return data;
 
   } catch (error) {
@@ -157,12 +162,13 @@ export const obtenerPerfilUsuario = async (usuarioId: number): Promise<{ success
 
 /** Utilities para localStorage */
 export const authStorage = {
-  /** Guardar usuario en localStorage */
-  saveUser: (user: Usuario): void => {
+  /** Guardar usuario y token en localStorage */
+  saveAuthData: (user: Usuario, token: string): void => {
     try {
       localStorage.setItem('acaucab_user', JSON.stringify(user));
+      localStorage.setItem('acaucab_token', token);
     } catch (error) {
-      console.error('Error guardando usuario en localStorage:', error);
+      console.error('Error guardando datos de autenticación en localStorage:', error);
     }
   },
 
@@ -177,17 +183,28 @@ export const authStorage = {
     }
   },
 
-  /** Remover usuario de localStorage */
-  removeUser: (): void => {
+  /** Obtener token de localStorage */
+  getToken: (): string | null => {
+    try {
+      return localStorage.getItem('acaucab_token');
+    } catch (error) {
+      console.error('Error obteniendo token de localStorage:', error);
+      return null;
+    }
+  },
+
+  /** Remover datos de autenticación de localStorage */
+  clearAuthData: (): void => {
     try {
       localStorage.removeItem('acaucab_user');
+      localStorage.removeItem('acaucab_token');
     } catch (error) {
-      console.error('Error removiendo usuario de localStorage:', error);
+      console.error('Error removiendo datos de autenticación de localStorage:', error);
     }
   },
 
   /** Verificar si hay una sesión activa */
   hasActiveSession: (): boolean => {
-    return authStorage.getUser() !== null;
+    return authStorage.getUser() !== null && authStorage.getToken() !== null;
   }
 }; 

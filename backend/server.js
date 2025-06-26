@@ -6,6 +6,7 @@ const roleRoutes = require('./routes/roleRoutes');
 const userRoutes = require('./routes/userRoutes');
 const authRoutes = require('./routes/authRoutes');
 const privilegeRoutes = require('./routes/privilegeRoutes');
+const reposicionRoutes = require('./routes/reposicionRoutes');
 const { specs, swaggerUi } = require('./config/swagger');
 const db = require('./config/db');
 require('dotenv').config();
@@ -41,7 +42,8 @@ app.get('/', (req, res) => {
       clientCreate: '/api/clientes/crear',
       clientPlaces: '/api/clientes/lugares',
       login: '/api/auth/login',
-      verifyPermission: '/api/auth/verificar-permiso'
+      verifyPermission: '/api/auth/verificar-permiso',
+      reposiciones: '/api/reposiciones'
     }
   });
 });
@@ -53,6 +55,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/privileges', privilegeRoutes);
 app.use('/api/clientes', clientRoutes);
+app.use('/api/reposiciones', reposicionRoutes);
 
 /** rutas para los reportes */
 const reportRoutes = require('./routes/reportesRouter');

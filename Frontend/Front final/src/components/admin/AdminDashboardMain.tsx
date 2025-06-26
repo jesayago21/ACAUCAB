@@ -130,9 +130,8 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             
             // Módulos de compras
             case 'compras-mayoristas':
-                return <ComprasManagement user={user} />;
             case 'compras':
-                return <ModulePlaceholder title="Órdenes de Compra" user={user} />;
+                return <ComprasManagement user={user} />;
             
             // Módulos de personas
             case 'clientes':
@@ -194,7 +193,7 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             'ventas-online': 'Ventas Online',
             'ventas-eventos': 'Ventas en Eventos',
             'compras-mayoristas': 'Compras Mayoristas',
-            'compras': 'Órdenes de Compra',
+            'compras': 'Compras',
             'clientes': 'Gestión de Clientes',
             'empleados': 'Gestión de Empleados',
             'miembros': 'Gestión de Miembros',

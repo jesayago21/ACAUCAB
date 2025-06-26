@@ -20,16 +20,17 @@ export default function LoginPage() {
 
   /** Manejar login exitoso */
   const handleLoginSuccess = (response: LoginResponse) => {
-    if (response.user) {
+    if (response.user && response.token) {
       setUsuario(response.user);
-      authStorage.saveUser(response.user);
+      // La autenticación (guardado de datos) ya se maneja en el servicio de login
+      // No es necesario volver a guardar aquí.
     }
   };
 
   /** Manejar logout */
   const handleLogout = () => {
     setUsuario(null);
-    authStorage.removeUser();
+    authStorage.clearAuthData();
   };
 
   /** Manejar volver al autopago */

@@ -53,6 +53,7 @@ const RoleManagement: React.FC<RoleManagementProps> = ({ user }) => {
     const [privilegiosModulos, setPrivilegiosModulos] = useState<PrivilegioModulo[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>('');
+    const [successMessage, setSuccessMessage] = useState<string>('');
 
     // Estados para formularios
     const [showCreateForm, setShowCreateForm] = useState(false);
@@ -146,6 +147,8 @@ const RoleManagement: React.FC<RoleManagementProps> = ({ user }) => {
     /** Crear rol */
     const handleCreateRole = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError('');
+        setSuccessMessage('');
         
         try {
             const response = await fetch('http://localhost:5000/api/roles', {
@@ -164,6 +167,7 @@ const RoleManagement: React.FC<RoleManagementProps> = ({ user }) => {
             await loadRoles();
             setShowCreateForm(false);
             setNewRole({ nombre: '' });
+            setSuccessMessage('¡Rol creado exitosamente!');
 
         } catch (error: any) {
             setError(error.message);
@@ -198,7 +202,7 @@ const RoleManagement: React.FC<RoleManagementProps> = ({ user }) => {
             setSelectedRoleForPrivileges(role);
             
             // Cargar privilegios actuales del rol
-            const response = await fetch(`http://localhost:5000/api/privileges/${role.clave}`);
+            const response = await fetch(`http://localhost:5000/api/roles/${role.clave}/privileges`);
             if (!response.ok) throw new Error('Error al cargar privilegios del rol');
             
             const rolePrivilegesData = await response.json();
@@ -214,15 +218,17 @@ const RoleManagement: React.FC<RoleManagementProps> = ({ user }) => {
     /** Guardar privilegios del rol */
     const handleSaveRolePrivileges = async () => {
         if (!selectedRoleForPrivileges) return;
+        setError('');
+        setSuccessMessage('');
 
         try {
-            const response = await fetch(`http://localhost:5000/api/roles/${selectedRoleForPrivileges.clave}/assign-privileges`, {
-                method: 'POST',
+            const response = await fetch(`http://localhost:5000/api/roles/${selectedRoleForPrivileges.clave}/privileges`, {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    privilegiosClave: rolePrivileges
+                    privilegeIds: rolePrivileges
                 })
             });
 
@@ -234,6 +240,7 @@ const RoleManagement: React.FC<RoleManagementProps> = ({ user }) => {
             setShowPrivilegeModal(false);
             setSelectedRoleForPrivileges(null);
             setRolePrivileges([]);
+            setSuccessMessage('¡Privilegios asignados correctamente!');
 
         } catch (error: any) {
             setError(error.message);
@@ -297,15 +304,22 @@ const RoleManagement: React.FC<RoleManagementProps> = ({ user }) => {
                 )}
             </div>
 
-            {/* Mensaje de error */}
+            {/* Mensajes */}
             {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <p className="text-red-700">{error}</p>
-                    <button
-                        onClick={() => setError('')}
-                        className="mt-2 text-red-600 hover:text-red-800 underline"
-                    >
-                        Cerrar
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <strong className="font-bold">Error: </strong>
+                    <span className="block sm:inline">{error}</span>
+                    <button onClick={() => setError('')} className="absolute top-0 bottom-0 right-0 px-4 py-3">
+                        <span className="text-2xl">&times;</span>
+                    </button>
+                </div>
+            )}
+            {successMessage && (
+                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                    <strong className="font-bold">Éxito: </strong>
+                    <span className="block sm:inline">{successMessage}</span>
+                    <button onClick={() => setSuccessMessage('')} className="absolute top-0 bottom-0 right-0 px-4 py-3">
+                        <span className="text-2xl">&times;</span>
                     </button>
                 </div>
             )}
@@ -381,14 +395,6 @@ const RoleManagement: React.FC<RoleManagementProps> = ({ user }) => {
                                                 onClick={() => handleManagePrivileges(rol)}
                                             >
                                                 Privilegios
-                                            </button>
-                                        )}
-                                        {canUpdate && (
-                                            <button 
-                                                className="text-blue-600 hover:text-blue-900"
-                                                onClick={() => setEditingRole(rol)}
-                                            >
-                                                Editar
                                             </button>
                                         )}
                                         {canDelete && (

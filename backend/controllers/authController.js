@@ -83,45 +83,7 @@ exports.login = async (req, res) => {
     }
 
     try {
-        const query = `
-            SELECT 
-                u.clave as usuario_id,
-                u.username,
-                u.fk_rol,
-                r.nombre as rol_nombre,
-                -- Información de empleado si aplica
-                CASE WHEN u.fk_empleado IS NOT NULL THEN 'empleado' 
-                     WHEN u.fk_miembro IS NOT NULL THEN 'miembro'
-                     WHEN u.fk_cliente IS NOT NULL THEN 'cliente'
-                     ELSE NULL END as tipo_entidad,
-                -- Datos del empleado
-                e.ci as empleado_ci,
-                e.primer_nombre as empleado_primer_nombre,
-                e.primer_apellido as empleado_primer_apellido,
-                e.segundo_nombre as empleado_segundo_nombre,
-                e.segundo_apellido as empleado_segundo_apellido,
-                -- Datos del cargo y departamento del empleado
-                c.nombre as cargo_nombre,
-                d.nombre as departamento_nombre,
-                -- Datos del miembro
-                m.rif as miembro_rif,
-                m.razon_social as miembro_razon_social,
-                -- Datos del cliente
-                cl.clave as cliente_id,
-                cl.primer_nombre as cliente_primer_nombre,
-                cl.primer_apellido as cliente_primer_apellido
-            FROM usuario u
-            JOIN rol r ON u.fk_rol = r.clave
-            LEFT JOIN empleado e ON u.fk_empleado = e.ci
-            LEFT JOIN contrato ct ON e.ci = ct.fk_empleado AND ct.fecha_fin IS NULL
-            LEFT JOIN cargo c ON ct.fk_cargo = c.clave
-            LEFT JOIN departamento d ON ct.fk_departamento = d.clave
-            LEFT JOIN miembro m ON u.fk_miembro = m.rif
-            LEFT JOIN cliente cl ON u.fk_cliente = cl.clave
-            WHERE u.username = $1 AND u.contrasena = $2
-        `;
-
-        const userResult = await pool.query(query, [username, password]);
+        const userResult = await pool.query('SELECT * FROM login_usuario($1, $2)', [username, password]);
 
         if (userResult.rows.length === 0) {
             return res.status(401).json({ 
@@ -133,15 +95,7 @@ exports.login = async (req, res) => {
         const userData = userResult.rows[0];
 
         // Obtener permisos atómicos del usuario
-        const permissionsQuery = `
-            SELECT p.clave, p.nombre, p.descripcion
-            FROM privilegio p
-            JOIN rol_pri rp ON p.clave = rp.fk_privilegio
-            WHERE rp.fk_rol = $1
-            ORDER BY p.nombre
-        `;
-
-        const permissionsResult = await pool.query(permissionsQuery, [userData.fk_rol]);
+        const permissionsResult = await pool.query('SELECT * FROM obtener_permisos_por_rol($1)', [userData.fk_rol]);
         const atomicPermissions = permissionsResult.rows;
 
         // Derivar permisos especiales
@@ -217,15 +171,7 @@ exports.verificarPermiso = async (req, res) => {
 
     try {
         // Obtener permisos atómicos del usuario
-        const query = `
-            SELECT p.nombre
-            FROM privilegio p
-            JOIN rol_pri rp ON p.clave = rp.fk_privilegio
-            JOIN usuario u ON rp.fk_rol = u.fk_rol
-            WHERE u.clave = $1
-        `;
-
-        const result = await pool.query(query, [usuario_id]);
+        const result = await pool.query('SELECT * FROM obtener_permisos_por_usuario($1)', [usuario_id]);
         const atomicPermissions = result.rows;
 
         // Derivar permisos especiales
@@ -241,69 +187,6 @@ exports.verificarPermiso = async (req, res) => {
 
     } catch (error) {
         console.error('Error verificando permiso:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Error interno del servidor' 
-        });
-    }
-};
-
-/**
- * Obtener perfil completo de usuario
- */
-exports.getPerfilUsuario = async (req, res) => {
-    const { usuario_id } = req.params;
-
-    try {
-        const query = `
-            SELECT 
-                u.clave as usuario_id,
-                u.username,
-                r.nombre as rol_nombre,
-                CASE WHEN u.fk_empleado IS NOT NULL THEN 'empleado' 
-                     WHEN u.fk_miembro IS NOT NULL THEN 'miembro'
-                     WHEN u.fk_cliente IS NOT NULL THEN 'cliente'
-                     ELSE NULL END as tipo_entidad
-            FROM usuario u
-            JOIN rol r ON u.fk_rol = r.clave
-            WHERE u.clave = $1
-        `;
-
-        const userResult = await pool.query(query, [usuario_id]);
-
-        if (userResult.rows.length === 0) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Usuario no encontrado' 
-            });
-        }
-
-        const userData = userResult.rows[0];
-
-        // Obtener permisos
-        const permissionsQuery = `
-            SELECT p.clave, p.nombre, p.descripcion
-            FROM privilegio p
-            JOIN rol_pri rp ON p.clave = rp.fk_privilegio
-            JOIN usuario u ON rp.fk_rol = u.fk_rol
-            WHERE u.clave = $1
-            ORDER BY p.nombre
-        `;
-
-        const permissionsResult = await pool.query(permissionsQuery, [usuario_id]);
-        const atomicPermissions = permissionsResult.rows;
-        const specialPermissions = deriveSpecialPermissions(atomicPermissions);
-
-        res.json({
-            success: true,
-            user: {
-                ...userData,
-                permisos: [...atomicPermissions, ...specialPermissions]
-            }
-        });
-
-    } catch (error) {
-        console.error('Error obteniendo perfil:', error);
         res.status(500).json({ 
             success: false, 
             message: 'Error interno del servidor' 

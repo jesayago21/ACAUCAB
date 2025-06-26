@@ -5,11 +5,7 @@ const db = require('../config/db');
  */
 exports.getAllPrivileges = async (req, res) => {
     try {
-        const result = await db.query(`
-            SELECT clave, nombre, descripcion 
-            FROM privilegio 
-            ORDER BY nombre ASC
-        `);
+        const result = await db.query('SELECT * FROM obtener_todos_los_privilegios()');
         res.status(200).json(result.rows);
     } catch (error) {
         console.error('Error al obtener privilegios:', error);
@@ -24,11 +20,7 @@ exports.getPrivilegeById = async (req, res) => {
     const { id } = req.params;
     
     try {
-        const result = await db.query(`
-            SELECT clave, nombre, descripcion 
-            FROM privilegio 
-            WHERE clave = $1
-        `, [id]);
+        const result = await db.query('SELECT * FROM obtener_privilegio_por_id($1)', [id]);
         
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'Privilegio no encontrado' });
@@ -52,11 +44,7 @@ exports.createPrivilege = async (req, res) => {
     }
     
     try {
-        const result = await db.query(`
-            INSERT INTO privilegio (nombre, descripcion)
-            VALUES ($1, $2)
-            RETURNING clave, nombre, descripcion
-        `, [nombre, descripcion || null]);
+        const result = await db.query('SELECT * FROM crear_privilegio($1, $2)', [nombre, descripcion || null]);
         
         res.status(201).json(result.rows[0]);
     } catch (error) {
@@ -80,12 +68,7 @@ exports.updatePrivilege = async (req, res) => {
     }
     
     try {
-        const result = await db.query(`
-            UPDATE privilegio 
-            SET nombre = $1, descripcion = $2
-            WHERE clave = $3
-            RETURNING clave, nombre, descripcion
-        `, [nombre, descripcion || null, id]);
+        const result = await db.query('SELECT * FROM actualizar_privilegio($1, $2, $3)', [id, nombre, descripcion || null]);
         
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'Privilegio no encontrado' });
@@ -108,13 +91,9 @@ exports.deletePrivilege = async (req, res) => {
     const { id } = req.params;
     
     try {
-        const result = await db.query(`
-            DELETE FROM privilegio 
-            WHERE clave = $1 
-            RETURNING clave
-        `, [id]);
+        const result = await db.query('SELECT eliminar_privilegio($1) as clave', [id]);
         
-        if (result.rows.length === 0) {
+        if (result.rows.length === 0 || result.rows[0].clave === null) {
             return res.status(404).json({ message: 'Privilegio no encontrado' });
         }
         
@@ -138,11 +117,7 @@ exports.deletePrivilege = async (req, res) => {
  */
 exports.getPrivilegesByModule = async (req, res) => {
     try {
-        const result = await db.query(`
-            SELECT clave, nombre, descripcion 
-            FROM privilegio 
-            ORDER BY nombre ASC
-        `);
+        const result = await db.query('SELECT * FROM obtener_todos_los_privilegios()');
         
         // Agrupar privilegios por módulo/tabla
         const modules = {};

@@ -51,10 +51,12 @@ export interface Usuario {
   permisos: Permiso[];
 }
 
+/** Respuesta de la API al hacer login */
 export interface LoginResponse {
   success: boolean;
-  message: string;
+  message?: string;
   user?: Usuario;
+  token?: string;
 }
 
 export interface AuthContextType {
@@ -66,6 +68,7 @@ export interface AuthContextType {
   isLoading: boolean;
 }
 
+/** Solicitud para verificar un permiso */
 export interface VerificarPermisoRequest {
   usuario_id: number;
   permiso_nombre: string;

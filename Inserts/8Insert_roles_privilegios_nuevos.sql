@@ -186,3 +186,38 @@ SELECT 4, p.clave, CURRENT_DATE FROM privilegio p WHERE p.nombre IN (
 -- - 'gestionar roles privilegios': Se otorga si tiene 'consultar rol' Y 'modificar rol' Y 'consultar privilegio'
 -- - 'ver reportes ventas': Se otorga si tiene cualquier 'consultar venta...'
 -- - 'ver reportes inventario': Se otorga si tiene 'consultar inventario' O 'consultar almacen' 
+
+-- ==============================================================================
+-- SINCRONIZACIÓN DE SECUENCIAS PARA EVITAR ERRORES DE LLAVE DUPLICADA
+-- ==============================================================================
+-- Nota: Esto es necesario si los datos iniciales (roles, privilegios) se
+-- insertaron con IDs manuales, lo que desincroniza los contadores automáticos.
+SELECT setval('rol_clave_seq', (SELECT MAX(clave) FROM rol), true);
+SELECT setval('privilegio_clave_seq', (SELECT MAX(clave) FROM privilegio), true);
+
+-- =============================================
+-- INSERTS PARA ROL Y PRIVILEGIOS DE REPOSICIÓN
+-- =============================================
+
+-- 1. Insertar el nuevo rol de "Jefe de Pasillo"
+-- Este rol es crucial para la gestión de reposiciones en tiendas físicas.
+INSERT INTO rol (nombre)
+SELECT 'Jefe de Pasillo'
+WHERE NOT EXISTS (SELECT 1 FROM rol WHERE nombre = 'Jefe de Pasillo');
+
+-- 2. Insertar los privilegios para el módulo de Reposición
+-- Estos privilegios permitirán un control de acceso granular desde el frontend.
+INSERT INTO privilegio (nombre, descripcion)
+SELECT 'consultar reposicion', 'Permite ver la lista de órdenes de reposición y sus detalles.'
+WHERE NOT EXISTS (SELECT 1 FROM privilegio WHERE nombre = 'consultar reposicion');
+
+INSERT INTO privilegio (nombre, descripcion)
+SELECT 'modificar reposicion', 'Permite cambiar el estado de una orden de reposición (ej. de "procesando" a "listo para entrega").'
+WHERE NOT EXISTS (SELECT 1 FROM privilegio WHERE nombre = 'modificar reposicion');
+
+INSERT INTO privilegio (nombre, descripcion)
+SELECT 'crear reposicion', 'Permite generar manualmente una nueva orden de reposición.'
+WHERE NOT EXISTS (SELECT 1 FROM privilegio WHERE nombre = 'crear reposicion');
+
+-- NOTA: La asignación de estos privilegios a los roles se gestiona
+-- desde el panel de administración del frontend y ya no se incluye en este script. 

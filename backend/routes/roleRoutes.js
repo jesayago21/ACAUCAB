@@ -227,7 +227,69 @@ router.get('/:id', roleController.getRoleById); // Aquí iría authenticateToken
  *       500:
  *         description: Error interno del servidor.
  */
-router.put('/:id', roleController.updateRole); // Aquí iría authenticateToken y authorize(['edit_role'])
+router.put('/:id', roleController.updateRole);
+
+/**
+ * @swagger
+ * /api/roles/{roleId}/privileges:
+ *   put:
+ *     summary: Asigna privilegios a un rol
+ *     tags: [Roles]
+ *     parameters:
+ *       - in: path
+ *         name: roleId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID del rol
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - privilegeIds
+ *             properties:
+ *               privilegeIds:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 description: Array de IDs de los privilegios a asignar
+ *     responses:
+ *       200:
+ *         description: Privilegios asignados exitosamente
+ *       400:
+ *         description: Datos inválidos
+ *       404:
+ *         description: Rol no encontrado
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.put('/:roleId/privileges', roleController.assignPrivilegesToRole);
+
+/**
+ * @swagger
+ * /api/roles/{roleId}/privileges:
+ *   get:
+ *     summary: Obtiene los privilegios de un rol
+ *     tags: [Roles]
+ *     parameters:
+ *       - in: path
+ *         name: roleId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID del rol
+ *     responses:
+ *       200:
+ *         description: Lista de privilegios del rol
+ *       404:
+ *         description: Rol no encontrado
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get('/:roleId/privileges', roleController.getPrivilegesByRoleId);
 
 /**
  * @swagger
