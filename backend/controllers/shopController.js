@@ -376,27 +376,26 @@ const createVentaFisica = async (req, res) => {
           throw new Error(`Moneda no soportada: ${metodoPago.detalles.moneda}`);
         }
       }
-      res.status(200).json({ success: true, tasa_cambio: rows[0] });
-    } catch (error) {
-        console.error('Error al obtener tasa de cambio:', error);
-        res.status(500).json({ success: false, message: 'Error interno del servidor.' });
     }
-};
+    // Finalizar transacción
+    await db.query('COMMIT');
+    console.log('✅ Venta creada y transacción finalizada exitosamente');
 
-/**
- * Crear una venta en tienda física.
- */
-const createVentaFisica = async (req, res) => {
-    const { tienda_id, cliente_id, items, pagos } = req.body;
-    try {
-        const result = await db.query('SELECT crear_venta_fisica($1, $2, $3::JSON, $4::JSON) as venta_id', [
-            tienda_id, cliente_id, JSON.stringify(items), JSON.stringify(pagos)
-        ]);
-        res.status(201).json({ success: true, message: 'Venta física creada exitosamente', venta_id: result.rows[0].venta_id });
-    } catch (error) {
-        console.error('Error al crear venta física:', error);
-        res.status(500).json({ success: false, message: 'Error interno del servidor.' });
-    }
+    res.status(201).json({
+      success: true,
+      message: 'Venta creada exitosamente',
+      venta_id: ventaId
+    });
+
+  } catch (error) {
+    // Revertir transacción en caso de error
+    await db.query('ROLLBACK');
+    console.error('❌ Error en createVentaFisica, transacción revertida:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error interno del servidor al crear la venta'
+    });
+  }
 };
 
 /**
