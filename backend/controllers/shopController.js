@@ -360,7 +360,10 @@ const getAllTasasCambio = async (req, res) => {
       FROM tasa_cambio 
       WHERE (fecha_fin IS NULL OR fecha_fin >= CURRENT_DATE)
         AND fecha_inicio <= CURRENT_DATE
-      ORDER BY moneda, fecha_inicio DESC;
+      ORDER BY 
+        moneda, 
+        fecha_fin ASC NULLS FIRST, -- Prioriza las tasas sin fecha de fin
+        fecha_inicio DESC;
     `;
     
     const { rows } = await db.query(queryText);

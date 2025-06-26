@@ -528,3 +528,58 @@ CREATE TRIGGER tr_descontar_puntos_cliente
 AFTER INSERT ON pago
 FOR EACH ROW
 EXECUTE FUNCTION descontar_puntos_cliente();
+
+-- =================================================================
+-- FUNCIÓN PARA ACTUALIZAR LA TASA DE CAMBIO ANTERIOR
+-- =================================================================
+-- Esta función se ejecuta antes de insertar una nueva tasa de cambio.
+-- Busca la tasa anterior para la misma moneda que todavía está activa
+-- (es decir, con fecha_fin IS NULL) y establece su fecha_fin a la
+-- fecha_inicio de la nueva tasa que se está insertando.
+
+CREATE OR REPLACE FUNCTION actualizar_tasa_cambio_anterior()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Actualizar la tasa de cambio anterior que no tiene fecha de fin
+    UPDATE tasa_cambio
+    SET fecha_fin = NEW.fecha_inicio - INTERVAL '1 second'
+    WHERE
+        moneda = NEW.moneda
+        AND clave <> NEW.clave
+        AND fecha_fin IS NULL;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- =================================================================
+-- TRIGGER PARA ACTUALIZAR TASAS DE CAMBIO
+-- =================================================================
+-- Este trigger se dispara ANTES de cada operación de INSERT en la
+-- tabla tasa_cambio.
+-- Llama a la función actualizar_tasa_cambio_anterior() para asegurar
+-- que solo haya una tasa activa por moneda.
+
+-- Primero, eliminamos el trigger si ya existe para evitar errores
+DROP TRIGGER IF EXISTS trg_actualizar_tasa_anterior ON tasa_cambio;
+
+-- Luego, creamos el nuevo trigger
+CREATE TRIGGER trg_actualizar_tasa_anterior
+BEFORE INSERT ON tasa_cambio
+FOR EACH ROW
+EXECUTE FUNCTION actualizar_tasa_cambio_anterior();
+
+-- =================================================================
+-- EJEMPLO DE USO:
+-- =================================================================
+-- Cuando insertes una nueva tasa, por ejemplo:
+--
+-- INSERT INTO tasa_cambio (moneda, monto_equivalencia, fecha_inicio)
+-- VALUES ('USD', 36.50, '2023-10-27');
+--
+-- El trigger se asegurará de que la tasa 'USD' anterior que tenía
+-- fecha_fin = NULL ahora tenga fecha_fin = '2023-10-26 23:59:59'.
+-- =================================================================
+
+COMMENT ON FUNCTION actualizar_tasa_cambio_anterior IS 'Función del trigger para cerrar la vigencia de una tasa de cambio anterior al insertar una nueva para la misma moneda.';
+COMMENT ON TRIGGER trg_actualizar_tasa_anterior ON tasa_cambio IS 'Trigger que se activa antes de insertar una nueva tasa para actualizar la fecha de fin de la tasa anterior activa.'; 
