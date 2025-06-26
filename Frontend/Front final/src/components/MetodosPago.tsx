@@ -324,6 +324,12 @@ export default function MetodosPago({
     setProcesando(true);
     
     try {
+      // Logs de debugging
+      console.log('🔍 INICIANDO PROCESO DE PAGO');
+      console.log('📋 Pagos aplicados:', pagosAplicados);
+      console.log('🛒 Items del carrito:', carrito.items);
+      console.log('💰 Total de la venta:', carrito.totalPrecio);
+      
       // Preparar datos para la venta
       const ventaData = {
         cliente_id: cliente.clave!,
@@ -341,8 +347,12 @@ export default function MetodosPago({
         total_venta: carrito.totalPrecio
       };
 
+      console.log('📤 Datos de venta a enviar:', JSON.stringify(ventaData, null, 2));
+
       // Crear la venta en el backend
       const resultado = await ventaService.crearVentaFisica(ventaData);
+      
+      console.log('✅ Respuesta del backend:', resultado);
       
       if (resultado.success) {
         console.log('✅ Venta creada exitosamente:', resultado);
@@ -381,7 +391,7 @@ export default function MetodosPago({
       }
       
     } catch (error) {
-      console.error('Error procesando el pago:', error);
+      console.error('❌ Error procesando el pago:', error);
       setProcesando(false);
       
       // Mostrar mensaje de error al usuario

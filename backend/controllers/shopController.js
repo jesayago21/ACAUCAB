@@ -389,6 +389,9 @@ const getAllTasasCambio = async (req, res) => {
 
 /** Crear una venta de tienda física */
 const createVentaFisica = async (req, res) => {
+  console.log('🔍 INICIANDO createVentaFisica');
+  console.log('📋 Datos recibidos:', JSON.stringify(req.body, null, 2));
+  
   const {
     cliente_id,
     tienda_id = 1, // Default a tienda ID 1
@@ -399,18 +402,24 @@ const createVentaFisica = async (req, res) => {
 
   // Validación básica de entrada
   if (!cliente_id || !items || !Array.isArray(items) || items.length === 0) {
+    console.error('❌ Datos de venta incompletos');
     return res.status(400).json({ 
       success: false,
       message: 'Datos de venta incompletos o inválidos' 
     });
   }
 
+  console.log(`📊 Cliente: ${cliente_id}, Tienda: ${tienda_id}, Items: ${items.length}, Métodos de pago: ${metodos_pago.length}`);
+
   try {
     // Iniciar transacción
     await db.query('BEGIN');
+    console.log('✅ Transacción iniciada');
 
     // Validar puntos del cliente si hay pagos con puntos
     const pagosConPuntos = metodos_pago.filter(mp => mp.tipo === 'Puntos');
+    console.log(`💎 Pagos con puntos encontrados: ${pagosConPuntos.length}`);
+    
     if (pagosConPuntos.length > 0) {
       // Obtener puntos actuales del cliente
       const puntosClienteQuery = `
@@ -426,8 +435,12 @@ const createVentaFisica = async (req, res) => {
       
       const puntosDisponibles = puntosResult.rows[0].puntos_acumulados || 0;
       const totalPuntosNecesarios = pagosConPuntos.reduce((sum, mp) => {
-        return sum + (mp.detalles?.puntos_usados || 0);
+        const puntosUsados = mp.detalles?.puntos_usados || 0;
+        console.log(`💎 Método de pago con puntos - Puntos usados: ${puntosUsados}`);
+        return sum + puntosUsados;
       }, 0);
+      
+      console.log(`💎 Puntos disponibles: ${puntosDisponibles}, Puntos necesarios: ${totalPuntosNecesarios}`);
       
       if (puntosDisponibles < totalPuntosNecesarios) {
         throw new Error(`Puntos insuficientes. Disponibles: ${puntosDisponibles}, Necesarios: ${totalPuntosNecesarios}`);
@@ -490,7 +503,12 @@ const createVentaFisica = async (req, res) => {
     }
 
     // 3. Manejar métodos de pago con lógica específica por tipo
+    console.log('💳 Procesando métodos de pago...');
     for (const metodoPago of metodos_pago) {
+      console.log(`\n📝 Procesando método: ${metodoPago.tipo}`);
+      console.log(`   Monto: ${metodoPago.monto}`);
+      console.log(`   Detalles:`, metodoPago.detalles);
+      
       let insertMetodoPagoQuery;
       let metodoPagoParams;
       
