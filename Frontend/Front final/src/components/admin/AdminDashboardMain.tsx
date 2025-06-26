@@ -8,7 +8,7 @@ import VentasManagement from './VentasManagement';
 import VentasWebManagement from './VentasWebManagement';
 import VentasTiendaManagement from './VentasTiendaManagement';
 import PuntosManagement from './PuntosManagement';
-import ComprasManagement from './ComprasManagement';
+
 import ReposicionManagement from './ReposicionManagement';
 import ReportesManagement from './ReportesManagement';
 import type { Usuario } from '../../types/auth';
@@ -128,10 +128,7 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             case 'ventas-eventos':
                 return <ModulePlaceholder title="Ventas en Eventos" user={user} />;
             
-            // Módulos de compras
-            case 'compras-mayoristas':
-            case 'compras':
-                return <ComprasManagement user={user} />;
+            
             
             // Módulos de personas
             case 'clientes':
@@ -192,8 +189,7 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             'ventas-fisicas': 'Ventas Físicas',
             'ventas-online': 'Ventas Online',
             'ventas-eventos': 'Ventas en Eventos',
-            'compras-mayoristas': 'Compras Mayoristas',
-            'compras': 'Compras',
+            
             'clientes': 'Gestión de Clientes',
             'empleados': 'Gestión de Empleados',
             'miembros': 'Gestión de Miembros',
