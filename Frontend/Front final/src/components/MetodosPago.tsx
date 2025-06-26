@@ -151,12 +151,36 @@ export default function MetodosPago({
   const aplicarPago = (tipoPago: PagoAplicado['tipo'], monto: number, detalles?: any) => {
     if (monto <= 0) return;
 
-    // Permitir pagar más solo en efectivo
-    if (tipoPago !== 'Efectivo' && monto > montoPendiente) {
-      return;
-    }
+    // Para efectivo, permitir que el monto aplicado pueda ser mayor al pendiente
+    // (el vuelto se maneja en los detalles)
+    let montoFinalAplicado = monto;
     
-    const montoFinalAplicado = Math.min(monto, montoPendiente);
+    // Para otros métodos de pago, limitar al monto pendiente con tolerancia decimal
+    if (tipoPago !== 'Efectivo') {
+      // Usar tolerancia decimal para permitir montos exactos al pendiente
+      if (monto > (montoPendiente + 0.001)) {
+        console.error('❌ Intento de sobrepago detectado:', {
+          tipoPago,
+          monto,
+          montoPendiente,
+          diferencia: monto - montoPendiente
+        });
+        return; // No permitir sobrepago en otros métodos
+      }
+      montoFinalAplicado = Math.min(monto, montoPendiente);
+    } else {
+      // Para efectivo, el monto aplicado es el menor entre lo que se paga y lo pendiente
+      // pero guardamos el vuelto en los detalles
+      montoFinalAplicado = Math.min(monto, montoPendiente);
+    }
+
+    console.log('💳 Aplicando pago:', {
+      tipoPago,
+      montoOriginal: monto,
+      montoFinalAplicado,
+      montoPendiente,
+      diferencia: montoPendiente - montoFinalAplicado
+    });
 
     const nuevoPago: PagoAplicado = {
       id: `${tipoPago}-${Date.now()}`,
@@ -204,23 +228,27 @@ export default function MetodosPago({
     const montoPagarNum = parseFloat(montoPagar) || 0;
     
     if (montoEntregadoNum <= 0 || montoPagarNum <= 0) {
-      return; // Las validaciones ahora se muestran visualmente
+      alert('Debe ingresar montos válidos en ambos campos.');
+      return;
     }
 
     if (montoPagarNum > montoEntregadoNum) {
-      return; // Las validaciones ahora se muestran visualmente
+      alert('El "Monto a Pagar" no puede ser mayor al "Monto Entregado".');
+      return;
     }
 
     const tasa = monedaEfectivo !== 'VES' ? tasasCambio[monedaEfectivo] : null;
-    const montoPendienteEnMoneda = tasa ? parseFloat((montoPendiente / tasa.monto_equivalencia).toFixed(2)) : montoPendiente;
+    const montoPendienteEnMoneda = tasa 
+      ? parseFloat((montoPendiente / tasa.monto_equivalencia).toFixed(2)) 
+      : montoPendiente;
 
-    if (montoPagarNum > montoPendienteEnMoneda) {
-      return; // Las validaciones ahora se muestran visualmente
-    }
-
-    const montoAplicadoEnMoneda = montoPagarNum;
+    // El monto que se aplica a la deuda es el mínimo entre lo que se quiere pagar y lo que se debe
+    const montoAplicadoEnMoneda = Math.min(montoPagarNum, montoPendienteEnMoneda);
+    
+    // El vuelto se calcula sobre el monto entregado menos lo que se APLICÓ a la deuda
     const vueltoEnMoneda = montoEntregadoNum - montoAplicadoEnMoneda;
-
+    
+    // Convertir el monto APLICADO a bolívares para el sistema
     const montoAplicadoEnBs = calcularEquivalenteBolivares(montoAplicadoEnMoneda, monedaEfectivo);
 
     aplicarPago('Efectivo', montoAplicadoEnBs, {
@@ -239,7 +267,7 @@ export default function MetodosPago({
     const montoDeseado = parseFloat(montoPuntos) || 0;
     if (montoDeseado <= 0) return;
     
-          const tasaActual = parseFloat(String(tasaPuntos.monto_equivalencia || 1));
+    const tasaActual = parseFloat(String(tasaPuntos.monto_equivalencia || 1));
     const puntosNecesarios = Math.ceil(montoDeseado / tasaActual);
     const montoMaximo = Math.min(puntosCliente.valor_en_bolivares, montoPendiente);
     const montoFinal = Math.min(montoDeseado, montoMaximo);
@@ -247,6 +275,12 @@ export default function MetodosPago({
     
     if (puntosFinales > puntosCliente.puntos_disponibles) {
       alert('No tienes suficientes puntos para este monto');
+      return;
+    }
+    
+    // Verificar que no exceda el monto pendiente con tolerancia decimal
+    if (montoFinal > (montoPendiente + 0.001)) {
+      alert(`El monto excede lo pendiente. Máximo: Bs. ${formatearPrecio(montoPendiente)}`);
       return;
     }
     
@@ -262,7 +296,16 @@ export default function MetodosPago({
 
   /** Aplicar pago con tarjeta */
   const handlePagoTarjeta = () => {
+    console.log('💳 INICIANDO handlePagoTarjeta');
+    console.log('📊 Estado actual:', {
+      montoPendiente,
+      montoTarjeta,
+      datosTarjeta,
+      subtipoTarjeta
+    });
+
     if (!datosTarjeta.numero || !datosTarjeta.vencimiento || !datosTarjeta.banco) {
+      console.error('❌ Datos de tarjeta incompletos');
       alert('Complete todos los datos de la tarjeta');
       return;
     }
@@ -270,23 +313,51 @@ export default function MetodosPago({
     // Validar que el número de tarjeta tenga exactamente 16 dígitos
     const numeroLimpio = datosTarjeta.numero.replace(/\s/g, '');
     if (numeroLimpio.length !== 16 || !/^\d{16}$/.test(numeroLimpio)) {
+      console.error('❌ Número de tarjeta inválido:', numeroLimpio);
       alert('El número de tarjeta debe tener exactamente 16 dígitos');
       return;
     }
 
     const monto = parseFloat(montoTarjeta) || 0;
-    if (monto <= 0 || monto > montoPendiente) {
-      alert('Ingrese un monto válido');
+    console.log('💰 Validando monto:', {
+      montoIngresado: montoTarjeta,
+      montoParsed: monto,
+      montoPendiente,
+      tolerancia: montoPendiente + 0.001,
+      esValido: monto > 0 && monto <= (montoPendiente + 0.001)
+    });
+
+    // Usar tolerancia decimal para permitir montos exactos al pendiente
+    if (monto <= 0 || monto > (montoPendiente + 0.001)) {
+      console.error('❌ Monto inválido:', {
+        monto,
+        montoPendiente,
+        maximo: montoPendiente + 0.001
+      });
+      alert(`Ingrese un monto válido. Máximo permitido: Bs. ${formatearPrecio(montoPendiente)}`);
       return;
     }
 
     const tipoFinal = subtipoTarjeta === 'credito' ? 'Tarjeta de credito' : 'Tarjeta de debito';
+    console.log('✅ Aplicando pago con tarjeta:', {
+      tipo: tipoFinal,
+      monto,
+      detalles: {
+        numero_tarjeta: numeroLimpio,
+        fecha_vencimiento: datosTarjeta.vencimiento,
+        banco: datosTarjeta.banco,
+        guardar_como_favorito: datosTarjeta.guardarComoFavorito
+      }
+    });
+
     aplicarPago(tipoFinal as PagoAplicado['tipo'], monto, {
       numero_tarjeta: numeroLimpio,
       fecha_vencimiento: datosTarjeta.vencimiento,
       banco: datosTarjeta.banco,
       guardar_como_favorito: datosTarjeta.guardarComoFavorito
     });
+
+    console.log('✅ handlePagoTarjeta completado');
   };
 
   /** Aplicar pago con cheque */
@@ -303,8 +374,9 @@ export default function MetodosPago({
     }
 
     const monto = parseFloat(montoCheque) || 0;
-    if (monto <= 0 || monto > montoPendiente) {
-      alert('Ingrese un monto válido');
+    // Usar tolerancia decimal para permitir montos exactos al pendiente
+    if (monto <= 0 || monto > (montoPendiente + 0.001)) {
+      alert(`Ingrese un monto válido. Máximo permitido: Bs. ${formatearPrecio(montoPendiente)}`);
       return;
     }
 
@@ -324,6 +396,12 @@ export default function MetodosPago({
     setProcesando(true);
     
     try {
+      // Logs de debugging
+      console.log('🔍 INICIANDO PROCESO DE PAGO');
+      console.log('📋 Pagos aplicados:', pagosAplicados);
+      console.log('🛒 Items del carrito:', carrito.items);
+      console.log('💰 Total de la venta:', carrito.totalPrecio);
+      
       // Preparar datos para la venta
       const ventaData = {
         cliente_id: cliente.clave!,
@@ -341,8 +419,12 @@ export default function MetodosPago({
         total_venta: carrito.totalPrecio
       };
 
+      console.log('📤 Datos de venta a enviar:', JSON.stringify(ventaData, null, 2));
+
       // Crear la venta en el backend
       const resultado = await ventaService.crearVentaFisica(ventaData);
+      
+      console.log('✅ Respuesta del backend:', resultado);
       
       if (resultado.success) {
         console.log('✅ Venta creada exitosamente:', resultado);
@@ -381,7 +463,7 @@ export default function MetodosPago({
       }
       
     } catch (error) {
-      console.error('Error procesando el pago:', error);
+      console.error('❌ Error procesando el pago:', error);
       setProcesando(false);
       
       // Mostrar mensaje de error al usuario
@@ -626,15 +708,24 @@ export default function MetodosPago({
                           {parseFloat(montoPagar) > parseFloat(montoEntregado) && (
                             <p className="text-xs text-red-600">⚠️ El monto a pagar no puede ser mayor al entregado</p>
                           )}
-                          {monedaEfectivo !== 'VES' && parseFloat(montoPagar) > parseFloat((montoPendiente / (tasasCambio[monedaEfectivo]?.monto_equivalencia || 1)).toFixed(2)) && (
-                            <p className="text-xs text-red-600">⚠️ El monto excede lo pendiente en {monedaEfectivo}</p>
-                          )}
                         </div>
                       )}
                       
                       <button
                         onClick={handlePagoEfectivo}
-                        disabled={!montoEntregado || !montoPagar || parseFloat(montoEntregado) <= 0 || parseFloat(montoPagar) <= 0}
+                        disabled={(() => {
+                          if (!montoEntregado || !montoPagar) return true;
+                          
+                          const montoEntregadoNum = parseFloat(montoEntregado);
+                          const montoPagarNum = parseFloat(montoPagar);
+                          
+                          if (montoEntregadoNum <= 0 || montoPagarNum <= 0) return true;
+                          
+                          // La única validación estricta es que no se puede pagar más de lo que se entrega
+                          if (montoPagarNum > montoEntregadoNum) return true;
+                          
+                          return false;
+                        })()}
                         className="w-full bg-[#3D4A3A] hover:bg-[#2C3631] text-white font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Aplicar Pago en Efectivo
@@ -687,7 +778,7 @@ export default function MetodosPago({
 
                       <button
                         onClick={handlePagoPuntos}
-                        disabled={!montoPuntos || parseFloat(montoPuntos) <= 0 || parseFloat(montoPuntos) > Math.min(puntosCliente.valor_en_bolivares, montoPendiente)}
+                        disabled={!montoPuntos || parseFloat(montoPuntos) <= 0 || parseFloat(montoPuntos) > (Math.min(puntosCliente.valor_en_bolivares, montoPendiente) + 0.001)}
                         className="w-full bg-[#3D4A3A] hover:bg-[#2C3631] text-white font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Aplicar Pago con Puntos

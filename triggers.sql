@@ -646,8 +646,34 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger para validar cambios de estatus en reposiciones
-CREATE TRIGGER tr_validar_cambio_estatus_reposicion
-BEFORE INSERT OR UPDATE ON historico
+-- =================================================================
+-- TRIGGER PARA ACTUALIZAR TASAS DE CAMBIO
+-- =================================================================
+-- Este trigger se dispara ANTES de cada operación de INSERT en la
+-- tabla tasa_cambio.
+-- Llama a la función actualizar_tasa_cambio_anterior() para asegurar
+-- que solo haya una tasa activa por moneda.
+
+-- Primero, eliminamos el trigger si ya existe para evitar errores
+DROP TRIGGER IF EXISTS trg_actualizar_tasa_anterior ON tasa_cambio;
+
+-- Luego, creamos el nuevo trigger
+CREATE TRIGGER trg_actualizar_tasa_anterior
+BEFORE INSERT ON tasa_cambio
 FOR EACH ROW
-EXECUTE FUNCTION validar_cambio_estatus_reposicion();
+EXECUTE FUNCTION actualizar_tasa_cambio_anterior();
+
+-- =================================================================
+-- EJEMPLO DE USO:
+-- =================================================================
+-- Cuando insertes una nueva tasa, por ejemplo:
+--
+-- INSERT INTO tasa_cambio (moneda, monto_equivalencia, fecha_inicio)
+-- VALUES ('USD', 36.50, '2023-10-27');
+--
+-- El trigger se asegurará de que la tasa 'USD' anterior que tenía
+-- fecha_fin = NULL ahora tenga fecha_fin = '2023-10-26 23:59:59'.
+-- =================================================================
+
+COMMENT ON FUNCTION actualizar_tasa_cambio_anterior IS 'Función del trigger para cerrar la vigencia de una tasa de cambio anterior al insertar una nueva para la misma moneda.';
+COMMENT ON TRIGGER trg_actualizar_tasa_anterior ON tasa_cambio IS 'Trigger que se activa antes de insertar una nueva tasa para actualizar la fecha de fin de la tasa anterior activa.'; 

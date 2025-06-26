@@ -148,16 +148,43 @@ export const clienteService = {
 
   /** Obtener puntos disponibles de un cliente */
   async obtenerPuntosCliente(clienteId: number): Promise<PuntosCliente> {
-    // Este endpoint no existe en las rutas, pero mantengo la estructura para futuro
-    const response = await fetchWithTimeout(`${API_BASE_URL}/clientes/${clienteId}/puntos`);
-    const data = await handleResponse<{cliente: {clave: number, puntos_acumulados: number}}>(response);
-    
-    // Convertir a formato PuntosCliente
-    return {
-      puntos_disponibles: data.cliente.puntos_acumulados,
-      valor_en_bolivares: data.cliente.puntos_acumulados * 1, // Tasa 1:1 como fallback
-      tasa_cambio: 1
-    };
+    try {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/clientes/${clienteId}/puntos`);
+      const data = await handleResponse<{
+        message: string;
+        found: boolean;
+        cliente: {
+          clave: number;
+          puntos_acumulados: number;
+        }
+      }>(response);
+      
+      // Obtener tasa de puntos para calcular valor en bolívares
+      let tasaPuntos = 1; // Default
+      try {
+        const tasasResponse = await tasaCambioService.obtenerTodasLasTasas();
+        if (tasasResponse.PUNTOS) {
+          tasaPuntos = tasasResponse.PUNTOS.monto_equivalencia || 1;
+        }
+      } catch (error) {
+        console.error('Error obteniendo tasa de puntos:', error);
+      }
+      
+      // Convertir a formato PuntosCliente
+      return {
+        puntos_disponibles: data.cliente.puntos_acumulados || 0,
+        valor_en_bolivares: (data.cliente.puntos_acumulados || 0) * tasaPuntos,
+        tasa_cambio: tasaPuntos
+      };
+    } catch (error) {
+      console.error('Error obteniendo puntos del cliente:', error);
+      // Retornar valores por defecto en caso de error
+      return {
+        puntos_disponibles: 0,
+        valor_en_bolivares: 0,
+        tasa_cambio: 1
+      };
+    }
   },
 
   /** Obtener métodos de pago favoritos del cliente */
