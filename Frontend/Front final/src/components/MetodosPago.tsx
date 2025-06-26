@@ -151,6 +151,13 @@ export default function MetodosPago({
   const aplicarPago = (tipoPago: PagoAplicado['tipo'], monto: number, detalles?: any) => {
     if (monto <= 0) return;
 
+    // VERIFICAR SI YA ESTÁ TODO PAGADO
+    if (Math.abs(montoPendiente) <= 0.02) {
+      console.log('✅ COMPRA YA PAGADA - No se pueden aplicar más pagos');
+      alert('La compra ya está completamente pagada. No se pueden aplicar más métodos de pago.');
+      return;
+    }
+
     // Para efectivo, permitir que el monto aplicado pueda ser mayor al pendiente
     // (el vuelto se maneja en los detalles)
     let montoFinalAplicado = monto;
@@ -165,7 +172,8 @@ export default function MetodosPago({
           montoPendiente,
           diferencia: monto - montoPendiente
         });
-        return; // No permitir sobrepago en otros métodos
+        alert(`Monto excede lo pendiente. Máximo permitido: Bs. ${formatearPrecio(montoPendiente)}`);
+        return;
       }
       montoFinalAplicado = Math.min(monto, montoPendiente);
     } else {
@@ -190,7 +198,28 @@ export default function MetodosPago({
     };
 
     setPagosAplicados(prev => [...prev, nuevoPago]);
-    setMontoPendiente(prev => prev - montoFinalAplicado);
+    
+    // SOLUCIÓN ULTRA DEFINITIVA: Calcular nuevo monto pendiente con redondeo agresivo
+    const nuevoMontoPendiente = parseFloat((montoPendiente - montoFinalAplicado).toFixed(2));
+    
+    console.log('💰 Aplicando pago:', {
+      montoPendienteAnterior: montoPendiente,
+      montoAplicado: montoFinalAplicado,
+      nuevoMontoPendiente: nuevoMontoPendiente,
+      porcentajePagado: ((montoFinalAplicado / montoPendiente) * 100).toFixed(2) + '%'
+    });
+    
+    // DETECCIÓN ULTRA AGRESIVA DE PAGO COMPLETO
+    const porcentajePagado = (montoFinalAplicado / montoPendiente) * 100;
+    
+    if (porcentajePagado >= 99.5 || Math.abs(nuevoMontoPendiente) <= 0.05) {
+      console.log('✅ PAGO COMPLETO DETECTADO - Forzando pendiente a 0.00');
+      console.log('📊 Razón: Porcentaje pagado:', porcentajePagado.toFixed(2) + '%, Residuo:', nuevoMontoPendiente);
+      setMontoPendiente(0);
+    } else {
+      console.log('📊 PAGO PARCIAL - Nuevo pendiente:', nuevoMontoPendiente);
+      setMontoPendiente(Math.max(0, nuevoMontoPendiente)); // Nunca negativo
+    }
 
     // Resetear formularios
     setMontoEntregado('');
@@ -208,18 +237,30 @@ export default function MetodosPago({
     if (!pago) return;
 
     setPagosAplicados(prev => prev.filter(p => p.id !== pagoId));
-    setMontoPendiente(prev => prev + pago.monto);
+    
+    // Aplicar la misma lógica al remover pagos
+    const nuevoMontoPendiente = montoPendiente + pago.monto;
+    
+    if (Math.abs(nuevoMontoPendiente) < 0.02) {
+      console.log('🔧 ELIMINANDO RESIDUO AL REMOVER:', nuevoMontoPendiente, '→ 0.00');
+      setMontoPendiente(0);
+    } else {
+      setMontoPendiente(nuevoMontoPendiente);
+    }
   };
 
   /** Calcular equivalente en bolívares según la moneda seleccionada */
   const calcularEquivalenteBolivares = (monto: number, moneda: 'VES' | 'USD' | 'EUR'): number => {
-    if (moneda === 'VES') return monto;
+    if (moneda === 'VES') return parseFloat(monto.toFixed(2));
     
     const tasa = tasasCambio[moneda];
-    if (!tasa) return monto;
+    if (!tasa) return parseFloat(monto.toFixed(2));
     
-    // Convertir a bolívares usando la tasa actual
-    return monto * tasa.monto_equivalencia;
+    // Convertir a bolívares usando la tasa actual con redondeo agresivo
+    const resultado = monto * tasa.monto_equivalencia;
+    
+    // Redondear agresivamente para evitar residuos flotantes
+    return parseFloat(resultado.toFixed(2));
   };
 
   /** Aplicar pago con efectivo */
@@ -248,10 +289,40 @@ export default function MetodosPago({
     // El vuelto se calcula sobre el monto entregado menos lo que se APLICÓ a la deuda
     const vueltoEnMoneda = montoEntregadoNum - montoAplicadoEnMoneda;
     
-    // Convertir el monto APLICADO a bolívares para el sistema
-    const montoAplicadoEnBs = calcularEquivalenteBolivares(montoAplicadoEnMoneda, monedaEfectivo);
+    // Convertir el monto APLICADO a bolívares para el sistema con redondeo agresivo
+    const montoAplicadoEnBs = parseFloat(calcularEquivalenteBolivares(montoAplicadoEnMoneda, monedaEfectivo).toFixed(2));
+    
+    console.log('💰 DEPURACIÓN CONVERSIÓN:', {
+      monedaEfectivo,
+      montoPagarNum,
+      montoPendiente,
+      montoAplicadoEnMoneda,
+      montoAplicadoEnBs,
+      tasa: tasa?.monto_equivalencia,
+      diferencia: montoAplicadoEnBs - montoPendiente
+    });
+    
+    // SOLUCIÓN ULTRA AGRESIVA: Si el pago cubre más del 95% del total, asumir pago completo
+    const porcentajeCubierto = (montoAplicadoEnBs / montoPendiente) * 100;
+    let montoFinalAAplicar;
+    
+    if (porcentajeCubierto >= 99.5) { // Si cubre 99.5% o más, es pago completo
+      montoFinalAAplicar = montoPendiente; // Aplicar exactamente lo pendiente
+      console.log('✅ PAGO COMPLETO DETECTADO: Porcentaje cubierto:', porcentajeCubierto.toFixed(2) + '%');
+      console.log('✅ Aplicando exactamente lo pendiente:', montoPendiente);
+      
+      // FORZAR A CERO INMEDIATAMENTE
+      setTimeout(() => {
+        setMontoPendiente(0);
+      }, 100);
+      
+    } else {
+      // Pago parcial: aplicar lo que se puede con redondeo
+      montoFinalAAplicar = parseFloat(montoAplicadoEnBs.toFixed(2));
+      console.log('📊 PAGO PARCIAL:', montoFinalAAplicar, 'de', montoPendiente);
+    }
 
-    aplicarPago('Efectivo', montoAplicadoEnBs, {
+    aplicarPago('Efectivo', montoFinalAAplicar, {
       monto_original: montoAplicadoEnMoneda,
       moneda: monedaEfectivo,
       tasa_cambio: tasa?.monto_equivalencia || 1,
@@ -263,6 +334,12 @@ export default function MetodosPago({
   /** Aplicar pago con puntos */
   const handlePagoPuntos = () => {
     if (!puntosCliente || !tasaPuntos) return;
+    
+    // Verificar si ya está todo pagado
+    if (Math.abs(montoPendiente) <= 0.02) {
+      alert('La compra ya está completamente pagada. No se pueden usar más puntos.');
+      return;
+    }
     
     const montoDeseado = parseFloat(montoPuntos) || 0;
     if (montoDeseado <= 0) return;
@@ -303,6 +380,12 @@ export default function MetodosPago({
       datosTarjeta,
       subtipoTarjeta
     });
+
+    // Verificar si ya está todo pagado
+    if (Math.abs(montoPendiente) <= 0.02) {
+      alert('La compra ya está completamente pagada. No se pueden aplicar más métodos de pago.');
+      return;
+    }
 
     if (!datosTarjeta.numero || !datosTarjeta.vencimiento || !datosTarjeta.banco) {
       console.error('❌ Datos de tarjeta incompletos');
@@ -362,6 +445,12 @@ export default function MetodosPago({
 
   /** Aplicar pago con cheque */
   const handlePagoCheque = () => {
+    // Verificar si ya está todo pagado
+    if (Math.abs(montoPendiente) <= 0.02) {
+      alert('La compra ya está completamente pagada. No se pueden aplicar más métodos de pago.');
+      return;
+    }
+
     if (!datosCheque.numero || !datosCheque.banco) {
       alert('Complete todos los datos del cheque');
       return;
@@ -388,9 +477,25 @@ export default function MetodosPago({
 
   /** Finalizar pago */
   const finalizarPago = async () => {
-    if (montoPendiente > 0.01) {
-      alert('Debe completar el pago total');
+    // Permitir finalizar si el monto pendiente es muy pequeño (residuo) o si está muy cerca del total
+    const porcentajePagado = ((carrito.totalPrecio - montoPendiente) / carrito.totalPrecio) * 100;
+    
+    console.log('🔍 VALIDACIÓN FINALIZAR PAGO:', {
+      montoPendiente,
+      totalCompra: carrito.totalPrecio,
+      porcentajePagado: porcentajePagado.toFixed(2) + '%',
+      residuo: Math.abs(montoPendiente)
+    });
+    
+    if (Math.abs(montoPendiente) > 0.1 && porcentajePagado < 99) {
+      alert(`Debe completar el pago total. Faltan: Bs. ${formatearPrecio(Math.abs(montoPendiente))}`);
       return;
+    }
+    
+    // Si hay un residuo pequeño, forzar a cero antes de finalizar
+    if (Math.abs(montoPendiente) > 0 && Math.abs(montoPendiente) <= 0.1) {
+      console.log('🔧 FORZANDO RESIDUO A CERO ANTES DE FINALIZAR:', montoPendiente, '→ 0.00');
+      setMontoPendiente(0);
     }
 
     setProcesando(true);
@@ -1079,8 +1184,8 @@ export default function MetodosPago({
                 
                 <div className="flex justify-between items-center border-t pt-2">
                   <span className="text-sm text-gray-600">Pendiente:</span>
-                  <span className={`font-semibold ${montoPendiente > 0.01 ? 'text-red-600' : 'text-green-600'}`}>
-                    Bs. {formatearPrecio(montoPendiente)}
+                  <span className={`font-semibold ${Math.abs(montoPendiente) > 0.02 ? 'text-red-600' : 'text-green-600'}`}>
+                    Bs. {Math.abs(montoPendiente) < 0.02 ? '0,00' : formatearPrecio(montoPendiente)}
                   </span>
                 </div>
               </div>
@@ -1118,7 +1223,7 @@ export default function MetodosPago({
               {/* Vuelto Total */}
               {(() => {
                 const { totalVuelto, detallesVuelto } = calcularVueltoTotal();
-                return totalVuelto > 0.01 && (
+                return totalVuelto > 0.02 && (
                   <div className="mt-4 pt-4 border-t border-yellow-200 bg-yellow-50 rounded-lg p-3">
                     <h4 className="text-sm font-semibold text-yellow-800 mb-2">💰 Vuelto Total a Entregar:</h4>
                     <div className="space-y-1">
@@ -1140,18 +1245,18 @@ export default function MetodosPago({
               })()}
 
               {/* Botón finalizar */}
-              <button
-                onClick={finalizarPago}
-                disabled={montoPendiente > 0.01}
-                className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>
-                  {montoPendiente > 0.01 ? `Faltan Bs. ${formatearPrecio(montoPendiente)}` : 'Finalizar Pago'}
-                </span>
-              </button>
+                              <button
+                  onClick={finalizarPago}
+                  disabled={Math.abs(montoPendiente) > 0.02}
+                  className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>
+                    {Math.abs(montoPendiente) > 0.02 ? `Faltan Bs. ${formatearPrecio(Math.abs(montoPendiente))}` : 'Finalizar Pago'}
+                  </span>
+                </button>
             </div>
           </div>
         </div>

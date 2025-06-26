@@ -116,16 +116,17 @@ async function run(fechaInicio = null, fechaFin = null) {
                 };
             }
             
-            // Acumular datos
-            const ingreso = venta.ingreso_total;
+            // Acumular datos (convertir a números para evitar errores)
+            const ingreso = parseFloat(venta.ingreso_total) || 0;
+            const cantidad = parseInt(venta.cantidad) || 0;
             const categoria = venta.categoria_cerveza.toLowerCase();
             const canal = venta.canal_venta.toLowerCase();
             
             // Resumen general
             resumen.total_ingresos += ingreso;
             resumen[categoria].total_ingresos += ingreso;
-            resumen[categoria].total_unidades += venta.cantidad;
-            resumen.total_unidades += venta.cantidad;
+            resumen[categoria].total_unidades += cantidad;
+            resumen.total_unidades += cantidad;
             if (canal === 'física') {
                 resumen[categoria].ventas_fisica += ingreso;
             } else {
@@ -134,7 +135,7 @@ async function run(fechaInicio = null, fechaFin = null) {
             
             // Por período
             ventas_por_periodo[periodo][categoria].ingresos += ingreso;
-            ventas_por_periodo[periodo][categoria].unidades += venta.cantidad;
+            ventas_por_periodo[periodo][categoria].unidades += cantidad;
             if (canal === 'física') {
                 ventas_por_periodo[periodo][categoria].fisica += ingreso;
             } else {
@@ -143,7 +144,7 @@ async function run(fechaInicio = null, fechaFin = null) {
             
             // Cervezas populares
             cervezas_populares[venta.cerveza].ingresos += ingreso;
-            cervezas_populares[venta.cerveza].unidades += venta.cantidad;
+            cervezas_populares[venta.cerveza].unidades += cantidad;
             if (canal === 'física') {
                 cervezas_populares[venta.cerveza].fisica += ingreso;
             } else {
@@ -152,7 +153,7 @@ async function run(fechaInicio = null, fechaFin = null) {
             
             // Productores
             productores_ranking[venta.productor][categoria].ingresos += ingreso;
-            productores_ranking[venta.productor][categoria].unidades += venta.cantidad;
+            productores_ranking[venta.productor][categoria].unidades += cantidad;
         });
         
         // Calcular porcentajes y estadísticas

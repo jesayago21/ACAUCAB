@@ -280,3 +280,57 @@
 2025-06-25T03:51:45.979Z - info: Rendering request 1 finished in 882 ms rootId=ezeq8hpfh11ks2r, id=ezeq8hpfh11ks2r
 2025-06-25T03:51:45.982Z - info: Closing jsreport instance
 2025-06-25T03:51:46.013Z - info: jsreport instance has been closed
+2025-06-26T08:18:15.229Z - info: Initializing jsreport (version: 4.9.0, configuration file: jsreport.config.json, nodejs: 22.12.0)
+2025-06-26T08:18:15.243Z - info: Searching for available extensions in C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB-1\reportes\
+2025-06-26T08:18:15.299Z - info: Extensions location cache contains up to date information, skipping crawling in C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB-1\reportes\
+2025-06-26T08:18:15.423Z - info: Found 35 extension(s)
+2025-06-26T08:18:15.971Z - info: Using extension base@4.0.0
+2025-06-26T08:18:16.021Z - info: Using extension child-templates@4.1.0
+2025-06-26T08:18:16.051Z - info: Using extension cli@4.1.1
+2025-06-26T08:18:16.075Z - info: Using extension components@4.0.2
+2025-06-26T08:18:16.106Z - info: Using extension data@4.1.0
+2025-06-26T08:18:16.154Z - info: Using extension express@4.2.0
+2025-06-26T08:18:21.368Z - info: Using extension freeze@4.0.0
+2025-06-26T08:18:21.397Z - info: Using extension fs-store@4.1.1
+2025-06-26T08:18:22.862Z - info: Using extension handlebars@4.0.1
+2025-06-26T08:18:22.898Z - info: Using extension import-export@4.0.7
+2025-06-26T08:18:23.022Z - info: Using extension jsrender@4.0.0
+2025-06-26T08:18:23.043Z - info: Using extension licensing@4.0.5
+2025-06-26T08:18:23.463Z - info: Using extension localization@4.0.1
+2025-06-26T08:18:23.473Z - info: Using extension npm@4.0.0
+2025-06-26T08:18:23.500Z - info: Using extension pdf-utils@4.3.0
+2025-06-26T08:18:23.533Z - info: Using extension reports@4.1.4
+2025-06-26T08:18:23.573Z - info: Using extension tags@4.0.1
+2025-06-26T08:18:23.588Z - info: Using extension text@4.0.2
+2025-06-26T08:18:23.594Z - info: Using extension version-control@4.1.1
+2025-06-26T08:18:23.651Z - info: Using extension assets@4.2.2
+2025-06-26T08:18:23.741Z - info: Using extension authorization@4.1.0
+2025-06-26T08:18:23.812Z - info: Using extension browser-client@4.1.0
+2025-06-26T08:18:23.855Z - info: Using extension chrome-pdf@4.2.0
+2025-06-26T08:18:23.875Z - info: Using extension docx@4.8.0
+2025-06-26T08:18:23.892Z - info: Using extension html-to-xlsx@4.2.1
+2025-06-26T08:18:25.561Z - info: html-to-xlsx detected chrome as available html engine
+2025-06-26T08:18:25.563Z - info: Using extension pptx@4.4.1
+2025-06-26T08:18:25.570Z - info: Using extension scheduling@4.1.0
+2025-06-26T08:18:25.757Z - info: Using extension scripts@4.2.0
+2025-06-26T08:18:25.762Z - info: Using extension static-pdf@4.1.0
+2025-06-26T08:18:25.768Z - info: Using extension studio@4.3.1
+2025-06-26T08:18:26.207Z - info: Using extension xlsx@4.4.1
+2025-06-26T08:18:26.221Z - info: Using extension public-templates@4.0.0
+2025-06-26T08:18:26.230Z - info: Using extension sample-template@4.0.1
+2025-06-26T08:18:26.247Z - info: Using extension studio-theme-dark@4.0.0
+2025-06-26T08:18:26.253Z - info: Using general timeout for rendering (reportTimeout: 60000)
+2025-06-26T08:18:26.260Z - info: Using fs provider for template store.
+2025-06-26T08:18:26.282Z - info: fs store is persisting using fs for C:\Users\sayag\OneDrive\Desktop\ACAUCAB Proyecto\ACAUCAB-1\reportes\data
+2025-06-26T08:18:26.321Z - info: fs store is loading data
+2025-06-26T08:18:26.451Z - info: fs store is initialized successfully
+2025-06-26T08:18:26.550Z - info: Creating default express app.
+2025-06-26T08:18:26.675Z - info: jsreport server successfully started on http port: 5488
+2025-06-26T08:18:26.719Z - info: Verifying license key free
+2025-06-26T08:18:26.757Z - info: Using free license
+2025-06-26T08:18:26.810Z - info: Initializing worker threads
+2025-06-26T08:18:32.037Z - info: 2 worker threads initialized in 5226ms
+2025-06-26T08:18:32.041Z - info: Starting temp files cleanup with 180000ms threshold
+2025-06-26T08:18:32.053Z - info: reporter initialized
+2025-06-26T08:18:32.319Z - info: Closing jsreport instance
+2025-06-26T08:18:32.484Z - info: jsreport instance has been closed
