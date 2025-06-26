@@ -206,5 +206,24 @@ export const authStorage = {
   /** Verificar si hay una sesión activa */
   hasActiveSession: (): boolean => {
     return authStorage.getUser() !== null && authStorage.getToken() !== null;
+  },
+
+  /** Guardar solo usuario (para compatibilidad hacia atrás) */
+  saveUser: (user: Usuario): void => {
+    try {
+      localStorage.setItem('acaucab_user', JSON.stringify(user));
+    } catch (error) {
+      console.error('Error guardando usuario en localStorage:', error);
+    }
+  },
+
+  /** Remover usuario (para compatibilidad hacia atrás) */
+  removeUser: (): void => {
+    try {
+      localStorage.removeItem('acaucab_user');
+      localStorage.removeItem('acaucab_token');
+    } catch (error) {
+      console.error('Error removiendo datos de autenticación de localStorage:', error);
+    }
   }
 }; 

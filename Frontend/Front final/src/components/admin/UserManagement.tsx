@@ -136,6 +136,10 @@ const UserManagement: React.FC<UserManagementProps> = ({ user }) => {
 
     /** Verificar permisos */
     const hasPermission = (permission: string): boolean => {
+        if (!user.permisos || !Array.isArray(user.permisos)) {
+            console.warn('⚠️ user.permisos es null o no es un array:', user.permisos);
+            return false;
+        }
         return user.permisos.some(p => p.nombre === permission);
     };
 
@@ -595,9 +599,9 @@ const UserManagement: React.FC<UserManagementProps> = ({ user }) => {
 
                 {/* Permisos */}
                 <div className="md:col-span-2">
-                    <h4 className="font-semibold text-gray-900 mb-2">Permisos ({usuario.permisos.length})</h4>
+                    <h4 className="font-semibold text-gray-900 mb-2">Permisos ({usuario.permisos ? usuario.permisos.length : 0})</h4>
                     <div className="flex flex-wrap gap-1">
-                        {usuario.permisos.length > 0 ? (
+                        {usuario.permisos && usuario.permisos.length > 0 ? (
                             usuario.permisos.map((permiso) => (
                                 <span
                                     key={permiso.clave}
@@ -1042,7 +1046,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ user }) => {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className="text-sm text-gray-900">
-                                            {usuario.permisos.length} permisos
+                                            {usuario.permisos ? usuario.permisos.length : 0} permisos
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">

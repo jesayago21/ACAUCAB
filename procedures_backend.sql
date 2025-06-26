@@ -800,20 +800,77 @@ $$;
 
 -- 7. Verificar existencia de cliente por tipo y documento
 CREATE OR REPLACE FUNCTION verificar_cliente_por_tipo(p_tipo VARCHAR(20), p_documento VARCHAR(50))
-RETURNS BOOLEAN
+RETURNS JSON
 LANGUAGE plpgsql
 AS $$
 DECLARE
     existe BOOLEAN;
+    cliente_info JSON;
+    tipo_busqueda VARCHAR(20);
 BEGIN
-    IF p_tipo = 'natural' THEN
-        SELECT EXISTS(SELECT 1 FROM cliente WHERE ci = p_documento::INT) INTO existe;
-    ELSIF p_tipo = 'juridico' THEN
-        SELECT EXISTS(SELECT 1 FROM cliente WHERE rif = p_documento::INT) INTO existe;
+    -- Convertir V a natural y J a juridico
+    IF p_tipo = 'V' THEN
+        tipo_busqueda := 'natural';
+    ELSIF p_tipo = 'J' THEN
+        tipo_busqueda := 'juridico';
+    ELSE
+        tipo_busqueda := p_tipo; -- Por si llega 'natural' o 'juridico' directamente
+    END IF;
+
+    IF tipo_busqueda = 'natural' THEN
+        SELECT EXISTS(SELECT 1 FROM cliente WHERE ci = p_documento::INT AND tipo = 'natural') INTO existe;
+        
+        IF existe THEN
+            SELECT json_build_object(
+                'clave', c.clave,
+                'rif', c.rif,
+                'ci', c.ci,
+                'tipo', c.tipo,
+                'primer_nombre', c.primer_nombre,
+                'segundo_nombre', c.segundo_nombre,
+                'primer_apellido', c.primer_apellido,
+                'segundo_apellido', c.segundo_apellido,
+                'direccion_habitacion', c.direccion_habitacion,
+                'puntos_acumulados', c.puntos_acumulados
+            ) INTO cliente_info
+            FROM cliente c 
+            WHERE c.ci = p_documento::INT AND c.tipo = 'natural';
+        END IF;
+        
+    ELSIF tipo_busqueda = 'juridico' THEN
+        SELECT EXISTS(SELECT 1 FROM cliente WHERE rif = p_documento::INT AND tipo = 'juridico') INTO existe;
+        
+        IF existe THEN
+            SELECT json_build_object(
+                'clave', c.clave,
+                'rif', c.rif,
+                'tipo', c.tipo,
+                'razon_social', c.razon_social,
+                'denominacion_comercial', c.denominacion_comercial,
+                'url_pagina_web', c.url_pagina_web,
+                'capital_disponible', c.capital_disponible,
+                'direccion_fiscal', c.direccion_fiscal,
+                'direccion_fisica', c.direccion_fisica,
+                'puntos_acumulados', c.puntos_acumulados
+            ) INTO cliente_info
+            FROM cliente c 
+            WHERE c.rif = p_documento::INT AND c.tipo = 'juridico';
+        END IF;
     ELSE
         existe := FALSE;
     END IF;
-    RETURN existe;
+    
+    -- Retornar resultado en formato JSON
+    RETURN json_build_object(
+        'found', existe,
+        'message', CASE 
+            WHEN existe THEN 'Cliente ' || tipo_busqueda || ' encontrado'
+            ELSE 'Cliente ' || tipo_busqueda || ' no encontrado'
+        END,
+        'cliente', cliente_info,
+        'tipo_documento', p_tipo,
+        'numero_documento', p_documento
+    );
 END;
 $$;
 
@@ -849,7 +906,7 @@ LANGUAGE plpgsql
 AS $$
 BEGIN
     RETURN QUERY
-    SELECT 
+    SELECT DISTINCT ON (p.clave)
         p.clave,
         p.ean_13,
         p.nombre AS nombre_presentacion,
@@ -859,7 +916,7 @@ BEGIN
         c.grado_alcohol,
         tc.nombre AS tipo_cerveza,
         m.razon_social AS miembro,
-        it.cantidad AS cantidad_disponible,
+        SUM(it.cantidad)::INT AS cantidad_disponible,
         CASE 
           WHEN o.clave IS NOT NULL AND CURRENT_DATE BETWEEN o.fecha_inicio AND o.fecha_fin 
           THEN true 
@@ -882,7 +939,10 @@ BEGIN
       ))
       AND (p_tipo_cerveza IS NULL OR LOWER(tc.nombre) = LOWER(p_tipo_cerveza))
       AND (p_solo_con_oferta IS FALSE OR o.clave IS NOT NULL)
-    ORDER BY p.nombre
+    GROUP BY p.clave, p.ean_13, p.nombre, p.cantidad_unidades, p.precio, 
+             c.nombre, c.grado_alcohol, tc.nombre, m.razon_social, 
+             o.clave, o.fecha_inicio, o.fecha_fin, o.porcentaje_descuento
+    ORDER BY p.clave, p.nombre
     LIMIT p_limite OFFSET p_offset;
 END;
 $$;
@@ -1565,3 +1625,272 @@ BEGIN
     FROM reposiciones_filtradas;
 END;
 $$;
+
+
+-- Stored Procedures para Gestión de Compras
+-- Archivo: procedures_compras.sql
+
+-- 1. Obtener todas las órdenes de compra con información completa
+CREATE OR REPLACE FUNCTION obtener_ordenes_compra(
+    p_estado_filtro VARCHAR(50) DEFAULT NULL,
+    p_miembro_id INT DEFAULT NULL,
+    p_limite INT DEFAULT 50,
+    p_offset INT DEFAULT 0
+)
+RETURNS TABLE (
+    clave INT,
+    fecha DATE,
+    monto_total INT,
+    miembro_rif INT,
+    miembro_nombre VARCHAR(100),
+    estado_actual VARCHAR(50),
+    fecha_estado DATE,
+    productos_cantidad INT,
+    observaciones TEXT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        c.clave,
+        c.fecha,
+        c.monto_total,
+        c.fk_miembro as miembro_rif,
+        m.razon_social as miembro_nombre,
+        COALESCE(est.estado, 'emitida') as estado_actual,
+        COALESCE(h.fecha, c.fecha) as fecha_estado,
+        COALESCE(dc.cantidad, 0) as productos_cantidad,
+        '' as observaciones
+    FROM compra c
+    INNER JOIN miembro m ON c.fk_miembro = m.rif
+    LEFT JOIN (
+        SELECT DISTINCT ON (h1.fk_compra) 
+            h1.fk_compra, 
+            h1.fecha, 
+            e1.estado
+        FROM historico h1
+        INNER JOIN estatus e1 ON h1.fk_estatus = e1.clave
+        WHERE h1.fk_compra IS NOT NULL 
+        AND e1.aplicable_a = 'compra'
+        ORDER BY h1.fk_compra, h1.fecha DESC
+    ) h ON c.clave = h.fk_compra
+    LEFT JOIN estatus est ON h.estado = est.estado
+    LEFT JOIN detalle_compra dc ON c.clave = dc.fk_compra
+    WHERE 
+        (p_estado_filtro IS NULL OR COALESCE(est.estado, 'emitida') = p_estado_filtro)
+        AND (p_miembro_id IS NULL OR c.fk_miembro = p_miembro_id)
+    ORDER BY c.fecha DESC
+    LIMIT p_limite OFFSET p_offset;
+END;
+$$;
+
+-- 2. Obtener detalles de una orden de compra específica
+CREATE OR REPLACE FUNCTION obtener_detalle_orden_compra(p_compra_id INT)
+RETURNS TABLE (
+    compra_clave INT,
+    compra_fecha DATE,
+    compra_monto_total INT,
+    miembro_rif INT,
+    miembro_nombre VARCHAR(100),
+    estado_actual VARCHAR(50),
+    fecha_estado DATE,
+    detalle_clave INT,
+    almacen_clave INT,
+    presentacion_nombre VARCHAR(50),
+    cerveza_nombre VARCHAR(50),
+    cantidad INT,
+    precio_unitario DECIMAL(10,2)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        c.clave as compra_clave,
+        c.fecha as compra_fecha,
+        c.monto_total as compra_monto_total,
+        c.fk_miembro as miembro_rif,
+        m.razon_social as miembro_nombre,
+        COALESCE(est.estado, 'emitida') as estado_actual,
+        COALESCE(h.fecha, c.fecha) as fecha_estado,
+        dc.clave as detalle_clave,
+        dc.fk_almacen as almacen_clave,
+        p.nombre as presentacion_nombre,
+        cer.nombre as cerveza_nombre,
+        dc.cantidad,
+        dc.precio_unitario
+    FROM compra c
+    INNER JOIN miembro m ON c.fk_miembro = m.rif
+    LEFT JOIN detalle_compra dc ON c.clave = dc.fk_compra
+    LEFT JOIN almacen a ON dc.fk_almacen = a.clave
+    LEFT JOIN presentacion p ON a.fk_presentacion = p.clave
+    LEFT JOIN cerveza cer ON p.fk_cerveza = cer.clave
+    LEFT JOIN (
+        SELECT DISTINCT ON (h1.fk_compra) 
+            h1.fk_compra, 
+            h1.fecha, 
+            e1.estado
+        FROM historico h1
+        INNER JOIN estatus e1 ON h1.fk_estatus = e1.clave
+        WHERE h1.fk_compra IS NOT NULL 
+        AND e1.aplicable_a = 'compra'
+        ORDER BY h1.fk_compra, h1.fecha DESC
+    ) h ON c.clave = h.fk_compra
+    LEFT JOIN estatus est ON h.estado = est.estado
+    WHERE c.clave = p_compra_id;
+END;
+$$;
+
+-- 3. Crear nueva orden de compra
+CREATE OR REPLACE FUNCTION crear_orden_compra(
+    p_miembro_rif INT,
+    p_almacen_id INT,
+    p_cantidad INT,
+    p_precio_unitario DECIMAL(10,2)
+)
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_compra_id INT;
+    v_monto_total DECIMAL(10,2);
+BEGIN
+    -- Calcular monto total
+    v_monto_total := p_cantidad * p_precio_unitario;
+    
+    -- Crear la compra
+    INSERT INTO compra (fecha, monto_total, fk_miembro)
+    VALUES (CURRENT_DATE, v_monto_total::INT, p_miembro_rif)
+    RETURNING clave INTO v_compra_id;
+    
+    -- Crear el detalle de compra
+    INSERT INTO detalle_compra (fk_almacen, fk_compra, cantidad, precio_unitario)
+    VALUES (p_almacen_id, v_compra_id, p_cantidad, p_precio_unitario);
+    
+    -- Crear el registro en histórico con estado inicial
+    INSERT INTO historico (fecha, fk_estatus, fk_compra)
+    VALUES (
+        CURRENT_DATE, 
+        (SELECT clave FROM estatus WHERE estado = 'emitida' AND aplicable_a = 'compra' LIMIT 1),
+        v_compra_id
+    );
+    
+    RETURN v_compra_id;
+END;
+$$;
+
+-- 4. Cambiar estado de orden de compra
+CREATE OR REPLACE FUNCTION cambiar_estado_orden_compra(
+    p_compra_id INT,
+    p_nuevo_estado VARCHAR(50)
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_estatus_id INT;
+BEGIN
+    -- Buscar el ID del estatus
+    SELECT clave INTO v_estatus_id 
+    FROM estatus 
+    WHERE estado = p_nuevo_estado AND aplicable_a = 'compra';
+    
+    IF v_estatus_id IS NULL THEN
+        RAISE EXCEPTION 'Estado % no válido para compras', p_nuevo_estado;
+    END IF;
+    
+    -- Insertar nuevo registro en histórico
+    INSERT INTO historico (fecha, fk_estatus, fk_compra)
+    VALUES (CURRENT_DATE, v_estatus_id, p_compra_id);
+    
+    RETURN TRUE;
+END;
+$$;
+
+-- 5. Obtener estadísticas de compras
+CREATE OR REPLACE FUNCTION obtener_estadisticas_compras()
+RETURNS TABLE (
+    total_ordenes INT,
+    ordenes_pendientes INT,
+    monto_total_mes DECIMAL(15,2),
+    productos_total INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        COUNT(*)::INT as total_ordenes,
+        COUNT(CASE 
+            WHEN COALESCE(ultimo_estado.estado, 'emitida') IN ('emitida', 'procesando') 
+            THEN 1 
+        END)::INT as ordenes_pendientes,
+        COALESCE(SUM(CASE 
+            WHEN c.fecha >= DATE_TRUNC('month', CURRENT_DATE) 
+            THEN c.monto_total 
+        END), 0)::DECIMAL(15,2) as monto_total_mes,
+        COALESCE(SUM(dc.cantidad), 0)::INT as productos_total
+    FROM compra c
+    LEFT JOIN detalle_compra dc ON c.clave = dc.fk_compra
+    LEFT JOIN (
+        SELECT DISTINCT ON (h.fk_compra) 
+            h.fk_compra, 
+            e.estado
+        FROM historico h
+        INNER JOIN estatus e ON h.fk_estatus = e.clave
+        WHERE h.fk_compra IS NOT NULL 
+        AND e.aplicable_a = 'compra'
+        ORDER BY h.fk_compra, h.fecha DESC
+    ) ultimo_estado ON c.clave = ultimo_estado.fk_compra;
+END;
+$$;
+
+-- 6. Obtener miembros disponibles para compras
+CREATE OR REPLACE FUNCTION obtener_miembros_proveedores()
+RETURNS TABLE (
+    rif INT,
+    razon_social VARCHAR(100),
+    denominacion_comercial VARCHAR(100),
+    url_pagina_web VARCHAR(255),
+    total_compras INT,
+    ultimo_pedido DATE
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        m.rif,
+        m.razon_social,
+        m.denominacion_comercial,
+        m.url_pagina_web,
+        COUNT(c.clave)::INT as total_compras,
+        MAX(c.fecha) as ultimo_pedido
+    FROM miembro m
+    LEFT JOIN compra c ON m.rif = c.fk_miembro
+    GROUP BY m.rif, m.razon_social, m.denominacion_comercial, m.url_pagina_web
+    ORDER BY m.razon_social;
+END;
+$$;
+
+-- 7. Obtener estados disponibles para compras
+CREATE OR REPLACE FUNCTION obtener_estados_compra()
+RETURNS TABLE (
+    clave INT,
+    estado VARCHAR(50),
+    descripcion TEXT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        e.clave,
+        e.estado,
+        '' as descripcion
+    FROM estatus e
+    WHERE e.aplicable_a = 'compra'
+    ORDER BY e.estado;
+END;
+$$; 

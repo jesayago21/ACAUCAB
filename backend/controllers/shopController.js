@@ -4,16 +4,39 @@ const db = require('../config/db');
  * Obtener productos disponibles con filtros y paginación.
  */
 const getAvailableProducts = async (req, res) => {
-    const { tienda_id, busqueda, tipo, limite = 10, offset = 0, solo_ofertas = false } = req.query;
+    const { tienda_id, busqueda, tipo, limite = 50, offset = 0, solo_ofertas = false } = req.query;
+    
     try {
+        console.log('🔍 Obteniendo productos con filtros:', {
+            tienda_id: tienda_id || 'todas',
+            busqueda: busqueda || 'sin filtro',
+            tipo: tipo || 'todos',
+            limite,
+            offset,
+            solo_ofertas
+        });
+        
         const { rows } = await db.query(
             'SELECT * FROM obtener_productos_disponibles($1, $2, $3, $4, $5, $6)',
-            [tienda_id || null, busqueda || null, tipo || null, solo_ofertas, limite, offset]
+            [
+                tienda_id ? parseInt(tienda_id) : 1,  // Default a tienda 1
+                busqueda || null, 
+                tipo || null, 
+                solo_ofertas === 'true', 
+                parseInt(limite), 
+                parseInt(offset)
+            ]
         );
+        
+        console.log('📦 Productos encontrados:', rows.length);
+        if (rows.length > 0) {
+            console.log('📦 Primer producto de ejemplo:', rows[0]);
+        }
+        
         res.status(200).json({ success: true, productos: rows });
     } catch (error) {
-        console.error('Error fetching products:', error);
-        res.status(500).json({ message: 'Error interno del servidor' });
+        console.error('❌ Error fetching products:', error);
+        res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
     }
 };
 
@@ -98,12 +121,28 @@ const createVentaFisica = async (req, res) => {
  * Obtener un producto por su código EAN-13 para el punto de venta.
  */
 const getProductByEAN = async (req, res) => {
-    const { ean, tienda_id } = req.query;
+    const { ean } = req.params;  // EAN viene de los parámetros de la ruta
+    const { tienda_id } = req.query;  // tienda_id viene como query parameter
+    
+    // Validar que el EAN sea válido
+    if (!ean || ean.trim() === '') {
+        return res.status(400).json({ success: false, message: 'EAN es requerido.' });
+    }
+    
     try {
-        const { rows } = await db.query('SELECT obtener_producto_por_ean($1, $2) as producto', [ean, tienda_id]);
+        console.log('🔍 Buscando producto por EAN:', ean, 'en tienda:', tienda_id || 'todas');
+        
+        const { rows } = await db.query('SELECT obtener_producto_por_ean($1, $2) as producto', [
+            parseInt(ean), 
+            tienda_id ? parseInt(tienda_id) : 1  // Default a tienda 1 si no se especifica
+        ]);
+        
+        console.log('📦 Resultado de búsqueda EAN:', rows);
+        
         if (!rows[0] || !rows[0].producto) {
             return res.status(404).json({ success: false, message: 'Producto no encontrado en esta tienda.' });
         }
+        
         res.status(200).json({ success: true, producto: rows[0].producto });
     } catch (error) {
         console.error('Error al obtener producto por EAN:', error);

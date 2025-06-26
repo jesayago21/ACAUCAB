@@ -61,12 +61,16 @@ export default function ProductCard({
   /** Calcular precio con descuento usando los datos del backend */
   const tieneOferta = producto.tiene_oferta && producto.porcentaje_descuento && producto.porcentaje_descuento > 0;
   
-  // Conversión segura del precio a número
-  const precioNumerico = typeof producto.precio === 'string' 
-    ? parseFloat(producto.precio) 
-    : typeof producto.precio === 'number' 
-      ? producto.precio 
-      : 0;
+  // Conversión segura del precio a número (maneja tanto string como number de BD)
+  const precioNumerico = (() => {
+    if (typeof producto.precio === 'string') {
+      return parseFloat(producto.precio) || 0;
+    }
+    if (typeof producto.precio === 'number') {
+      return producto.precio;
+    }
+    return 0;
+  })();
   
   const precioOriginal = precioNumerico;
   const precioOferta = tieneOferta 

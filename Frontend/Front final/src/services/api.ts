@@ -13,7 +13,7 @@ import type {
 } from '../types/api';
 
 // Configuración de la API usando variables de entorno
-const API_BASE_URL = `${import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:5000'}/api`;
+export const API_BASE_URL = `${import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:5000'}/api`;
 const API_TIMEOUT = parseInt(import.meta.env.PUBLIC_API_TIMEOUT || '20000');
 const IS_DEVELOPMENT = import.meta.env.PUBLIC_NODE_ENV === 'development';
 
@@ -89,6 +89,29 @@ export function debounce<T extends (...args: any[]) => any>(
     clearTimeout(timeoutId);
     timeoutId = window.setTimeout(() => func(...args), delay);
   };
+}
+
+/** Función helper para convertir precio de BD (string) a número */
+function parsePrice(precio: any): number {
+  if (typeof precio === 'string') {
+    return parseFloat(precio) || 0;
+  }
+  if (typeof precio === 'number') {
+    return precio;
+  }
+  return 0;
+}
+
+/** Función helper para convertir porcentaje de descuento */
+function parseDiscount(descuento: any): number {
+  if (!descuento) return 0;
+  if (typeof descuento === 'string') {
+    return parseFloat(descuento) || 0;
+  }
+  if (typeof descuento === 'number') {
+    return descuento;
+  }
+  return 0;
 }
 
 /** Servicios para Clientes */

@@ -140,13 +140,19 @@ const obtenerPuntosCliente = async (req, res) => {
  * Verificar si un cliente ya existe por tipo y documento.
  */
 const verificarClientePorTipo = async (req, res) => {
-    const { tipo, documento } = req.body;
-    if (!tipo || !documento) {
-        return res.status(400).json({ message: 'Los parámetros "tipo" y "documento" son requeridos.' });
+    const { tipo_documento, numero_documento } = req.body;
+    if (!tipo_documento || !numero_documento) {
+        return res.status(400).json({ message: 'Los parámetros "tipo_documento" y "numero_documento" son requeridos.' });
     }
     try {
-        const result = await db.query('SELECT verificar_cliente_por_tipo($1, $2) as existe', [tipo, documento]);
-        res.status(200).json(result.rows[0]);
+        const result = await db.query('SELECT verificar_cliente_por_tipo($1, $2) as resultado', [tipo_documento, numero_documento]);
+        const data = result.rows[0].resultado;
+        
+        if (data.found) {
+            res.status(200).json(data);
+        } else {
+            res.status(404).json(data);
+        }
     } catch (error) {
         console.error('Error al verificar cliente:', error);
         res.status(500).json({ message: 'Error interno del servidor' });

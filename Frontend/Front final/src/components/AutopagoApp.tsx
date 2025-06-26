@@ -1,5 +1,5 @@
 /** Componente principal de la aplicación de autopago */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCarrito } from '../hooks/useCarrito';
 import IdentificacionCliente from './IdentificacionCliente';
 import RegistroCliente from './RegistroCliente';
@@ -102,7 +102,7 @@ export default function AutopagoApp() {
   const carrito = useCarrito();
 
   /** Verificar sesión activa al cargar */
-  React.useEffect(() => {
+  useEffect(() => {
     const usuarioGuardado = authStorage.getUser();
     if (usuarioGuardado) {
       setUsuario(usuarioGuardado);

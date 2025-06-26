@@ -61,12 +61,17 @@ export function useCarrito(): UseCarritoReturn {
 
   /** Obtener ID único del producto */
   const obtenerIdProducto = (producto: Producto): number => {
-    return producto.clave || producto.id || 0;
+    const id = producto.clave || producto.id || 0;
+    if (id === 0) {
+      console.warn('⚠️ Producto sin ID válido:', producto);
+    }
+    return id;
   };
 
   /** Obtener stock disponible del producto */
   const obtenerStockDisponible = (producto: Producto): number => {
-    return producto.stock_disponible || producto.cantidad_disponible || 0;
+    const stock = producto.stock_disponible || producto.cantidad_disponible || 0;
+    return Math.max(0, stock); // Asegurar que no sea negativo
   };
 
   /** Agregar item al carrito */
@@ -132,9 +137,22 @@ export function useCarrito(): UseCarritoReturn {
           return prevItems;
         }
         
-        const precioUnitario = producto.tiene_oferta && producto.porcentaje_descuento 
-          ? parseFloat((producto.precio * (1 - producto.porcentaje_descuento / 100)).toFixed(2))
-          : parseFloat(producto.precio.toFixed(2));
+        // Obtener precio como número (puede venir como string de BD)
+        const precioBase = typeof producto.precio === 'string' 
+          ? parseFloat(producto.precio) || 0
+          : typeof producto.precio === 'number' 
+            ? producto.precio 
+            : 0;
+            
+        const descuento = producto.porcentaje_descuento 
+          ? (typeof producto.porcentaje_descuento === 'string' 
+            ? parseFloat(producto.porcentaje_descuento) || 0 
+            : producto.porcentaje_descuento)
+          : 0;
+        
+        const precioUnitario = producto.tiene_oferta && descuento > 0
+          ? parseFloat((precioBase * (1 - descuento / 100)).toFixed(2))
+          : parseFloat(precioBase.toFixed(2));
           
         const nuevoItem: ItemCarrito = {
           producto,

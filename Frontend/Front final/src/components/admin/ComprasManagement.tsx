@@ -36,8 +36,10 @@ const ComprasManagement: React.FC<ComprasManagementProps> = ({ user }) => {
     const [selectedEstado, setSelectedEstado] = useState<string>('todas');
     const [showCreateForm, setShowCreateForm] = useState(false);
 
+
     /** Verificar permisos */
     const hasPermission = (permission: string): boolean => {
+        if (!user.permisos || !Array.isArray(user.permisos)) return false;
         return user.permisos.some(p => p.nombre.toLowerCase() === permission.toLowerCase());
     };
 
