@@ -1894,3 +1894,32 @@ BEGIN
     ORDER BY e.estado;
 END;
 $$; 
+
+
+CREATE OR REPLACE FUNCTION reporte_tendencia_ventas(
+    p_fecha_inicio DATE,
+    p_fecha_fin DATE
+)
+RETURNS TABLE(fecha_venta DATE, total_ventas DECIMAL)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    WITH ventas_unificadas AS (
+        SELECT fecha::DATE AS fecha_venta, monto_total FROM venta_online
+        UNION ALL
+        SELECT fecha::DATE AS fecha_venta, total_venta AS monto_total FROM venta_tienda_fisica
+    )
+    SELECT
+        vu.fecha_venta,
+        SUM(vu.monto_total) AS total_ventas
+    FROM
+        ventas_unificadas vu
+    WHERE
+        vu.fecha_venta BETWEEN p_fecha_inicio AND p_fecha_fin
+    GROUP BY
+        vu.fecha_venta
+    ORDER BY
+        vu.fecha_venta;
+END;
+$$;

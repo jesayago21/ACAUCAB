@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Productos con Mejor Rendimiento - ACAUCAB</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; line-height: 1.6; color: #333; }
+        .content { padding: 20px; }
+        .header { background: #2c3e50; color: white; padding: 20px; text-align: center; }
+        .header h1 { font-size: 2em; }
+        .meta-info { background: #f8f9fa; padding: 15px; border-bottom: 1px solid #e9ecef; }
+        .resumen-section { background: #667eea; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .resumen-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .resumen-item { text-align: center; }
+        .resumen-item h3 { font-size: 1.8em; }
+        table { width: 100%; border-collapse: collapse; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        th, td { padding: 12px 15px; text-align: left; }
+        th { background: #34495e; color: white; }
+        tbody tr:nth-child(even) { background: #f8f9fa; }
+        tbody tr:hover { background: #e3f2fd; }
+        .rank { font-weight: bold; font-size: 1.2em; text-align: center; }
+    </style>
+</head>
+<body>
+    <div>
+        <div class="header">
+            <h1>Productos con Mejor Rendimiento</h1>
+            <p>{{periodoReporte}}</p>
+        </div>
+        <div class="meta-info">
+            <strong>Generado:</strong> {{fechaGeneracion}} - {{horaGeneracion}}
+        </div>
+        <div class="content">
+            <div class="resumen-section">
+                <div class="resumen-grid">
+                    <div class="resumen-item">
+                        <h3>{{resumen.total_productos}}</h3>
+                        <p>Productos en el Top 10</p>
+                    </div>
+                    <div class="resumen-item">
+                        <h3>${{resumen.total_ingresos_top10}}</h3>
+                        <p>Ingresos de este Top 10</p>
+                    </div>
+                    <div class="resumen-item">
+                        <h3>{{resumen.top_producto_ingresos}}</h3>
+                        <p>Producto #1 por Ingresos</p>
+                    </div>
+                </div>
+            </div>
+            <h2>Top 10 Productos por Ingresos</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 5%; text-align: center;">#</th>
+                        <th>Producto</th>
+                        <th>Productor</th>
+                        <th>Categoría</th>
+                        <th style="text-align: right;">Unidades Vendidas</th>
+                        <th style="text-align: right;">Ingresos Generados</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each productos}}
+                    <tr>
+                        <td class="rank">{{add @index 1}}</td>
+                        <td>{{cerveza}}</td>
+                        <td>{{productor}}</td>
+                        <td>{{categoria_cerveza}}</td>
+                        <td style="text-align: right;">{{unidades_vendidas}}</td>
+                        <td style="text-align: right;">${{ingresos_generados}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html> 

@@ -198,22 +198,111 @@ router.get('/reporte-tiempo-entrega', (req, res) => {
             console.error('Error generando reporte:', error);
             return res.status(500).send('Error generando el reporte de tiempo de entrega');
         }
-        // Buscar la línea ARCHIVO_REPORTE: ... en el stdout
-        const match = stdout.match(/ARCHIVO_REPORTE:\s*(.*\.html)/);
+        const match = stdout.match(/ARCHIVO_REPORTE:\\s*(.*\\.html)/);
         let filePath;
         if (match && match[1]) {
             filePath = match[1].trim();
         } else {
-            // Fallback: buscar el más reciente si no se encuentra la línea
             const fs = require('fs');
             const outputDir = path.resolve(__dirname, '../../reportes/ReportesPdf/tiempo_entrega');
-            const files = fs.readdirSync(outputDir)
-                .filter(f => f.endsWith('.html'))
-                .sort((a, b) => fs.statSync(path.join(outputDir, b)).mtime - fs.statSync(path.join(outputDir, a)).mtime);
-            if (files.length === 0) return res.status(404).send('No se encontró el reporte');
-            filePath = path.join(outputDir, files[0]);
+            if (fs.existsSync(outputDir)) {
+                const files = fs.readdirSync(outputDir)
+                    .filter(f => f.endsWith('.html'))
+                    .sort((a, b) => fs.statSync(path.join(outputDir, b)).mtime - fs.statSync(path.join(outputDir, a)).mtime);
+                if (files.length > 0) filePath = path.join(outputDir, files[0]);
+            }
         }
-        res.download(filePath, 'reporte_tiempo_entrega.html');
+
+        if (filePath) {
+            res.sendFile(filePath);
+        } else {
+            res.status(404).send('No se encontró el reporte generado.');
+        }
+    });
+});
+
+// Reporte 6: Reporte de tendencia de ventas
+router.get('/reporte-tendencia-ventas', (req, res) => {
+    const { fechaInicio, fechaFin } = req.query;
+    const scriptPath = path.resolve(__dirname, '../../reportes/generar_reporte_tendencia_ventas.js');
+    
+    let args = '';
+    if (fechaInicio && fechaFin) {
+        args = ` ${fechaInicio} ${fechaFin}`;
+    }
+    
+    exec(`node "${scriptPath}"${args}`, (error, stdout, stderr) => {
+        if (error) {
+            console.error('Error generando reporte de tendencia de ventas:', stderr);
+            return res.status(500).send('Error generando el reporte de tendencia de ventas');
+        }
+
+        const match = stdout.match(/ARCHIVO_REPORTE:\\s*(.*\\.html)/);
+        let filePath;
+        if (match && match[1]) {
+            filePath = match[1].trim();
+        } else {
+            const fs = require('fs');
+            const outputDir = path.resolve(__dirname, '../../reportes/ReportesPdf/tendencia_ventas');
+            if (fs.existsSync(outputDir)) {
+                const files = fs.readdirSync(outputDir)
+                    .filter(f => f.endsWith('.html'))
+                    .sort((a, b) => fs.statSync(path.join(outputDir, b)).mtime - fs.statSync(path.join(outputDir, a)).mtime);
+                if (files.length > 0) filePath = path.join(outputDir, files[0]);
+            }
+        }
+        
+        if (filePath) {
+            res.sendFile(filePath);
+        } else {
+            res.status(404).send('No se encontró el reporte generado.');
+        }
+    });
+});
+
+// Reporte 7: Productos con mejor rendimiento
+router.get('/reporte-mejores-productos', (req, res) => {
+    const { fechaInicio, fechaFin } = req.query;
+    const scriptPath = path.resolve(__dirname, '../../reportes/generar_reporte_mejores_productos.js');
+    
+    let args = '';
+    if (fechaInicio && fechaFin) {
+        args = ` ${fechaInicio} ${fechaFin}`;
+    }
+    
+    exec(`node "${scriptPath}"${args}`, (error, stdout, stderr) => {
+        if (error) {
+            console.error('Error generando reporte de mejores productos:', stderr);
+            return res.status(500).send('Error generando el reporte de mejores productos.');
+        }
+
+        const match = stdout.match(/ARCHIVO_REPORTE:\\s*(.*\\.html)/);
+        let filePath;
+        if (match && match[1]) {
+            filePath = match[1].trim();
+        } else {
+            const fs = require('fs');
+            const outputDir = path.resolve(__dirname, '../../reportes/ReportesPdf/mejores_productos');
+             if (fs.existsSync(outputDir)) {
+                const files = fs.readdirSync(outputDir)
+                    .filter(f => f.endsWith('.html'))
+                    .sort((a, b) => fs.statSync(path.join(outputDir, b)).mtime - fs.statSync(path.join(outputDir, a)).mtime);
+                if (files.length > 0) filePath = path.join(outputDir, files[0]);
+            }
+        }
+
+        if (filePath) {
+            res.sendFile(filePath, (err) => {
+                if (err) {
+                    console.error("Error enviando el archivo de reporte:", err);
+                    if (!res.headersSent) {
+                        res.status(500).send("Error al leer el archivo de reporte.");
+                    }
+                }
+            });
+        } else {
+            res.status(404).send("No se pudo generar o encontrar el archivo del reporte.");
+        }
     });
 });
 

@@ -1,6 +1,7 @@
 {
   "extends": "astro/tsconfigs/base",
   "compilerOptions": {
+    "types": ["vite/client"],
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "esModuleInterop": true,

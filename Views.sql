@@ -722,3 +722,28 @@ SELECT
   fecha_procesando
 FROM tiempos_entrega
 ORDER BY tipo_dato, dia_semana, fecha_venta DESC;
+
+-- =====================================================
+-- 5.6 REPORTE: PRODUCTOS CON MEJOR RENDIMIENTO
+-- =====================================================
+
+CREATE OR REPLACE VIEW v_productos_mas_vendidos AS
+SELECT
+    cerveza,
+    productor,
+    categoria_cerveza,
+    tipo_cerveza,
+    SUM(cantidad) AS unidades_vendidas,
+    SUM(ingreso_total) AS ingresos_generados,
+    AVG(precio_unitario) AS precio_promedio,
+    -- La fecha se omite aquí porque estamos agregando todo el historial
+    -- Si se necesita filtrar por fecha, se debe hacer en la consulta al usar la vista
+    RANK() OVER (ORDER BY SUM(ingreso_total) DESC) as ranking_ingresos,
+    RANK() OVER (ORDER BY SUM(cantidad) DESC) as ranking_unidades
+FROM
+    v_comparativa_ingresos_cerveza
+GROUP BY
+    cerveza,
+    productor,
+    categoria_cerveza,
+    tipo_cerveza;
