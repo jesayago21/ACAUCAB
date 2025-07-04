@@ -5,7 +5,7 @@ require('dotenv').config();
 
 /**
  * Script para resetear completamente la base de datos ACAUCAB
- * Ejecuta secuencialmente: DROP -> CREATE -> INSERTS -> PROCEDURES -> TRIGGERS -> VIEWS
+ * Ejecuta secuencialmente: DROP -> CREATE -> INSERT CON TODO -> PROCEDURES -> TRIGGERS -> VIEWS
  */
 
 /** Configuración de la conexión a la base de datos */
@@ -36,8 +36,11 @@ async function ejecutarSQL(contenidoSQL, nombreArchivo) {
   try {
     console.log(`🔄 Ejecutando: ${nombreArchivo}...`);
     
-    // Para archivos grandes de inserts, ejecutar como una sola transacción
-    if (nombreArchivo.includes('insert') || nombreArchivo.includes('Insert')) {
+    // Para archivos grandes de inserts, procedures, triggers y vistas, ejecutar como un bloque único
+    if (nombreArchivo.includes('insert') || nombreArchivo.includes('Insert') || 
+        nombreArchivo.includes('Procedures') || nombreArchivo.includes('procedures') ||
+        nombreArchivo.includes('triggers') || nombreArchivo.includes('Triggers') ||
+        nombreArchivo.includes('Views') || nombreArchivo.includes('views')) {
       // Ejecutar todo el archivo como una sola query para mantener el orden
       await client.query(contenidoSQL);
     } else {
@@ -63,35 +66,19 @@ async function ejecutarSQL(contenidoSQL, nombreArchivo) {
   }
 }
 
-/** Orden de archivos a ejecutar - BÁSICO (sin procedures/triggers) */
-const ARCHIVOS_BASICOS = [
+/** Orden de archivos a ejecutar - FLUJO SIMPLIFICADO */
+const ARCHIVOS_SQL = [
   // 1. DROP - Eliminar estructura existente
   { archivo: '../DROP.sql', descripcion: 'Eliminando estructura de BD existente' },
   
   // 2. CREATE - Crear estructura
   { archivo: '../CREATE version 2.sql', descripcion: 'Creando estructura de BD' },
   
-  // 3. INSERTS - Datos en orden de dependencias
-  { archivo: '../Inserts/1insert lugar.sql', descripcion: 'Insertando datos de lugares' },
-  { archivo: '../Inserts/2INSERT cer_rec.sql', descripcion: 'Insertando cervezas y recetas' },
-  { archivo: '../Inserts/3inserts miem_cer.sql', descripcion: 'Insertando miembros certificados' },
-  { archivo: '../Inserts/4Inserts_empleado-rolesymas.sql', descripcion: 'Insertando empleados y roles' },
-  { archivo: '../Inserts/5Insert usuario-pago y ultimos.sql', descripcion: 'Insertando usuarios y pagos' },
-  { archivo: '../Inserts/6Insert_usuarios_prueba.sql', descripcion: 'Insertando usuarios de prueba' },
-  { archivo: '../Inserts/8Insert_roles_privilegios_nuevos.sql', descripcion: 'Insertando roles y privilegios' },
-  { archivo: '../Inserts/9ult estatus e historico.sql', descripcion: 'Insertando estatus e histórico' },
-  { archivo: '../Inserts/10Insert_privilegios_atomicos_corregidos.sql', descripcion: 'Insertando privilegios atómicos' },
-  
-  // 4. VIEWS - Vistas (sin procedures/triggers)
-  { archivo: '../Views.sql', descripcion: 'Creando vistas' }
-];
-
-/** Orden de archivos a ejecutar - COMPLETO (con procedures/triggers) */
-const ARCHIVOS_COMPLETOS = [
-  ...ARCHIVOS_BASICOS.slice(0, -1), // Todos excepto Views
+  // 3. INSERT CON TODO - Todos los datos en un solo archivo
+  { archivo: '../Inserts/Insert con todo.sql', descripcion: 'Insertando todos los datos' },
   
   // 4. PROCEDURES - Procedimientos almacenados
-  { archivo: '../procedures/Procedures.sql', descripcion: 'Creando procedimientos almacenados' },
+  { archivo: '../Procedures.sql', descripcion: 'Creando procedimientos almacenados' },
   
   // 5. TRIGGERS - Disparadores
   { archivo: '../triggers.sql', descripcion: 'Creando triggers' },
@@ -100,20 +87,9 @@ const ARCHIVOS_COMPLETOS = [
   { archivo: '../Views.sql', descripcion: 'Creando vistas' }
 ];
 
-/** Variable para determinar qué archivos usar */
-let ARCHIVOS_SQL = ARCHIVOS_COMPLETOS;
-
 /** Función principal */
-async function resetearBaseDatos(opciones = {}) {
-  const { soloBasico = false } = opciones;
-  
-  if (soloBasico) {
-    ARCHIVOS_SQL = ARCHIVOS_BASICOS;
-    console.log('🚀 Iniciando reseteo BÁSICO de la base de datos ACAUCAB (sin procedures/triggers)...\n');
-  } else {
-    ARCHIVOS_SQL = ARCHIVOS_COMPLETOS;
-    console.log('🚀 Iniciando reseteo COMPLETO de la base de datos ACAUCAB...\n');
-  }
+async function resetearBaseDatos() {
+  console.log('🚀 Iniciando reseteo COMPLETO de la base de datos ACAUCAB...\n');
   
   const tiempoInicio = Date.now();
   let archivosEjecutados = 0;
@@ -173,8 +149,8 @@ para resetear completamente la base de datos en el siguiente orden:
 
 1. DROP.sql - Elimina estructura existente
 2. CREATE version 2.sql - Crea nueva estructura  
-3. Inserts/ - Datos en orden de dependencias
-4. procedures/ - Procedimientos almacenados
+3. Insert con todo.sql - Todos los datos en un archivo
+4. Procedures.sql - Procedimientos almacenados
 5. triggers.sql - Disparadores
 6. Views.sql - Vistas
 
@@ -184,8 +160,6 @@ USO:
 OPCIONES:
     --help, -h      Muestra esta ayuda
     --list, -l      Lista los archivos que se ejecutarán
-    --force, -f     Ejecuta sin confirmación
-    --basic, -b     Ejecuta solo lo básico (sin procedures/triggers)
 
 REQUISITOS:
     - Archivo .env con configuración de BD
@@ -195,31 +169,13 @@ REQUISITOS:
 }
 
 /** Función para listar archivos */
-function listarArchivos(soloBasico = false) {
-  const archivos = soloBasico ? ARCHIVOS_BASICOS : ARCHIVOS_COMPLETOS;
-  const tipo = soloBasico ? 'BÁSICOS (sin procedures/triggers)' : 'COMPLETOS';
-  
-  console.log(`\n📋 ARCHIVOS ${tipo} QUE SE EJECUTARÁN:\n`);
-  archivos.forEach((item, index) => {
+function listarArchivos() {
+  console.log(`\n📋 ARCHIVOS QUE SE EJECUTARÁN:\n`);
+  ARCHIVOS_SQL.forEach((item, index) => {
     const existe = fs.existsSync(path.join(__dirname, item.archivo));
     const estado = existe ? '✅' : '❌';
     console.log(`${index + 1}. ${estado} ${item.archivo}`);
     console.log(`   ${item.descripcion}\n`);
-  });
-}
-
-/** Función para confirmar ejecución */
-async function confirmarEjecucion() {
-  return new Promise((resolve) => {
-    const readline = require('readline').createInterface({
-      input: process.stdin,
-      output: process.stdout
-    });
-    
-    readline.question('¿Estás seguro de continuar? (si/no): ', (respuesta) => {
-      readline.close();
-      resolve(respuesta.toLowerCase() === 'si' || respuesta.toLowerCase() === 's');
-    });
   });
 }
 
@@ -232,28 +188,13 @@ async function main() {
     return;
   }
   
-  const soloBasico = args.includes('--basic') || args.includes('-b');
-  
   if (args.includes('--list') || args.includes('-l')) {
-    listarArchivos(soloBasico);
+    listarArchivos();
     return;
   }
   
-  const forzar = args.includes('--force') || args.includes('-f');
-  
-  if (!forzar) {
-    const tipoReseteo = soloBasico ? 'BÁSICO (sin procedures/triggers)' : 'COMPLETO';
-    console.log(`⚠️  ADVERTENCIA: Este proceso eliminará TODOS los datos existentes.`);
-    console.log(`🔧 Tipo de reseteo: ${tipoReseteo}`);
-    
-    const confirmar = await confirmarEjecucion();
-    if (!confirmar) {
-      console.log('❌ Operación cancelada por el usuario');
-      return;
-    }
-  }
-  
-  await resetearBaseDatos({ soloBasico });
+  // Ejecutar directamente sin confirmación
+  await resetearBaseDatos();
 }
 
 // Ejecutar si se llama directamente

@@ -1,5 +1,5 @@
 INSERT INTO usuario ( username, contrasena, fk_rol, fk_empleado, fk_miembro, fk_cliente) VALUES
-( 'admin', 'admin', 4, 678901234, NULL, NULL),
+( 'admin', 'admin', 1, 678901234, NULL, NULL),
 ( 'supervisor', 'supervisor123', 2, 234567890, NULL, NULL),
 ( 'soporte', 'soporte123', 5, 567890123, NULL, NULL),
 ( 'gerente', 'gerente123', 4, 345678901, NULL, NULL),
