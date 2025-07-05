@@ -69,6 +69,8 @@ const canAccessModule = (user: User, module: string): boolean => {
         case 'inventario':
         case 'almacen':
             return hasPermission(user, 'Consultar almacen');
+        case 'inventario-tienda':
+            return hasPermission(user, 'Consultar inventario_tienda');
         case 'reposicion':
         case 'reposiciones':
         case 'estados-reposicion':
@@ -76,6 +78,10 @@ const canAccessModule = (user: User, module: string): boolean => {
 
         // Gestión de ventas - usar permisos básicos
         case 'ventas':
+            return hasPermission(user, 'Consultar venta_tienda_fisica') ||
+                   hasPermission(user, 'Consultar venta_online') ||
+                   hasPermission(user, 'Consultar venta_evento');
+        case 'indicadores-ventas':
             return hasPermission(user, 'Consultar venta_tienda_fisica') ||
                    hasPermission(user, 'Consultar venta_online') ||
                    hasPermission(user, 'Consultar venta_evento');
@@ -95,12 +101,18 @@ const canAccessModule = (user: User, module: string): boolean => {
         case 'estados-compra':
             return hasPermission(user, 'Consultar compra');
 
-        // Gestión de eventos y ofertas - usar permisos básicos
-        case 'eventos-ofertas':
+        // Gestión de eventos - usar permisos básicos
         case 'eventos':
+        case 'eventos-lista':
             return hasPermission(user, 'Consultar evento');
         case 'tipos-evento':
             return hasPermission(user, 'Consultar tipo_evento');
+        case 'entradas':
+            return hasPermission(user, 'Consultar venta_entrada');
+        case 'asistencia':
+            return hasPermission(user, 'Consultar asistencia');
+        case 'inventario-eventos':
+            return hasPermission(user, 'Consultar inventario_evento');
         case 'ofertas':
             return hasPermission(user, 'Consultar oferta');
 
@@ -165,7 +177,9 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
             name: 'Inventario y Operaciones',
             icon: '📦',
             children: [
-                { id: 'almacen', name: 'Almacén', icon: '🏪' },
+                { id: 'compras', name: 'Órdenes de Compra', icon: '📋' },
+                { id: 'inventario-tienda', name: 'Inventario de Tienda', icon: '🏪' },
+                { id: 'almacen', name: 'Almacén', icon: '🏢' },
                 { id: 'reposicion', name: 'Reposición', icon: '🔄' },
                 { id: 'estados-reposicion', name: 'Estados de Reposición', icon: '📊' }
             ]
@@ -175,29 +189,24 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
             name: 'Gestión de Ventas',
             icon: '💰',
             children: [
+                { id: 'indicadores-ventas', name: 'Indicadores de Ventas', icon: '📈' },
                 { id: 'ventas-web', name: 'Ventas Online', icon: '🌐' },
                 { id: 'ventas-tienda', name: 'Ventas Tienda', icon: '🏪' },
-                { id: 'puntos', name: 'Gestión de Puntos', icon: '⭐' }
-            ]
-        },
-
-        {
-            id: 'eventos-ofertas',
-            name: 'Eventos y Ofertas',
-            icon: '🎊',
-            children: [
-                { id: 'eventos', name: 'Eventos', icon: '📅' },
-                { id: 'tipos-evento', name: 'Tipos de Evento', icon: '🎭' },
+                { id: 'puntos', name: 'Gestión de Puntos', icon: '⭐' },
                 { id: 'ofertas', name: 'Ofertas', icon: '🏷️' }
             ]
         },
         {
-            id: 'compras',
-            name: 'Compras',
-            icon: '🛒',
+            id: 'eventos',
+            name: 'Eventos',
+            icon: '🎊',
             children: [
-                { id: 'compras', name: 'Órdenes de Compra', icon: '📋' },
-                { id: 'estados-compra', name: 'Estados de Compra', icon: '📊' }
+                { id: 'eventos-lista', name: 'Eventos', icon: '📅' },
+                { id: 'tipos-evento', name: 'Tipos de Evento', icon: '🎭' },
+                { id: 'entradas', name: 'Entradas', icon: '🎫' },
+                { id: 'asistencia', name: 'Asistencia', icon: '✅' },
+                { id: 'ventas-eventos', name: 'Ventas de Eventos', icon: '💰' },
+                { id: 'inventario-eventos', name: 'Inventario de Eventos', icon: '📦' }
             ]
         },
         {
@@ -279,7 +288,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                     {visibleModules.map(module => (
                         <div key={module.id} className="mb-2">
                             {/* Módulo principal */}
-                            {module.children.length > 0 && (module.id === 'productos' || module.id === 'inventario' || module.id === 'ventas' || module.id === 'compras' || module.id === 'eventos-ofertas') ? (
+                            {module.children.length > 0 && (module.id === 'productos' || module.id === 'inventario' || module.id === 'eventos') ? (
                                 // Módulos padre que no son clickeables
                                 <div className={`w-full flex items-center p-3 rounded-lg text-gray-400 cursor-default ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
                                     <span className="text-lg">{module.icon}</span>
@@ -288,7 +297,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                                     )}
                                 </div>
                             ) : (
-                                // Módulos clickeables (dashboard, usuarios, reportes, pagos, etc.)
+                                // Módulos clickeables (dashboard, usuarios, reportes, pagos, ventas, etc.)
                             <button
                                 onClick={() => onModuleChange(module.id)}
                                 className={`w-full flex items-center p-3 rounded-lg transition-colors ${

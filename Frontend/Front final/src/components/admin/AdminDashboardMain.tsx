@@ -108,6 +108,8 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             // Módulos de ventas (nuevos)
             case 'ventas':
                 return <VentasManagement user={user} />;
+            case 'indicadores-ventas':
+                return <VentasManagement user={user} />;
             case 'ventas-web':
                 return <VentasWebManagement 
                     user={user}
@@ -141,11 +143,17 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             
             // Módulos eliminados: compras-mayoristas, clientes, empleados, miembros
             
-            // Módulos de eventos y ofertas
-            case 'eventos':
+            // Módulos de eventos
+            case 'eventos-lista':
                 return <EventosManagement />;
             case 'tipos-evento':
                 return <TiposEventoManagement />;
+            case 'entradas':
+                return <ModulePlaceholder title="Gestión de Entradas" user={user} />;
+            case 'asistencia':
+                return <ModulePlaceholder title="Control de Asistencia" user={user} />;
+            case 'inventario-eventos':
+                return <ModulePlaceholder title="Inventario de Eventos" user={user} />;
             case 'ofertas':
                 return <OfertasManagement />;
             case 'compras':
@@ -191,6 +199,7 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             'reposicion': 'Gestión de Reposición',
             'reposiciones': 'Gestión de Reposiciones',
             'ventas': 'Gestión de Ventas',
+            'indicadores-ventas': 'Indicadores de Ventas',
             'ventas-web': 'Ventas Online',
             'ventas-tienda': 'Ventas en Tienda',
             'puntos': 'Gestión de Puntos',
@@ -198,8 +207,11 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             'ventas-online': 'Ventas Online',
             'ventas-eventos': 'Ventas en Eventos',
 
-            'eventos': 'Gestión de Eventos',
+            'eventos-lista': 'Gestión de Eventos',
             'tipos-evento': 'Tipos de Evento',
+            'entradas': 'Gestión de Entradas',
+            'asistencia': 'Control de Asistencia',
+            'inventario-eventos': 'Inventario de Eventos',
             'ofertas': 'Gestión de Ofertas',
             'compras': 'Gestión de Compras',
             'reportes': 'Gestión de Reportes',
