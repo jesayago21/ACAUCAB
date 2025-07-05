@@ -1923,3 +1923,2025 @@ BEGIN
         vu.fecha_venta;
 END;
 $$;
+
+-- =============================================
+-- PROCEDIMIENTOS PARA EVENTOS (eventController.js)
+-- =============================================
+
+-- Drops para eventos
+DROP FUNCTION IF EXISTS obtener_tipos_evento();
+DROP FUNCTION IF EXISTS crear_tipo_evento(VARCHAR, TEXT);
+DROP FUNCTION IF EXISTS actualizar_tipo_evento(INT, VARCHAR, TEXT);
+DROP FUNCTION IF EXISTS eliminar_tipo_evento(INT);
+DROP FUNCTION IF EXISTS obtener_todos_eventos(DATE, DATE, INT, VARCHAR);
+DROP FUNCTION IF EXISTS obtener_evento_por_id(INT);
+DROP FUNCTION IF EXISTS crear_evento(VARCHAR, DATE, DATE, TEXT, INT, INT, INT, INT);
+DROP FUNCTION IF EXISTS actualizar_evento(INT, VARCHAR, DATE, DATE, TEXT, INT, INT, INT, INT);
+DROP FUNCTION IF EXISTS eliminar_evento(INT);
+DROP FUNCTION IF EXISTS obtener_eventos_activos();
+DROP FUNCTION IF EXISTS obtener_eventos_proximos(INT);
+DROP FUNCTION IF EXISTS obtener_subeventos_por_evento(INT);
+DROP FUNCTION IF EXISTS crear_subevento(INT, VARCHAR, DATE, DATE, TEXT, INT, INT, INT);
+DROP FUNCTION IF EXISTS actualizar_subevento(INT, VARCHAR, DATE, DATE, TEXT, INT, INT, INT);
+DROP FUNCTION IF EXISTS eliminar_subevento(INT);
+DROP FUNCTION IF EXISTS obtener_inventario_evento(INT);
+DROP FUNCTION IF EXISTS actualizar_inventario_evento(INT, INT, INT);
+DROP FUNCTION IF EXISTS transferir_inventario_a_evento(INT, INT, INT);
+DROP FUNCTION IF EXISTS registrar_asistencia_evento(INT, INT);
+DROP FUNCTION IF EXISTS obtener_asistentes_evento(INT);
+DROP FUNCTION IF EXISTS vender_entrada_evento(INT, INT, JSON);
+DROP FUNCTION IF EXISTS obtener_invitados_evento(INT);
+DROP FUNCTION IF EXISTS agregar_invitado_evento(INT, INT, INT, VARCHAR, VARCHAR, INT);
+
+-- 1. Gestión de tipos de eventos
+CREATE OR REPLACE FUNCTION obtener_tipos_evento()
+RETURNS TABLE (
+    clave INT,
+    nombre VARCHAR(50),
+    descripcion TEXT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT te.clave, te.nombre, te.descripcion
+    FROM tipo_evento te
+    ORDER BY te.nombre;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION crear_tipo_evento(
+    p_nombre VARCHAR(50),
+    p_descripcion TEXT
+)
+RETURNS TABLE (
+    clave INT,
+    nombre VARCHAR(50),
+    descripcion TEXT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    INSERT INTO tipo_evento (nombre, descripcion)
+    VALUES (p_nombre, p_descripcion)
+    RETURNING tipo_evento.clave, tipo_evento.nombre, tipo_evento.descripcion;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION actualizar_tipo_evento(
+    p_id INT,
+    p_nombre VARCHAR(50),
+    p_descripcion TEXT
+)
+RETURNS TABLE (
+    clave INT,
+    nombre VARCHAR(50),
+    descripcion TEXT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    UPDATE tipo_evento
+    SET nombre = p_nombre, descripcion = p_descripcion
+    WHERE clave = p_id
+    RETURNING tipo_evento.clave, tipo_evento.nombre, tipo_evento.descripcion;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION eliminar_tipo_evento(p_id INT)
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    deleted_id INT;
+BEGIN
+    DELETE FROM tipo_evento WHERE clave = p_id RETURNING clave INTO deleted_id;
+    RETURN deleted_id;
+END;
+$$;
+
+-- 2. Gestión de eventos principales
+CREATE OR REPLACE FUNCTION obtener_todos_eventos(
+    p_fecha_inicio DATE DEFAULT NULL,
+    p_fecha_fin DATE DEFAULT NULL,
+    p_lugar_id INT DEFAULT NULL,
+    p_tipo VARCHAR(50) DEFAULT NULL
+)
+RETURNS TABLE (
+    clave INT,
+    nombre VARCHAR(50),
+    fecha_inicio DATE,
+    fecha_fin DATE,
+    direccion TEXT,
+    precio_entrada INT,
+    tipo_evento VARCHAR(50),
+    lugar VARCHAR(50),
+    cantidad_subeventos BIGINT,
+    cantidad_asistentes BIGINT,
+    ingresos_totales DECIMAL
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        e.clave,
+        e.nombre,
+        e.fecha_inicio,
+        e.fecha_fin,
+        e.direccion,
+        e.precio_entrada,
+        te.nombre as tipo_evento,
+        l.nombre as lugar,
+        COUNT(DISTINCT se.clave) as cantidad_subeventos,
+        COUNT(DISTINCT a.clave) as cantidad_asistentes,
+        COALESCE(SUM(ve.monto_total), 0) as ingresos_totales
+    FROM evento e
+    JOIN tipo_evento te ON e.fk_tipo_evento = te.clave
+    JOIN lugar l ON e.fk_lugar = l.clave
+    LEFT JOIN evento se ON se.fk_evento = e.clave
+    LEFT JOIN asistencia a ON a.fk_evento = e.clave
+    LEFT JOIN venta_entrada ve ON ve.fk_evento = e.clave
+    WHERE (p_fecha_inicio IS NULL OR e.fecha_inicio >= p_fecha_inicio)
+      AND (p_fecha_fin IS NULL OR e.fecha_fin <= p_fecha_fin)
+      AND (p_lugar_id IS NULL OR e.fk_lugar = p_lugar_id)
+      AND (p_tipo IS NULL OR te.nombre = p_tipo)
+      AND e.fk_evento IS NULL -- Solo eventos principales
+    GROUP BY e.clave, e.nombre, e.fecha_inicio, e.fecha_fin, 
+             e.direccion, e.precio_entrada, te.nombre, l.nombre
+    ORDER BY e.fecha_inicio DESC;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION obtener_evento_por_id(p_evento_id INT)
+RETURNS TABLE (
+    clave INT,
+    nombre VARCHAR(50),
+    fecha_inicio DATE,
+    fecha_fin DATE,
+    direccion TEXT,
+    precio_entrada INT,
+    tipo_evento_id INT,
+    tipo_evento_nombre VARCHAR(50),
+    lugar_id INT,
+    lugar_nombre VARCHAR(50),
+    evento_padre_id INT,
+    evento_padre_nombre VARCHAR(50)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        e.clave,
+        e.nombre,
+        e.fecha_inicio,
+        e.fecha_fin,
+        e.direccion,
+        e.precio_entrada,
+        te.clave as tipo_evento_id,
+        te.nombre as tipo_evento_nombre,
+        l.clave as lugar_id,
+        l.nombre as lugar_nombre,
+        ep.clave as evento_padre_id,
+        ep.nombre as evento_padre_nombre
+    FROM evento e
+    JOIN tipo_evento te ON e.fk_tipo_evento = te.clave
+    JOIN lugar l ON e.fk_lugar = l.clave
+    LEFT JOIN evento ep ON e.fk_evento = ep.clave
+    WHERE e.clave = p_evento_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION crear_evento(
+    p_nombre VARCHAR(50),
+    p_fecha_inicio DATE,
+    p_fecha_fin DATE,
+    p_direccion TEXT,
+    p_precio_entrada INT,
+    p_fk_evento INT,
+    p_fk_lugar INT,
+    p_fk_tipo_evento INT
+)
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_evento_id INT;
+BEGIN
+    INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, 
+                       precio_entrada, fk_evento, fk_lugar, fk_tipo_evento)
+    VALUES (p_nombre, p_fecha_inicio, p_fecha_fin, p_direccion, 
+            p_precio_entrada, p_fk_evento, p_fk_lugar, p_fk_tipo_evento)
+    RETURNING clave INTO v_evento_id;
+    
+    RETURN v_evento_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION actualizar_evento(
+    p_id INT,
+    p_nombre VARCHAR(50),
+    p_fecha_inicio DATE,
+    p_fecha_fin DATE,
+    p_direccion TEXT,
+    p_precio_entrada INT,
+    p_fk_evento INT,
+    p_fk_lugar INT,
+    p_fk_tipo_evento INT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE evento
+    SET nombre = p_nombre,
+        fecha_inicio = p_fecha_inicio,
+        fecha_fin = p_fecha_fin,
+        direccion = p_direccion,
+        precio_entrada = p_precio_entrada,
+        fk_evento = p_fk_evento,
+        fk_lugar = p_fk_lugar,
+        fk_tipo_evento = p_fk_tipo_evento
+    WHERE clave = p_id;
+    
+    RETURN FOUND;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION eliminar_evento(p_id INT)
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    deleted_id INT;
+BEGIN
+    DELETE FROM evento WHERE clave = p_id RETURNING clave INTO deleted_id;
+    RETURN deleted_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION obtener_eventos_activos()
+RETURNS TABLE (
+    clave INT,
+    nombre VARCHAR(50),
+    fecha_inicio DATE,
+    fecha_fin DATE,
+    tipo_evento VARCHAR(50),
+    lugar VARCHAR(50)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        e.clave,
+        e.nombre,
+        e.fecha_inicio,
+        e.fecha_fin,
+        te.nombre as tipo_evento,
+        l.nombre as lugar
+    FROM evento e
+    JOIN tipo_evento te ON e.fk_tipo_evento = te.clave
+    JOIN lugar l ON e.fk_lugar = l.clave
+    WHERE CURRENT_DATE BETWEEN e.fecha_inicio AND e.fecha_fin
+      AND e.fk_evento IS NULL
+    ORDER BY e.fecha_inicio;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION obtener_eventos_proximos(p_dias INT DEFAULT 30)
+RETURNS TABLE (
+    clave INT,
+    nombre VARCHAR(50),
+    fecha_inicio DATE,
+    fecha_fin DATE,
+    dias_para_inicio INT,
+    tipo_evento VARCHAR(50),
+    lugar VARCHAR(50)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        e.clave,
+        e.nombre,
+        e.fecha_inicio,
+        e.fecha_fin,
+        (e.fecha_inicio - CURRENT_DATE)::INT as dias_para_inicio,
+        te.nombre as tipo_evento,
+        l.nombre as lugar
+    FROM evento e
+    JOIN tipo_evento te ON e.fk_tipo_evento = te.clave
+    JOIN lugar l ON e.fk_lugar = l.clave
+    WHERE e.fecha_inicio > CURRENT_DATE
+      AND e.fecha_inicio <= CURRENT_DATE + p_dias
+      AND e.fk_evento IS NULL
+    ORDER BY e.fecha_inicio;
+END;
+$$;
+
+-- 3. Gestión de sub-eventos
+CREATE OR REPLACE FUNCTION obtener_subeventos_por_evento(p_evento_id INT)
+RETURNS TABLE (
+    clave INT,
+    nombre VARCHAR(50),
+    fecha_inicio DATE,
+    fecha_fin DATE,
+    direccion TEXT,
+    precio_entrada INT,
+    tipo_evento VARCHAR(50),
+    cantidad_asistentes BIGINT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        e.clave,
+        e.nombre,
+        e.fecha_inicio,
+        e.fecha_fin,
+        e.direccion,
+        e.precio_entrada,
+        te.nombre as tipo_evento,
+        COUNT(DISTINCT a.clave) as cantidad_asistentes
+    FROM evento e
+    JOIN tipo_evento te ON e.fk_tipo_evento = te.clave
+    LEFT JOIN asistencia a ON a.fk_evento = e.clave
+    WHERE e.fk_evento = p_evento_id
+    GROUP BY e.clave, e.nombre, e.fecha_inicio, e.fecha_fin, 
+             e.direccion, e.precio_entrada, te.nombre
+    ORDER BY e.fecha_inicio;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION crear_subevento(
+    p_evento_padre_id INT,
+    p_nombre VARCHAR(50),
+    p_fecha_inicio DATE,
+    p_fecha_fin DATE,
+    p_direccion TEXT,
+    p_precio_entrada INT,
+    p_fk_lugar INT,
+    p_fk_tipo_evento INT
+)
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_subevento_id INT;
+    v_fecha_inicio_padre DATE;
+    v_fecha_fin_padre DATE;
+BEGIN
+    -- Validar que las fechas estén dentro del evento padre
+    SELECT fecha_inicio, fecha_fin 
+    INTO v_fecha_inicio_padre, v_fecha_fin_padre
+    FROM evento 
+    WHERE clave = p_evento_padre_id;
+    
+    IF p_fecha_inicio < v_fecha_inicio_padre OR p_fecha_fin > v_fecha_fin_padre THEN
+        RAISE EXCEPTION 'Las fechas del sub-evento deben estar dentro del rango del evento padre';
+    END IF;
+    
+    -- Crear el sub-evento
+    INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, 
+                       precio_entrada, fk_evento, fk_lugar, fk_tipo_evento)
+    VALUES (p_nombre, p_fecha_inicio, p_fecha_fin, p_direccion, 
+            p_precio_entrada, p_evento_padre_id, p_fk_lugar, p_fk_tipo_evento)
+    RETURNING clave INTO v_subevento_id;
+    
+    RETURN v_subevento_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION actualizar_subevento(
+    p_id INT,
+    p_nombre VARCHAR(50),
+    p_fecha_inicio DATE,
+    p_fecha_fin DATE,
+    p_direccion TEXT,
+    p_precio_entrada INT,
+    p_fk_lugar INT,
+    p_fk_tipo_evento INT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_evento_padre_id INT;
+    v_fecha_inicio_padre DATE;
+    v_fecha_fin_padre DATE;
+BEGIN
+    -- Obtener el evento padre
+    SELECT fk_evento INTO v_evento_padre_id
+    FROM evento WHERE clave = p_id;
+    
+    IF v_evento_padre_id IS NOT NULL THEN
+        -- Validar fechas con el evento padre
+        SELECT fecha_inicio, fecha_fin 
+        INTO v_fecha_inicio_padre, v_fecha_fin_padre
+        FROM evento 
+        WHERE clave = v_evento_padre_id;
+        
+        IF p_fecha_inicio < v_fecha_inicio_padre OR p_fecha_fin > v_fecha_fin_padre THEN
+            RAISE EXCEPTION 'Las fechas del sub-evento deben estar dentro del rango del evento padre';
+        END IF;
+    END IF;
+    
+    UPDATE evento
+    SET nombre = p_nombre,
+        fecha_inicio = p_fecha_inicio,
+        fecha_fin = p_fecha_fin,
+        direccion = p_direccion,
+        precio_entrada = p_precio_entrada,
+        fk_lugar = p_fk_lugar,
+        fk_tipo_evento = p_fk_tipo_evento
+    WHERE clave = p_id;
+    
+    RETURN FOUND;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION eliminar_subevento(p_id INT)
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    deleted_id INT;
+BEGIN
+    -- Solo permitir eliminar si es un sub-evento
+    DELETE FROM evento 
+    WHERE clave = p_id AND fk_evento IS NOT NULL
+    RETURNING clave INTO deleted_id;
+    
+    RETURN deleted_id;
+END;
+$$;
+
+-- 4. Gestión de inventario de eventos
+CREATE OR REPLACE FUNCTION obtener_inventario_evento(p_evento_id INT)
+RETURNS TABLE (
+    clave INT,
+    presentacion_id INT,
+    presentacion_nombre VARCHAR(50),
+    cerveza_nombre VARCHAR(50),
+    precio DECIMAL(10,2),
+    cantidad_disponible INT,
+    cantidad_vendida BIGINT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        ie.clave,
+        p.clave as presentacion_id,
+        p.nombre as presentacion_nombre,
+        c.nombre as cerveza_nombre,
+        p.precio,
+        ie.cantidad_unidades as cantidad_disponible,
+        COALESCE(SUM(dve.cantidad), 0) as cantidad_vendida
+    FROM inventario_evento ie
+    JOIN presentacion p ON ie.fk_presentacion = p.clave
+    JOIN cerveza c ON p.fk_cerveza = c.clave
+    LEFT JOIN detalle_venta_evento dve ON dve.fk_inventario_evento = ie.clave
+    WHERE ie.fk_evento = p_evento_id
+    GROUP BY ie.clave, p.clave, p.nombre, c.nombre, p.precio, ie.cantidad_unidades;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION actualizar_inventario_evento(
+    p_evento_id INT,
+    p_presentacion_id INT,
+    p_cantidad INT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_inventario_id INT;
+BEGIN
+    -- Buscar si ya existe el inventario
+    SELECT clave INTO v_inventario_id
+    FROM inventario_evento
+    WHERE fk_evento = p_evento_id AND fk_presentacion = p_presentacion_id;
+    
+    IF v_inventario_id IS NOT NULL THEN
+        -- Actualizar cantidad existente
+        UPDATE inventario_evento
+        SET cantidad_unidades = p_cantidad
+        WHERE clave = v_inventario_id;
+    ELSE
+        -- Crear nuevo registro
+        INSERT INTO inventario_evento (fk_presentacion, fk_evento, cantidad_unidades)
+        VALUES (p_presentacion_id, p_evento_id, p_cantidad);
+    END IF;
+    
+    RETURN TRUE;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION transferir_inventario_a_evento(
+    p_almacen_id INT,
+    p_evento_id INT,
+    p_cantidad INT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_presentacion_id INT;
+    v_cantidad_disponible INT;
+    v_inventario_evento_id INT;
+BEGIN
+    -- Obtener presentación y cantidad disponible
+    SELECT fk_presentacion, cantidad_unidades 
+    INTO v_presentacion_id, v_cantidad_disponible
+    FROM almacen 
+    WHERE clave = p_almacen_id;
+    
+    IF v_cantidad_disponible < p_cantidad THEN
+        RAISE EXCEPTION 'No hay suficiente inventario en almacén. Disponible: %, Solicitado: %', 
+                        v_cantidad_disponible, p_cantidad;
+    END IF;
+    
+    -- Descontar del almacén
+    UPDATE almacen
+    SET cantidad_unidades = cantidad_unidades - p_cantidad
+    WHERE clave = p_almacen_id;
+    
+    -- Buscar si ya existe inventario para este evento y presentación
+    SELECT clave INTO v_inventario_evento_id
+    FROM inventario_evento
+    WHERE fk_evento = p_evento_id AND fk_presentacion = v_presentacion_id;
+    
+    IF v_inventario_evento_id IS NOT NULL THEN
+        -- Actualizar inventario existente
+        UPDATE inventario_evento
+        SET cantidad_unidades = cantidad_unidades + p_cantidad
+        WHERE clave = v_inventario_evento_id;
+    ELSE
+        -- Crear nuevo inventario
+        INSERT INTO inventario_evento (fk_presentacion, fk_evento, cantidad_unidades)
+        VALUES (v_presentacion_id, p_evento_id, p_cantidad);
+    END IF;
+    
+    RETURN TRUE;
+END;
+$$;
+
+-- 5. Gestión de participantes y asistencia
+CREATE OR REPLACE FUNCTION registrar_asistencia_evento(
+    p_evento_id INT,
+    p_cliente_id INT
+)
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_asistencia_id INT;
+BEGIN
+    -- Verificar si ya está registrado
+    SELECT clave INTO v_asistencia_id
+    FROM asistencia
+    WHERE fk_evento = p_evento_id AND fk_cliente = p_cliente_id;
+    
+    IF v_asistencia_id IS NOT NULL THEN
+        RAISE EXCEPTION 'El cliente ya tiene asistencia registrada para este evento';
+    END IF;
+    
+    INSERT INTO asistencia (fecha_entrada, fk_evento, fk_cliente)
+    VALUES (NOW(), p_evento_id, p_cliente_id)
+    RETURNING clave INTO v_asistencia_id;
+    
+    RETURN v_asistencia_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION obtener_asistentes_evento(p_evento_id INT)
+RETURNS TABLE (
+    asistencia_id INT,
+    cliente_id INT,
+    cliente_nombre TEXT,
+    cliente_documento INT,
+    fecha_entrada TIMESTAMP,
+    tipo_cliente tipo_cliente
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        a.clave as asistencia_id,
+        c.clave as cliente_id,
+        CASE 
+            WHEN c.tipo = 'natural' THEN c.primer_nombre || ' ' || c.primer_apellido
+            ELSE c.razon_social
+        END as cliente_nombre,
+        CASE 
+            WHEN c.tipo = 'natural' THEN c.ci
+            ELSE c.rif
+        END as cliente_documento,
+        a.fecha_entrada,
+        c.tipo as tipo_cliente
+    FROM asistencia a
+    JOIN cliente c ON a.fk_cliente = c.clave
+    WHERE a.fk_evento = p_evento_id
+    ORDER BY a.fecha_entrada DESC;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION vender_entrada_evento(
+    p_evento_id INT,
+    p_cliente_id INT,
+    p_pagos JSON
+)
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_venta_id INT;
+    v_precio_entrada INT;
+    pago RECORD;
+BEGIN
+    -- Obtener precio de entrada
+    SELECT precio_entrada INTO v_precio_entrada
+    FROM evento WHERE clave = p_evento_id;
+    
+    IF v_precio_entrada IS NULL THEN
+        RAISE EXCEPTION 'El evento no tiene precio de entrada definido';
+    END IF;
+    
+    -- Crear venta de entrada
+    INSERT INTO venta_entrada (fecha, monto_total, fk_evento, fk_cliente)
+    VALUES (CURRENT_DATE, v_precio_entrada, p_evento_id, p_cliente_id)
+    RETURNING clave INTO v_venta_id;
+    
+    -- Procesar pagos
+    FOR pago IN SELECT * FROM json_to_recordset(p_pagos) AS x(metodo_pago_id INT, monto NUMERIC, tasa_cambio_id INT)
+    LOOP
+        INSERT INTO pago (fecha_pago, monto_total, fk_tasa_cambio, fk_metodo_de_pago, fk_venta_entrada)
+        VALUES (CURRENT_DATE, pago.monto, pago.tasa_cambio_id, pago.metodo_pago_id, v_venta_id);
+    END LOOP;
+    
+    RETURN v_venta_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION obtener_invitados_evento(p_evento_id INT)
+RETURNS TABLE (
+    invitado_id INT,
+    rif INT,
+    nombre_completo TEXT,
+    tipo_invitado VARCHAR(50),
+    fecha_entrada TIMESTAMP,
+    fecha_salida TIMESTAMP
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        i.ci as invitado_id,
+        i.rif,
+        i.primer_nombre || ' ' || i.primer_apellido as nombre_completo,
+        ti.nombre as tipo_invitado,
+        ie.fecha_hora_entrada,
+        ie.fecha_hora_salida
+    FROM inv_eve ie
+    JOIN invitado i ON ie.fk_invitado = i.ci
+    JOIN tipo_invitado ti ON i.fk_tipo_invitado = ti.clave
+    WHERE ie.fk_evento = p_evento_id
+    ORDER BY ie.fecha_hora_entrada DESC;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION agregar_invitado_evento(
+    p_evento_id INT,
+    p_ci INT,
+    p_rif INT,
+    p_primer_nombre VARCHAR(50),
+    p_primer_apellido VARCHAR(50),
+    p_tipo_invitado_id INT
+)
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_invitado_id INT;
+BEGIN
+    -- Crear o actualizar invitado
+    INSERT INTO invitado (ci, rif, primer_nombre, primer_apellido, fk_tipo_invitado)
+    VALUES (p_ci, p_rif, p_primer_nombre, p_primer_apellido, p_tipo_invitado_id)
+    ON CONFLICT (ci) DO UPDATE
+    SET rif = EXCLUDED.rif,
+        primer_nombre = EXCLUDED.primer_nombre,
+        primer_apellido = EXCLUDED.primer_apellido,
+        fk_tipo_invitado = EXCLUDED.fk_tipo_invitado
+    RETURNING ci INTO v_invitado_id;
+    
+    -- Registrar en el evento
+    INSERT INTO inv_eve (fecha_hora_entrada, fk_invitado, fk_evento)
+    VALUES (NOW(), v_invitado_id, p_evento_id);
+    
+    RETURN v_invitado_id;
+END;
+$$;
+
+-- =============================================
+-- PROCEDIMIENTOS PARA DASHBOARD (dashboardController.js)
+-- =============================================
+
+-- Drops para dashboard
+DROP FUNCTION IF EXISTS obtener_ventas_totales(DATE, DATE, VARCHAR);
+DROP FUNCTION IF EXISTS obtener_crecimiento_ventas(DATE, DATE, DATE, DATE);
+DROP FUNCTION IF EXISTS calcular_ticket_promedio(DATE, DATE);
+DROP FUNCTION IF EXISTS obtener_volumen_unidades_vendidas(DATE, DATE);
+DROP FUNCTION IF EXISTS obtener_ventas_por_estilo_cerveza(DATE, DATE);
+DROP FUNCTION IF EXISTS obtener_clientes_nuevos_vs_recurrentes(DATE, DATE);
+DROP FUNCTION IF EXISTS calcular_tasa_retencion_clientes(DATE, DATE);
+DROP FUNCTION IF EXISTS calcular_rotacion_inventario(DATE, DATE);
+DROP FUNCTION IF EXISTS obtener_tasa_ruptura_stock();
+DROP FUNCTION IF EXISTS obtener_ventas_por_empleado(DATE, DATE);
+
+-- 1. Indicadores de Ventas
+
+CREATE OR REPLACE FUNCTION obtener_ventas_totales(
+    p_fecha_inicio DATE,
+    p_fecha_fin DATE,
+    p_tipo_tienda VARCHAR(20) DEFAULT NULL
+)
+RETURNS TABLE (
+    tipo_venta VARCHAR(20),
+    cantidad_ventas BIGINT,
+    monto_total DECIMAL(15,2),
+    promedio_venta DECIMAL(10,2)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    WITH ventas_unificadas AS (
+        SELECT 
+            'online'::VARCHAR(20) as tipo,
+            vo.monto_total as monto,
+            vo.fecha
+        FROM venta_online vo
+        WHERE vo.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+        
+        UNION ALL
+        
+        SELECT 
+            'fisica'::VARCHAR(20) as tipo,
+            vf.total_venta as monto,
+            vf.fecha
+        FROM venta_tienda_fisica vf
+        WHERE vf.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+        
+        UNION ALL
+        
+        SELECT 
+            'evento'::VARCHAR(20) as tipo,
+            ve.monto_total as monto,
+            ve.fecha
+        FROM venta_evento ve
+        WHERE ve.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+    )
+    SELECT 
+        vu.tipo as tipo_venta,
+        COUNT(*) as cantidad_ventas,
+        SUM(vu.monto) as monto_total,
+        AVG(vu.monto) as promedio_venta
+    FROM ventas_unificadas vu
+    WHERE p_tipo_tienda IS NULL OR vu.tipo = p_tipo_tienda
+    GROUP BY vu.tipo
+    
+    UNION ALL
+    
+    SELECT 
+        'total'::VARCHAR(20) as tipo_venta,
+        COUNT(*) as cantidad_ventas,
+        SUM(vu.monto) as monto_total,
+        AVG(vu.monto) as promedio_venta
+    FROM ventas_unificadas vu
+    WHERE p_tipo_tienda IS NULL OR vu.tipo = p_tipo_tienda;
+END;
+$$; 
+CREATE OR REPLACE FUNCTION obtener_crecimiento_ventas(
+    p_fecha_inicio_actual DATE,
+    p_fecha_fin_actual DATE,
+    p_fecha_inicio_anterior DATE,
+    p_fecha_fin_anterior DATE
+)
+RETURNS TABLE (
+    ventas_periodo_actual DECIMAL(15,2),
+    ventas_periodo_anterior DECIMAL(15,2),
+    diferencia_absoluta DECIMAL(15,2),
+    porcentaje_crecimiento DECIMAL(5,2)
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_ventas_actual DECIMAL(15,2);
+    v_ventas_anterior DECIMAL(15,2);
+BEGIN
+    -- Calcular ventas período actual
+    SELECT COALESCE(SUM(monto), 0) INTO v_ventas_actual
+    FROM (
+        SELECT monto_total as monto FROM venta_online 
+        WHERE fecha BETWEEN p_fecha_inicio_actual AND p_fecha_fin_actual
+        UNION ALL
+        SELECT total_venta as monto FROM venta_tienda_fisica 
+        WHERE fecha BETWEEN p_fecha_inicio_actual AND p_fecha_fin_actual
+        UNION ALL
+        SELECT monto_total as monto FROM venta_evento 
+        WHERE fecha BETWEEN p_fecha_inicio_actual AND p_fecha_fin_actual
+    ) ventas_actual;
+    
+    -- Calcular ventas período anterior
+    SELECT COALESCE(SUM(monto), 0) INTO v_ventas_anterior
+    FROM (
+        SELECT monto_total as monto FROM venta_online 
+        WHERE fecha BETWEEN p_fecha_inicio_anterior AND p_fecha_fin_anterior
+        UNION ALL
+        SELECT total_venta as monto FROM venta_tienda_fisica 
+        WHERE fecha BETWEEN p_fecha_inicio_anterior AND p_fecha_fin_anterior
+        UNION ALL
+        SELECT monto_total as monto FROM venta_evento 
+        WHERE fecha BETWEEN p_fecha_inicio_anterior AND p_fecha_fin_anterior
+    ) ventas_anterior;
+    
+    RETURN QUERY
+    SELECT 
+        v_ventas_actual as ventas_periodo_actual,
+        v_ventas_anterior as ventas_periodo_anterior,
+        v_ventas_actual - v_ventas_anterior as diferencia_absoluta,
+        CASE 
+            WHEN v_ventas_anterior = 0 THEN 100.00
+            ELSE ROUND(((v_ventas_actual - v_ventas_anterior) / v_ventas_anterior * 100)::NUMERIC, 2)
+        END as porcentaje_crecimiento;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION calcular_ticket_promedio(
+    p_fecha_inicio DATE,
+    p_fecha_fin DATE
+)
+RETURNS TABLE (
+    tipo_venta VARCHAR(20),
+    ticket_promedio DECIMAL(10,2),
+    cantidad_items_promedio DECIMAL(5,2)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    -- Ventas online
+    SELECT 
+        'online'::VARCHAR(20) as tipo_venta,
+        AVG(vo.monto_total) as ticket_promedio,
+        AVG(items_por_venta.cantidad_items) as cantidad_items_promedio
+    FROM venta_online vo
+    LEFT JOIN (
+        SELECT fk_venta_online, SUM(cantidad) as cantidad_items
+        FROM detalle_venta_online
+        GROUP BY fk_venta_online
+    ) items_por_venta ON vo.clave = items_por_venta.fk_venta_online
+    WHERE vo.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+    
+    UNION ALL
+    
+    -- Ventas físicas
+    SELECT 
+        'fisica'::VARCHAR(20) as tipo_venta,
+        AVG(vf.total_venta) as ticket_promedio,
+        AVG(items_por_venta.cantidad_items) as cantidad_items_promedio
+    FROM venta_tienda_fisica vf
+    LEFT JOIN (
+        SELECT fk_venta_tienda_fisica, SUM(cantidad) as cantidad_items
+        FROM detalle_venta_fisica
+        GROUP BY fk_venta_tienda_fisica
+    ) items_por_venta ON vf.clave = items_por_venta.fk_venta_tienda_fisica
+    WHERE vf.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+    
+    UNION ALL
+    
+    -- Total general
+    SELECT 
+        'total'::VARCHAR(20) as tipo_venta,
+        AVG(monto) as ticket_promedio,
+        AVG(items) as cantidad_items_promedio
+    FROM (
+        SELECT vo.monto_total as monto, COALESCE(SUM(dvo.cantidad), 0) as items
+        FROM venta_online vo
+        LEFT JOIN detalle_venta_online dvo ON vo.clave = dvo.fk_venta_online
+        WHERE vo.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+        GROUP BY vo.clave, vo.monto_total
+        
+        UNION ALL
+        
+        SELECT vf.total_venta as monto, COALESCE(SUM(dvf.cantidad), 0) as items
+        FROM venta_tienda_fisica vf
+        LEFT JOIN detalle_venta_fisica dvf ON vf.clave = dvf.fk_venta_tienda_fisica
+        WHERE vf.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+        GROUP BY vf.clave, vf.total_venta
+    ) todas_ventas;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION obtener_volumen_unidades_vendidas(
+    p_fecha_inicio DATE,
+    p_fecha_fin DATE
+)
+RETURNS TABLE (
+    tipo_presentacion VARCHAR(50),
+    unidades_vendidas BIGINT,
+    litros_vendidos DECIMAL(10,2)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    WITH ventas_unificadas AS (
+        -- Ventas online
+        SELECT 
+            p.nombre as presentacion,
+            p.cantidad_unidades as ml_por_unidad,
+            dvo.cantidad
+        FROM detalle_venta_online dvo
+        JOIN almacen a ON dvo.fk_almacen = a.clave
+        JOIN presentacion p ON a.fk_presentacion = p.clave
+        JOIN venta_online vo ON dvo.fk_venta_online = vo.clave
+        WHERE vo.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+        
+        UNION ALL
+        
+        -- Ventas físicas
+        SELECT 
+            p.nombre as presentacion,
+            p.cantidad_unidades as ml_por_unidad,
+            dvf.cantidad
+        FROM detalle_venta_fisica dvf
+        JOIN inventario_tienda it ON dvf.fk_inventario_tienda = it.clave
+        JOIN presentacion p ON it.fk_presentacion = p.clave
+        JOIN venta_tienda_fisica vf ON dvf.fk_venta_tienda_fisica = vf.clave
+        WHERE vf.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+        
+        UNION ALL
+        
+        -- Ventas en eventos
+        SELECT 
+            p.nombre as presentacion,
+            p.cantidad_unidades as ml_por_unidad,
+            dve.cantidad
+        FROM detalle_venta_evento dve
+        JOIN inventario_evento ie ON dve.fk_inventario_evento = ie.clave
+        JOIN presentacion p ON ie.fk_presentacion = p.clave
+        JOIN venta_evento ve ON dve.fk_venta_evento = ve.clave
+        WHERE ve.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+    )
+    SELECT 
+        presentacion as tipo_presentacion,
+        SUM(cantidad) as unidades_vendidas,
+        SUM(cantidad * ml_por_unidad / 1000.0) as litros_vendidos
+    FROM ventas_unificadas
+    GROUP BY presentacion
+    ORDER BY unidades_vendidas DESC;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION obtener_ventas_por_estilo_cerveza(
+    p_fecha_inicio DATE,
+    p_fecha_fin DATE
+)
+RETURNS TABLE (
+    estilo_cerveza VARCHAR(50),
+    cantidad_vendida BIGINT,
+    monto_total DECIMAL(15,2),
+    porcentaje_del_total DECIMAL(5,2)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    WITH ventas_por_estilo AS (
+        -- Ventas online
+        SELECT 
+            tc.nombre as estilo,
+            dvo.cantidad,
+            dvo.cantidad * dvo.precio_unitario as monto
+        FROM detalle_venta_online dvo
+        JOIN almacen a ON dvo.fk_almacen = a.clave
+        JOIN presentacion p ON a.fk_presentacion = p.clave
+        JOIN cerveza c ON p.fk_cerveza = c.clave
+        JOIN tipo_cerveza tc ON c.fk_tipo_cerveza = tc.clave
+        JOIN venta_online vo ON dvo.fk_venta_online = vo.clave
+        WHERE vo.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+        
+        UNION ALL
+        
+        -- Ventas físicas
+        SELECT 
+            tc.nombre as estilo,
+            dvf.cantidad,
+            dvf.cantidad * dvf.precio_unitario as monto
+        FROM detalle_venta_fisica dvf
+        JOIN inventario_tienda it ON dvf.fk_inventario_tienda = it.clave
+        JOIN presentacion p ON it.fk_presentacion = p.clave
+        JOIN cerveza c ON p.fk_cerveza = c.clave
+        JOIN tipo_cerveza tc ON c.fk_tipo_cerveza = tc.clave
+        JOIN venta_tienda_fisica vf ON dvf.fk_venta_tienda_fisica = vf.clave
+        WHERE vf.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+        
+        UNION ALL
+        
+        -- Ventas en eventos
+        SELECT 
+            tc.nombre as estilo,
+            dve.cantidad,
+            dve.cantidad * dve.precio_unitario as monto
+        FROM detalle_venta_evento dve
+        JOIN inventario_evento ie ON dve.fk_inventario_evento = ie.clave
+        JOIN presentacion p ON ie.fk_presentacion = p.clave
+        JOIN cerveza c ON p.fk_cerveza = c.clave
+        JOIN tipo_cerveza tc ON c.fk_tipo_cerveza = tc.clave
+        JOIN venta_evento ve ON dve.fk_venta_evento = ve.clave
+        WHERE ve.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+    ),
+    totales AS (
+        SELECT SUM(monto) as total_general_estilos
+        FROM ventas_por_estilo
+    )
+    SELECT 
+        estilo as estilo_cerveza,
+        SUM(cantidad) as cantidad_vendida,
+        SUM(monto) as monto_total,
+        ROUND((SUM(monto) / totales.total_general_estilos * 100)::NUMERIC, 2) as porcentaje_del_total
+    FROM ventas_por_estilo
+    CROSS JOIN totales
+    GROUP BY estilo, totales.total_general_estilos
+    ORDER BY monto_total DESC;
+END;
+$$;
+
+-- 2. Indicadores de Clientes
+CREATE OR REPLACE FUNCTION obtener_clientes_nuevos_vs_recurrentes(
+    p_fecha_inicio DATE,
+    p_fecha_fin DATE
+)
+RETURNS TABLE (
+    tipo_cliente VARCHAR(20),
+    cantidad INT,
+    porcentaje DECIMAL(5,2)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    WITH clientes_periodo AS (
+        SELECT DISTINCT fk_cliente as cliente_id
+        FROM venta_tienda_fisica
+        WHERE fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+        
+        UNION
+        
+        SELECT DISTINCT c.clave as cliente_id
+        FROM venta_online vo
+        JOIN usuario u ON vo.fk_usuario = u.clave
+        JOIN cliente c ON u.fk_cliente = c.clave
+        WHERE vo.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+        
+        UNION
+        
+        SELECT DISTINCT fk_cliente as cliente_id
+        FROM venta_evento
+        WHERE fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+    ),
+    clientes_anteriores AS (
+        SELECT DISTINCT fk_cliente as cliente_id
+        FROM venta_tienda_fisica
+        WHERE fecha < p_fecha_inicio
+        
+        UNION
+        
+        SELECT DISTINCT c.clave as cliente_id
+        FROM venta_online vo
+        JOIN usuario u ON vo.fk_usuario = u.clave
+        JOIN cliente c ON u.fk_cliente = c.clave
+        WHERE vo.fecha < p_fecha_inicio
+        
+        UNION
+        
+        SELECT DISTINCT fk_cliente as cliente_id
+        FROM venta_evento
+        WHERE fecha < p_fecha_inicio
+    ),
+    clasificacion AS (
+        SELECT 
+            cp.cliente_id,
+            CASE 
+                WHEN ca.cliente_id IS NULL THEN 'nuevo'
+                ELSE 'recurrente'
+            END as tipo
+        FROM clientes_periodo cp
+        LEFT JOIN clientes_anteriores ca ON cp.cliente_id = ca.cliente_id
+    ),
+    conteos AS (
+        SELECT 
+            tipo,
+            COUNT(*) as cantidad_clientes
+        FROM clasificacion
+        GROUP BY tipo
+    ),
+    total AS (
+        SELECT SUM(cantidad_clientes) as total_clientes FROM conteos
+    )
+    SELECT 
+        c.tipo as tipo_cliente,
+        c.cantidad_clientes::INT as cantidad,
+        ROUND((c.cantidad_clientes::DECIMAL / t.total_clientes * 100), 2) as porcentaje
+    FROM conteos c
+    CROSS JOIN total t;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION calcular_tasa_retencion_clientes(
+    p_fecha_inicio DATE,
+    p_fecha_fin DATE
+)
+RETURNS TABLE (
+    clientes_inicio_periodo INT,
+    clientes_fin_periodo INT,
+    clientes_retenidos INT,
+    tasa_retencion DECIMAL(5,2)
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_clientes_inicio INT;
+    v_clientes_fin INT;
+    v_clientes_retenidos INT;
+BEGIN
+    -- Clientes activos al inicio del período (compraron en los 30 días anteriores)
+    WITH clientes_inicio AS (
+        SELECT DISTINCT cliente_id FROM (
+            SELECT fk_cliente as cliente_id FROM venta_tienda_fisica
+            WHERE fecha BETWEEN p_fecha_inicio - INTERVAL '30 days' AND p_fecha_inicio
+            
+            UNION
+            
+            SELECT c.clave as cliente_id FROM venta_online vo
+            JOIN usuario u ON vo.fk_usuario = u.clave
+            JOIN cliente c ON u.fk_cliente = c.clave
+            WHERE vo.fecha BETWEEN p_fecha_inicio - INTERVAL '30 days' AND p_fecha_inicio
+            
+            UNION
+            
+            SELECT fk_cliente as cliente_id FROM venta_evento
+            WHERE fecha BETWEEN p_fecha_inicio - INTERVAL '30 days' AND p_fecha_inicio
+        ) ci
+    ),
+    clientes_fin AS (
+        SELECT DISTINCT cliente_id FROM (
+            SELECT fk_cliente as cliente_id FROM venta_tienda_fisica
+            WHERE fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+            
+            UNION
+            
+            SELECT c.clave as cliente_id FROM venta_online vo
+            JOIN usuario u ON vo.fk_usuario = u.clave
+            JOIN cliente c ON u.fk_cliente = c.clave
+            WHERE vo.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+            
+            UNION
+            
+            SELECT fk_cliente as cliente_id FROM venta_evento
+            WHERE fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+        ) cf
+    )
+    SELECT 
+        COUNT(DISTINCT ci.cliente_id),
+        COUNT(DISTINCT cf.cliente_id),
+        COUNT(DISTINCT ci.cliente_id) FILTER (WHERE cf.cliente_id IS NOT NULL),
+        CASE 
+            WHEN COUNT(DISTINCT ci.cliente_id) = 0 THEN 0
+            ELSE ROUND((COUNT(DISTINCT ci.cliente_id) FILTER (WHERE cf.cliente_id IS NOT NULL)::DECIMAL / 
+                       COUNT(DISTINCT ci.cliente_id) * 100), 2)
+        END
+    INTO v_clientes_inicio, v_clientes_fin, v_clientes_retenidos
+    FROM clientes_inicio ci
+    LEFT JOIN clientes_fin cf ON ci.cliente_id = cf.cliente_id;
+    
+    RETURN QUERY
+    SELECT v_clientes_inicio, v_clientes_fin, v_clientes_retenidos,
+           CASE 
+               WHEN v_clientes_inicio = 0 THEN 0
+               ELSE ROUND((v_clientes_retenidos::DECIMAL / v_clientes_inicio * 100), 2)
+           END as tasa_retencion;
+END;
+$$;
+
+-- 3. Indicadores de Inventario y Operaciones
+CREATE OR REPLACE FUNCTION calcular_rotacion_inventario(
+    p_fecha_inicio DATE,
+    p_fecha_fin DATE
+)
+RETURNS TABLE (
+    tipo_inventario VARCHAR(20),
+    valor_promedio_inventario DECIMAL(15,2),
+    costo_productos_vendidos DECIMAL(15,2),
+    rotacion_inventario DECIMAL(5,2),
+    dias_inventario INT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_dias_periodo INT;
+BEGIN
+    v_dias_periodo := p_fecha_fin - p_fecha_inicio + 1;
+    
+    RETURN QUERY
+    -- Almacén central
+    SELECT 
+        'almacen'::VARCHAR(20) as tipo_inventario,
+        AVG(a.cantidad_unidades * p.precio) as valor_promedio_inventario,
+        SUM(dvo.cantidad * dvo.precio_unitario) as costo_productos_vendidos,
+        CASE 
+            WHEN AVG(a.cantidad_unidades * p.precio) = 0 THEN 0
+            ELSE ROUND((SUM(dvo.cantidad * dvo.precio_unitario) / AVG(a.cantidad_unidades * p.precio))::NUMERIC, 2)
+        END as rotacion_inventario,
+        CASE 
+            WHEN SUM(dvo.cantidad * dvo.precio_unitario) = 0 THEN 0
+            ELSE ROUND((AVG(a.cantidad_unidades * p.precio) / (SUM(dvo.cantidad * dvo.precio_unitario) / v_dias_periodo))::NUMERIC)::INT
+        END as dias_inventario
+    FROM almacen a
+    JOIN presentacion p ON a.fk_presentacion = p.clave
+    LEFT JOIN detalle_venta_online dvo ON dvo.fk_almacen = a.clave
+    LEFT JOIN venta_online vo ON dvo.fk_venta_online = vo.clave AND vo.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+    
+    UNION ALL
+    
+    -- Tiendas físicas
+    SELECT 
+        'tienda'::VARCHAR(20) as tipo_inventario,
+        AVG(it.cantidad * p.precio) as valor_promedio_inventario,
+        SUM(dvf.cantidad * dvf.precio_unitario) as costo_productos_vendidos,
+        CASE 
+            WHEN AVG(it.cantidad * p.precio) = 0 THEN 0
+            ELSE ROUND((SUM(dvf.cantidad * dvf.precio_unitario) / AVG(it.cantidad * p.precio))::NUMERIC, 2)
+        END as rotacion_inventario,
+        CASE 
+            WHEN SUM(dvf.cantidad * dvf.precio_unitario) = 0 THEN 0
+            ELSE ROUND((AVG(it.cantidad * p.precio) / (SUM(dvf.cantidad * dvf.precio_unitario) / v_dias_periodo))::NUMERIC)::INT
+        END as dias_inventario
+    FROM inventario_tienda it
+    JOIN presentacion p ON it.fk_presentacion = p.clave
+    LEFT JOIN detalle_venta_fisica dvf ON dvf.fk_inventario_tienda = it.clave
+    LEFT JOIN venta_tienda_fisica vf ON dvf.fk_venta_tienda_fisica = vf.clave AND vf.fecha BETWEEN p_fecha_inicio AND p_fecha_fin;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION obtener_tasa_ruptura_stock()
+RETURNS TABLE (
+    tipo_inventario VARCHAR(20),
+    total_productos INT,
+    productos_sin_stock INT,
+    tasa_ruptura DECIMAL(5,2)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    -- Almacén central
+    SELECT 
+        'almacen'::VARCHAR(20) as tipo_inventario,
+        COUNT(*) as total_productos,
+        COUNT(*) FILTER (WHERE cantidad_unidades = 0) as productos_sin_stock,
+        ROUND((COUNT(*) FILTER (WHERE cantidad_unidades = 0)::DECIMAL / COUNT(*) * 100), 2) as tasa_ruptura
+    FROM almacen
+    
+    UNION ALL
+    
+    -- Tiendas físicas (agregado)
+    SELECT 
+        'tienda'::VARCHAR(20) as tipo_inventario,
+        COUNT(DISTINCT fk_presentacion) as total_productos,
+        COUNT(DISTINCT fk_presentacion) FILTER (WHERE total_cantidad = 0) as productos_sin_stock,
+        ROUND((COUNT(DISTINCT fk_presentacion) FILTER (WHERE total_cantidad = 0)::DECIMAL / 
+               COUNT(DISTINCT fk_presentacion) * 100), 2) as tasa_ruptura
+    FROM (
+        SELECT fk_presentacion, SUM(cantidad) as total_cantidad
+        FROM inventario_tienda
+        GROUP BY fk_presentacion
+    ) inventario_agregado;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION obtener_ventas_por_empleado(
+    p_fecha_inicio DATE,
+    p_fecha_fin DATE
+)
+RETURNS TABLE (
+    empleado_id INT,
+    empleado_nombre TEXT,
+    cargo VARCHAR(50),
+    tienda VARCHAR(50),
+    cantidad_ventas BIGINT,
+    monto_total_ventas DECIMAL(15,2),
+    ticket_promedio DECIMAL(10,2)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        e.ci as empleado_id,
+        (e.primer_nombre || ' ' || e.primer_apellido)::TEXT as empleado_nombre,
+        c.nombre as cargo,
+        tf.nombre as tienda,
+        COUNT(vf.clave) as cantidad_ventas,
+        SUM(vf.total_venta) as monto_total_ventas,
+        AVG(vf.total_venta) as ticket_promedio
+    FROM venta_tienda_fisica vf
+    JOIN tienda_fisica tf ON vf.fk_tienda_fisica = tf.clave
+    JOIN departamento d ON d.fk_tienda_fisica = tf.clave
+    JOIN contrato ct ON ct.fk_departamento = d.clave AND ct.fecha_fin IS NULL
+    JOIN empleado e ON ct.fk_empleado = e.ci
+    JOIN cargo c ON ct.fk_cargo = c.clave
+    WHERE vf.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+      AND c.nombre IN ('Vendedor', 'Cajero', 'Jefe de Tienda')
+    GROUP BY e.ci, e.primer_nombre, e.primer_apellido, c.nombre, tf.nombre
+    ORDER BY monto_total_ventas DESC;
+END;
+$$;
+
+-- =============================================
+-- PROCEDIMIENTOS PARA VENTAS ONLINE COMPLETAS
+-- =============================================
+
+-- Drops para ventas online completas
+DROP FUNCTION IF EXISTS validar_stock_online(JSON);
+DROP FUNCTION IF EXISTS aplicar_ofertas_carrito(JSON, INT);
+DROP FUNCTION IF EXISTS calcular_costo_envio(INT, DECIMAL);
+DROP FUNCTION IF EXISTS procesar_venta_online_completa(INT, JSON, JSON, VARCHAR);
+DROP FUNCTION IF EXISTS actualizar_estado_envio(INT, VARCHAR, TEXT);
+DROP FUNCTION IF EXISTS obtener_tracking_envio(INT);
+
+-- 1. Validar stock disponible para venta online
+CREATE OR REPLACE FUNCTION validar_stock_online(p_items JSON)
+RETURNS TABLE (
+    presentacion_id INT,
+    cantidad_solicitada INT,
+    cantidad_disponible INT,
+    stock_suficiente BOOLEAN
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    WITH items_solicitados AS (
+        SELECT 
+            (item->>'presentacion_id')::INT as presentacion_id,
+            (item->>'cantidad')::INT as cantidad
+        FROM json_array_elements(p_items) as item
+    )
+    SELECT 
+        i.presentacion_id,
+        i.cantidad as cantidad_solicitada,
+        a.cantidad_unidades as cantidad_disponible,
+        (a.cantidad_unidades >= i.cantidad) as stock_suficiente
+    FROM items_solicitados i
+    JOIN almacen a ON a.fk_presentacion = i.presentacion_id;
+END;
+$$;
+
+-- 2. Aplicar ofertas al carrito
+CREATE OR REPLACE FUNCTION aplicar_ofertas_carrito(
+    p_items JSON,
+    p_cliente_id INT
+)
+RETURNS TABLE (
+    presentacion_id INT,
+    precio_original DECIMAL(10,2),
+    descuento_aplicado INT,
+    precio_final DECIMAL(10,2),
+    ahorro DECIMAL(10,2)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    WITH items_carrito AS (
+        SELECT 
+            (item->>'presentacion_id')::INT as presentacion_id,
+            (item->>'cantidad')::INT as cantidad
+        FROM json_array_elements(p_items) as item
+    )
+    SELECT 
+        ic.presentacion_id,
+        p.precio as precio_original,
+        COALESCE(o.porcentaje_descuento, 0) as descuento_aplicado,
+        CASE 
+            WHEN o.clave IS NOT NULL THEN ROUND(p.precio * (1 - o.porcentaje_descuento::DECIMAL / 100), 2)
+            ELSE p.precio
+        END as precio_final,
+        CASE 
+            WHEN o.clave IS NOT NULL THEN ROUND(p.precio * o.porcentaje_descuento::DECIMAL / 100, 2)
+            ELSE 0
+        END as ahorro
+    FROM items_carrito ic
+    JOIN presentacion p ON p.clave = ic.presentacion_id
+    LEFT JOIN oferta o ON o.fk_presentacion = p.clave 
+                      AND CURRENT_DATE BETWEEN o.fecha_inicio AND o.fecha_fin;
+END;
+$$;
+
+-- 3. Calcular costo de envío
+CREATE OR REPLACE FUNCTION calcular_costo_envio(
+    p_lugar_id INT,
+    p_monto_total DECIMAL(10,2)
+)
+RETURNS DECIMAL(10,2)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_tipo_lugar VARCHAR(20);
+    v_costo_base DECIMAL(10,2);
+    v_costo_envio DECIMAL(10,2);
+BEGIN
+    -- Obtener tipo de lugar
+    SELECT tipo INTO v_tipo_lugar
+    FROM lugar WHERE clave = p_lugar_id;
+    
+    -- Calcular costo base según tipo de lugar
+    CASE v_tipo_lugar
+        WHEN 'parroquia' THEN v_costo_base := 50.00;
+        WHEN 'municipio' THEN v_costo_base := 100.00;
+        WHEN 'estado' THEN v_costo_base := 200.00;
+        ELSE v_costo_base := 150.00;
+    END CASE;
+    
+    -- Aplicar descuentos por monto
+    IF p_monto_total >= 1000 THEN
+        v_costo_envio := 0; -- Envío gratis
+    ELSIF p_monto_total >= 500 THEN
+        v_costo_envio := v_costo_base * 0.5; -- 50% descuento
+    ELSE
+        v_costo_envio := v_costo_base;
+    END IF;
+    
+    RETURN v_costo_envio;
+END;
+$$;
+
+-- 4. Procesar venta online completa con todas las validaciones
+CREATE OR REPLACE FUNCTION procesar_venta_online_completa(
+    p_usuario_id INT,
+    p_items JSON,
+    p_pagos JSON,
+    p_direccion_envio VARCHAR(255)
+)
+RETURNS TABLE (
+    venta_id INT,
+    monto_subtotal DECIMAL(15,2),
+    monto_descuentos DECIMAL(15,2),
+    costo_envio DECIMAL(10,2),
+    monto_total DECIMAL(15,2),
+    estado VARCHAR(50)
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_venta_id INT;
+    v_cliente_id INT;
+    v_lugar_id INT;
+    v_monto_subtotal DECIMAL(15,2) := 0;
+    v_monto_descuentos DECIMAL(15,2) := 0;
+    v_costo_envio DECIMAL(10,2);
+    v_monto_total DECIMAL(15,2);
+    item RECORD;
+    pago RECORD;
+    v_precio_final DECIMAL(10,2);
+    v_almacen_id INT;
+    v_estado_inicial_id INT;
+BEGIN
+    -- Obtener cliente del usuario
+    SELECT fk_cliente INTO v_cliente_id
+    FROM usuario WHERE clave = p_usuario_id;
+    
+    IF v_cliente_id IS NULL THEN
+        RAISE EXCEPTION 'El usuario no está asociado a un cliente';
+    END IF;
+    
+    -- Obtener lugar del cliente
+    SELECT COALESCE(fk_direccion_habitacion, fk_direccion_fisica) INTO v_lugar_id
+    FROM cliente WHERE clave = v_cliente_id;
+    
+    -- Validar stock
+    IF EXISTS (
+        SELECT 1 FROM validar_stock_online(p_items)
+        WHERE NOT stock_suficiente
+    ) THEN
+        RAISE EXCEPTION 'No hay suficiente stock para algunos productos';
+    END IF;
+    
+    -- Calcular montos con ofertas
+    FOR item IN 
+        SELECT * FROM json_to_recordset(p_items) AS x(
+            presentacion_id INT, 
+            cantidad INT, 
+            precio_unitario NUMERIC
+        )
+    LOOP
+        -- Obtener precio con oferta
+        SELECT precio_final INTO v_precio_final
+        FROM aplicar_ofertas_carrito(
+            json_build_array(json_build_object(
+                'presentacion_id', item.presentacion_id,
+                'cantidad', item.cantidad
+            )),
+            v_cliente_id
+        )
+        WHERE presentacion_id = item.presentacion_id;
+        
+        v_monto_subtotal := v_monto_subtotal + (item.cantidad * item.precio_unitario);
+        v_monto_descuentos := v_monto_descuentos + (item.cantidad * (item.precio_unitario - v_precio_final));
+    END LOOP;
+    
+    -- Calcular costo de envío
+    v_costo_envio := calcular_costo_envio(v_lugar_id, v_monto_subtotal - v_monto_descuentos);
+    v_monto_total := v_monto_subtotal - v_monto_descuentos + v_costo_envio;
+    
+    -- Crear venta
+    INSERT INTO venta_online (fecha, monto_total, direccion_envio, fk_lugar, fk_tienda_online, fk_usuario)
+    VALUES (CURRENT_DATE, v_monto_total, p_direccion_envio, v_lugar_id, 1, p_usuario_id)
+    RETURNING clave INTO v_venta_id;
+    
+    -- Insertar detalles con precios finales
+    FOR item IN 
+        SELECT * FROM json_to_recordset(p_items) AS x(
+            presentacion_id INT, 
+            cantidad INT, 
+            precio_unitario NUMERIC
+        )
+    LOOP
+        -- Obtener almacén y precio final
+        SELECT clave INTO v_almacen_id 
+        FROM almacen WHERE fk_presentacion = item.presentacion_id;
+        
+        SELECT precio_final INTO v_precio_final
+        FROM aplicar_ofertas_carrito(
+            json_build_array(json_build_object(
+                'presentacion_id', item.presentacion_id,
+                'cantidad', item.cantidad
+            )),
+            v_cliente_id
+        )
+        WHERE presentacion_id = item.presentacion_id;
+        
+        -- Insertar detalle
+        INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
+        VALUES (v_venta_id, v_almacen_id, item.cantidad, v_precio_final);
+        
+        -- Actualizar stock
+        UPDATE almacen 
+        SET cantidad_unidades = cantidad_unidades - item.cantidad
+        WHERE clave = v_almacen_id;
+    END LOOP;
+    
+    -- Procesar pagos
+    FOR pago IN SELECT * FROM json_to_recordset(p_pagos) AS x(
+        metodo_pago_id INT, 
+        monto NUMERIC, 
+        tasa_cambio_id INT
+    )
+    LOOP
+        INSERT INTO pago (fecha_pago, monto_total, fk_tasa_cambio, fk_metodo_de_pago, fk_venta_online)
+        VALUES (CURRENT_DATE, pago.monto, pago.tasa_cambio_id, pago.metodo_pago_id, v_venta_id);
+    END LOOP;
+    
+    -- Crear estado inicial
+    SELECT clave INTO v_estado_inicial_id
+    FROM estatus 
+    WHERE estado = 'procesando' AND aplicable_a = 'venta online'
+    LIMIT 1;
+    
+    INSERT INTO historico (fecha, fk_estatus, fk_venta_online, comentario)
+    VALUES (NOW(), v_estado_inicial_id, v_venta_id, 'Orden recibida y procesando');
+    
+    -- Retornar resumen
+    RETURN QUERY
+    SELECT 
+        v_venta_id,
+        v_monto_subtotal,
+        v_monto_descuentos,
+        v_costo_envio,
+        v_monto_total,
+        'procesando'::VARCHAR(50);
+END;
+$$;
+
+-- 5. Actualizar estado de envío
+CREATE OR REPLACE FUNCTION actualizar_estado_envio(
+    p_venta_id INT,
+    p_nuevo_estado VARCHAR(50),
+    p_comentario TEXT DEFAULT NULL
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_estado_id INT;
+    v_estado_actual VARCHAR(50);
+    v_fecha_estado_actual TIMESTAMP;
+BEGIN
+    -- Obtener estado actual
+    SELECT e.estado, h.fecha
+    INTO v_estado_actual, v_fecha_estado_actual
+    FROM historico h
+    JOIN estatus e ON h.fk_estatus = e.clave
+    WHERE h.fk_venta_online = p_venta_id
+    ORDER BY h.fecha DESC
+    LIMIT 1;
+    
+    -- Validar transición de estados
+    IF v_estado_actual = 'procesando' AND p_nuevo_estado = 'listo para entrega' THEN
+        -- Validar que no hayan pasado más de 2 horas
+        IF (NOW() - v_fecha_estado_actual) > INTERVAL '2 hours' THEN
+            RAISE EXCEPTION 'Han pasado más de 2 horas desde el estado procesando';
+        END IF;
+    ELSIF v_estado_actual = 'entregado' THEN
+        RAISE EXCEPTION 'La orden ya fue entregada y no puede cambiar de estado';
+    END IF;
+    
+    -- Obtener ID del nuevo estado
+    SELECT clave INTO v_estado_id
+    FROM estatus
+    WHERE estado = p_nuevo_estado AND aplicable_a = 'venta online';
+    
+    IF v_estado_id IS NULL THEN
+        RAISE EXCEPTION 'Estado % no válido para venta online', p_nuevo_estado;
+    END IF;
+    
+    -- Insertar nuevo estado
+    INSERT INTO historico (fecha, fk_estatus, fk_venta_online, comentario)
+    VALUES (NOW(), v_estado_id, p_venta_id, p_comentario);
+    
+    RETURN TRUE;
+END;
+$$;
+
+-- 6. Obtener tracking de envío
+CREATE OR REPLACE FUNCTION obtener_tracking_envio(p_venta_id INT)
+RETURNS TABLE (
+    estado VARCHAR(50),
+    fecha TIMESTAMP,
+    comentario TEXT,
+    es_estado_actual BOOLEAN
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    WITH estados_ordenados AS (
+        SELECT 
+            e.estado,
+            h.fecha,
+            h.comentario,
+            ROW_NUMBER() OVER (ORDER BY h.fecha DESC) as rn
+        FROM historico h
+        JOIN estatus e ON h.fk_estatus = e.clave
+        WHERE h.fk_venta_online = p_venta_id
+        ORDER BY h.fecha DESC
+    )
+    SELECT 
+        estado,
+        fecha,
+        comentario,
+        (rn = 1) as es_estado_actual
+    FROM estados_ordenados;
+END;
+$$;
+
+-- =============================================
+-- PROCEDIMIENTOS PARA OFERTAS
+-- =============================================
+
+-- Drops para ofertas
+DROP FUNCTION IF EXISTS obtener_ofertas_activas();
+DROP FUNCTION IF EXISTS crear_oferta(INT, INT, DATE, DATE);
+DROP FUNCTION IF EXISTS validar_periodo_oferta_proc(INT, DATE);
+DROP FUNCTION IF EXISTS eliminar_oferta(INT);
+DROP FUNCTION IF EXISTS obtener_historial_ofertas(INT);
+
+-- 1. Obtener ofertas activas
+CREATE OR REPLACE FUNCTION obtener_ofertas_activas()
+RETURNS TABLE (
+    oferta_id INT,
+    presentacion_id INT,
+    presentacion_nombre VARCHAR(50),
+    cerveza_nombre VARCHAR(50),
+    precio_original DECIMAL(10,2),
+    porcentaje_descuento INT,
+    precio_oferta DECIMAL(10,2),
+    fecha_inicio DATE,
+    fecha_fin DATE,
+    dias_restantes INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        o.clave as oferta_id,
+        p.clave as presentacion_id,
+        p.nombre as presentacion_nombre,
+        c.nombre as cerveza_nombre,
+        p.precio as precio_original,
+        o.porcentaje_descuento,
+        ROUND(p.precio * (1 - o.porcentaje_descuento::DECIMAL / 100), 2) as precio_oferta,
+        o.fecha_inicio,
+        o.fecha_fin,
+        (o.fecha_fin - CURRENT_DATE)::INT as dias_restantes
+    FROM oferta o
+    JOIN presentacion p ON o.fk_presentacion = p.clave
+    JOIN cerveza c ON p.fk_cerveza = c.clave
+    WHERE CURRENT_DATE BETWEEN o.fecha_inicio AND o.fecha_fin
+    ORDER BY o.fecha_fin;
+END;
+$$;
+
+-- 2. Crear nueva oferta
+CREATE OR REPLACE FUNCTION crear_oferta(
+    p_presentacion_id INT,
+    p_porcentaje_descuento INT,
+    p_fecha_inicio DATE,
+    p_fecha_fin DATE
+)
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_oferta_id INT;
+BEGIN
+    -- Validar período de 30 días
+    IF NOT validar_periodo_oferta_proc(p_presentacion_id, p_fecha_inicio) THEN
+        RAISE EXCEPTION 'Debe esperar al menos 30 días después de la última oferta para este producto';
+    END IF;
+    
+    -- Validar porcentaje
+    IF p_porcentaje_descuento <= 0 OR p_porcentaje_descuento >= 100 THEN
+        RAISE EXCEPTION 'El porcentaje de descuento debe estar entre 1 y 99';
+    END IF;
+    
+    -- Validar fechas
+    IF p_fecha_inicio > p_fecha_fin THEN
+        RAISE EXCEPTION 'La fecha de inicio debe ser anterior a la fecha de fin';
+    END IF;
+    
+    -- Crear oferta
+    INSERT INTO oferta (porcentaje_descuento, fecha_inicio, fecha_fin, fk_presentacion)
+    VALUES (p_porcentaje_descuento, p_fecha_inicio, p_fecha_fin, p_presentacion_id)
+    RETURNING clave INTO v_oferta_id;
+    
+    RETURN v_oferta_id;
+END;
+$$;
+
+-- 3. Validar período de oferta (función auxiliar)
+CREATE OR REPLACE FUNCTION validar_periodo_oferta_proc(
+    p_presentacion_id INT,
+    p_fecha_inicio DATE
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_ultima_fecha_fin DATE;
+BEGIN
+    -- Obtener fecha fin de la última oferta
+    SELECT MAX(fecha_fin) INTO v_ultima_fecha_fin
+    FROM oferta
+    WHERE fk_presentacion = p_presentacion_id;
+    
+    -- Si no hay ofertas previas, permitir
+    IF v_ultima_fecha_fin IS NULL THEN
+        RETURN TRUE;
+    END IF;
+    
+    -- Verificar que hayan pasado 30 días
+    RETURN (p_fecha_inicio - v_ultima_fecha_fin) >= 30;
+END;
+$$;
+
+-- 4. Eliminar oferta
+CREATE OR REPLACE FUNCTION eliminar_oferta(p_oferta_id INT)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- Solo permitir eliminar ofertas futuras
+    IF EXISTS (
+        SELECT 1 FROM oferta 
+        WHERE clave = p_oferta_id 
+        AND fecha_inicio <= CURRENT_DATE
+    ) THEN
+        RAISE EXCEPTION 'No se pueden eliminar ofertas que ya iniciaron';
+    END IF;
+    
+    DELETE FROM oferta WHERE clave = p_oferta_id;
+    
+    RETURN FOUND;
+END;
+$$;
+
+-- 5. Obtener historial de ofertas de una presentación
+CREATE OR REPLACE FUNCTION obtener_historial_ofertas(p_presentacion_id INT)
+RETURNS TABLE (
+    oferta_id INT,
+    porcentaje_descuento INT,
+    fecha_inicio DATE,
+    fecha_fin DATE,
+    estado VARCHAR(20),
+    ventas_durante_oferta BIGINT,
+    ingresos_durante_oferta DECIMAL(15,2)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    WITH ventas_oferta AS (
+        SELECT 
+            o.clave as oferta_id,
+            COUNT(DISTINCT COALESCE(dvo.clave, dvf.clave, dve.clave)) as ventas,
+            SUM(
+                COALESCE(dvo.cantidad * dvo.precio_unitario, 0) +
+                COALESCE(dvf.cantidad * dvf.precio_unitario, 0) +
+                COALESCE(dve.cantidad * dve.precio_unitario, 0)
+            ) as ingresos
+        FROM oferta o
+        LEFT JOIN almacen a ON a.fk_presentacion = o.fk_presentacion
+        LEFT JOIN detalle_venta_online dvo ON dvo.fk_almacen = a.clave
+        LEFT JOIN venta_online vo ON dvo.fk_venta_online = vo.clave 
+            AND vo.fecha BETWEEN o.fecha_inicio AND o.fecha_fin
+        
+        LEFT JOIN inventario_tienda it ON it.fk_presentacion = o.fk_presentacion
+        LEFT JOIN detalle_venta_fisica dvf ON dvf.fk_inventario_tienda = it.clave
+        LEFT JOIN venta_tienda_fisica vf ON dvf.fk_venta_tienda_fisica = vf.clave 
+            AND vf.fecha BETWEEN o.fecha_inicio AND o.fecha_fin
+        
+        LEFT JOIN inventario_evento ie ON ie.fk_presentacion = o.fk_presentacion
+        LEFT JOIN detalle_venta_evento dve ON dve.fk_inventario_evento = ie.clave
+        LEFT JOIN venta_evento ve ON dve.fk_venta_evento = ve.clave 
+            AND ve.fecha BETWEEN o.fecha_inicio AND o.fecha_fin
+        
+        WHERE o.fk_presentacion = p_presentacion_id
+        GROUP BY o.clave
+    )
+    SELECT 
+        o.clave as oferta_id,
+        o.porcentaje_descuento,
+        o.fecha_inicio,
+        o.fecha_fin,
+        CASE 
+            WHEN CURRENT_DATE < o.fecha_inicio THEN 'programada'::VARCHAR(20)
+            WHEN CURRENT_DATE BETWEEN o.fecha_inicio AND o.fecha_fin THEN 'activa'::VARCHAR(20)
+            ELSE 'finalizada'::VARCHAR(20)
+        END as estado,
+        COALESCE(vo.ventas, 0) as ventas_durante_oferta,
+        COALESCE(vo.ingresos, 0) as ingresos_durante_oferta
+    FROM oferta o
+    LEFT JOIN ventas_oferta vo ON o.clave = vo.oferta_id
+    WHERE o.fk_presentacion = p_presentacion_id
+    ORDER BY o.fecha_inicio DESC;
+END;
+$$;
+
+-- =============================================
+-- FUNCIONES ADICIONALES PARA REPORTES DEL DASHBOARD
+-- =============================================
+
+-- Reporte de ventas por canal de distribución
+CREATE OR REPLACE FUNCTION reporte_ventas_por_canal(
+    p_fecha_inicio DATE,
+    p_fecha_fin DATE
+)
+RETURNS TABLE (
+    canal VARCHAR(20),
+    cantidad_ventas BIGINT,
+    monto_total DECIMAL(15,2),
+    porcentaje_del_total DECIMAL(5,2)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    WITH ventas_por_canal AS (
+        SELECT 
+            'Online' as canal,
+            COUNT(*) as ventas,
+            SUM(monto_total) as monto
+        FROM venta_online
+        WHERE fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+        
+        UNION ALL
+        
+        SELECT 
+            'Tienda Física' as canal,
+            COUNT(*) as ventas,
+            SUM(total_venta) as monto
+        FROM venta_tienda_fisica
+        WHERE fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+        
+        UNION ALL
+        
+        SELECT 
+            'Eventos' as canal,
+            COUNT(*) as ventas,
+            SUM(monto_total) as monto
+        FROM venta_evento
+        WHERE fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+    ),
+    total AS (
+        SELECT SUM(monto) as total_general FROM ventas_por_canal
+    )
+    SELECT 
+        vpc.canal,
+        vpc.ventas as cantidad_ventas,
+        vpc.monto as monto_total,
+        ROUND((vpc.monto / t.total_general * 100)::NUMERIC, 2) as porcentaje_del_total
+    FROM ventas_por_canal vpc
+    CROSS JOIN total t
+    ORDER BY vpc.monto DESC;
+END;
+$$;
+
+-- Reporte de inventario actual
+CREATE OR REPLACE FUNCTION reporte_inventario_actual()
+RETURNS TABLE (
+    tipo_inventario VARCHAR(20),
+    presentacion_id INT,
+    presentacion_nombre VARCHAR(50),
+    cerveza_nombre VARCHAR(50),
+    tipo_cerveza VARCHAR(50),
+    stock_actual INT,
+    valor_inventario DECIMAL(10,2),
+    estado_stock VARCHAR(20)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    -- Almacén central
+    SELECT 
+        'Almacén'::VARCHAR(20) as tipo_inventario,
+        p.clave as presentacion_id,
+        p.nombre as presentacion_nombre,
+        c.nombre as cerveza_nombre,
+        tc.nombre as tipo_cerveza,
+        a.cantidad_unidades as stock_actual,
+        (a.cantidad_unidades * p.precio) as valor_inventario,
+        CASE 
+            WHEN a.cantidad_unidades = 0 THEN 'Sin Stock'::VARCHAR(20)
+            WHEN a.cantidad_unidades <= 100 THEN 'Stock Bajo'::VARCHAR(20)
+            WHEN a.cantidad_unidades <= 500 THEN 'Stock Normal'::VARCHAR(20)
+            ELSE 'Stock Alto'::VARCHAR(20)
+        END as estado_stock
+    FROM almacen a
+    JOIN presentacion p ON a.fk_presentacion = p.clave
+    JOIN cerveza c ON p.fk_cerveza = c.clave
+    JOIN tipo_cerveza tc ON c.fk_tipo_cerveza = tc.clave
+    
+    UNION ALL
+    
+    -- Inventario de tiendas (agregado)
+    SELECT 
+        'Tienda'::VARCHAR(20) as tipo_inventario,
+        p.clave as presentacion_id,
+        p.nombre as presentacion_nombre,
+        c.nombre as cerveza_nombre,
+        tc.nombre as tipo_cerveza,
+        SUM(it.cantidad)::INT as stock_actual,
+        SUM(it.cantidad * p.precio) as valor_inventario,
+        CASE 
+            WHEN SUM(it.cantidad) = 0 THEN 'Sin Stock'::VARCHAR(20)
+            WHEN SUM(it.cantidad) <= 20 THEN 'Stock Bajo'::VARCHAR(20)
+            WHEN SUM(it.cantidad) <= 100 THEN 'Stock Normal'::VARCHAR(20)
+            ELSE 'Stock Alto'::VARCHAR(20)
+        END as estado_stock
+    FROM inventario_tienda it
+    JOIN presentacion p ON it.fk_presentacion = p.clave
+    JOIN cerveza c ON p.fk_cerveza = c.clave
+    JOIN tipo_cerveza tc ON c.fk_tipo_cerveza = tc.clave
+    GROUP BY p.clave, p.nombre, c.nombre, tc.nombre
+    
+    ORDER BY tipo_inventario, cerveza_nombre, presentacion_nombre;
+END;
+$$;
+
+-- Reporte de mejores productos (Top 10) - Ya existe en el archivo original
+-- Función reporte_tendencia_ventas ya existe al final del archivo original

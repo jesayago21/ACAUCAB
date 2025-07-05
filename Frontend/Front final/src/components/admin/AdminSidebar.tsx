@@ -39,121 +39,81 @@ const canAccessModule = (user: User, module: string): boolean => {
     switch (module) {
         // Dashboard principal - todos pueden acceder
         case 'dashboard':
+        case 'dashboard-avanzado':
             return true;
 
-        // Gestión de usuarios - requiere permisos de usuario o dashboard admin
+        // Gestión de usuarios - usar permisos básicos
         case 'usuarios':
-            return hasPermission(user, 'Consultar usuario') || 
-                   hasPermission(user, 'Consultar empleado') ||
-                   hasPermission(user, 'Consultar miembro') ||
-                   hasPermission(user, 'Consultar cliente') ||
-                   hasPermission(user, 'ver dashboard admin') ||
-                   hasPermission(user, 'Crear usuario') ||
-                   hasPermission(user, 'Modificar usuario') ||
-                   hasPermission(user, 'Eliminar usuario');
+            return hasPermission(user, 'Consultar usuario');
         case 'roles':
-            return hasPermission(user, 'Consultar rol') || 
-                   hasPermission(user, 'Crear rol') ||
-                   hasPermission(user, 'Modificar rol') ||
-                   hasPermission(user, 'Eliminar rol') ||
-                   hasPermission(user, 'gestionar roles privilegios');
+            return hasPermission(user, 'Consultar rol');
         case 'privilegios':
-            return hasPermission(user, 'Consultar privilegio') || 
-                   hasPermission(user, 'gestionar roles privilegios');
+            return hasPermission(user, 'Consultar privilegio');
 
-        // Gestión de productos
+        // Gestión de productos - usar permisos básicos
+        case 'productos':
         case 'cervezas':
-            return hasPermission(user, 'consultar cerveza');
+            return hasPermission(user, 'Consultar cerveza');
         case 'recetas':
-            return hasPermission(user, 'consultar receta');
+            return hasPermission(user, 'Consultar receta');
         case 'presentaciones':
-            return hasPermission(user, 'consultar presentacion');
+            return hasPermission(user, 'Consultar presentacion');
         case 'tipos-cerveza':
-            return hasPermission(user, 'consultar tipo cerveza');
+            return hasPermission(user, 'Consultar tipo_cerveza');
         case 'caracteristicas':
-            return hasPermission(user, 'consultar caracteristica');
+            return hasPermission(user, 'Consultar caracteristica');
         case 'ingredientes':
-            return hasPermission(user, 'consultar ingrediente');
+            return hasPermission(user, 'Consultar ingrediente');
 
-        // Gestión de inventario
+        // Gestión de inventario - usar permisos básicos
+        case 'inventario':
         case 'almacen':
-            return hasPermission(user, 'consultar almacen');
-
-        case 'reposiciones':
-            return hasPermission(user, 'consultar reposicion') ||
-                   user.rol.nombre === 'Jefe de Pasillo';
-        case 'estados-reposicion':
-            return hasPermission(user, 'gestionar estados reposicion') ||
-                   user.rol.nombre === 'Jefe de Pasillo';
-
-        // Gestión de ventas (nuevos módulos)
-        case 'ventas':
-            return hasPermission(user, 'consultar venta_tienda_fisica') ||
-                   hasPermission(user, 'Consultar venta_tienda_fisica') ||
-                   hasPermission(user, 'consultar venta_online') ||
-                   hasPermission(user, 'Consultar venta_online') ||
-                   hasPermission(user, 'consultar venta_evento') ||
-                   hasPermission(user, 'Consultar venta_evento') ||
-                   hasPermission(user, 'consultar puntos') ||
-                   hasPermission(user, 'Consultar puntos');
-        case 'ventas-web':
-            return hasPermission(user, 'consultar venta_online') || hasPermission(user, 'Consultar venta_online');
-        case 'ventas-tienda':
-            return hasPermission(user, 'consultar venta_tienda_fisica') || hasPermission(user, 'Consultar venta_tienda_fisica');
-        case 'puntos':
-            return hasPermission(user, 'consultar puntos') || hasPermission(user, 'Consultar puntos');
-
-        // Módulo compras-mayoristas eliminado
-
-        // Gestión de reposición (nuevo módulo como hijo de inventario)
+            return hasPermission(user, 'Consultar almacen');
         case 'reposicion':
-            return hasPermission(user, 'consultar reposicion') || 
-                   hasPermission(user, 'Consultar reposicion') ||
-                   user.rol.nombre === 'Jefe de Pasillo';
+        case 'reposiciones':
+        case 'estados-reposicion':
+            return hasPermission(user, 'Consultar reposicion') || user.rol.nombre === 'Jefe de Pasillo';
 
-        // Módulos legacy (mantener por compatibilidad)
-        case 'ventas-fisicas':
-            return hasPermission(user, 'consultar venta tienda fisica');
+        // Gestión de ventas - usar permisos básicos
+        case 'ventas':
+            return hasPermission(user, 'Consultar venta_tienda_fisica') ||
+                   hasPermission(user, 'Consultar venta_online') ||
+                   hasPermission(user, 'Consultar venta_evento');
+        case 'ventas-web':
         case 'ventas-online':
-            return hasPermission(user, 'consultar venta online');
+            return hasPermission(user, 'Consultar venta_online');
+        case 'ventas-tienda':
+        case 'ventas-fisicas':
+            return hasPermission(user, 'Consultar venta_tienda_fisica');
         case 'ventas-eventos':
-            return hasPermission(user, 'consultar venta evento');
-        case 'estados-venta-online':
-            return hasPermission(user, 'gestionar estados venta online');
+            return hasPermission(user, 'Consultar venta_evento');
+        case 'puntos':
+            return hasPermission(user, 'Consultar cliente'); // Los puntos están relacionados con clientes
+
+        // Gestión de compras - usar permisos básicos
         case 'compras':
-            return hasPermission(user, 'Consultar compra');
         case 'estados-compra':
-            return hasPermission(user, 'gestionar estados compra');
+            return hasPermission(user, 'Consultar compra');
 
-        // Casos eliminados: personas, clientes, empleados, miembros
-
-        // Gestión de eventos y ofertas
+        // Gestión de eventos y ofertas - usar permisos básicos
+        case 'eventos-ofertas':
         case 'eventos':
-            return hasPermission(user, 'consultar evento');
+            return hasPermission(user, 'Consultar evento');
+        case 'tipos-evento':
+            return hasPermission(user, 'Consultar tipo_evento');
         case 'ofertas':
-            return hasPermission(user, 'consultar oferta');
+            return hasPermission(user, 'Consultar oferta');
 
-        // Reportes
-        case 'reportes-ventas':
-            return hasPermission(user, 'ver reportes ventas');
-        case 'reportes-inventario':
-            return hasPermission(user, 'ver reportes inventario');
-        case 'reportes-financieros':
-            return hasPermission(user, 'ver reportes financieros');
+        // Reportes - permitir a todos por ahora
         case 'reportes':
-            // Temporalmente permitir acceso a reportes para todos los usuarios autenticados
-            return true;
-            /* Cuando se creen los permisos, usar:
-            return hasPermission(user, 'ver reportes ventas') ||
-                   hasPermission(user, 'ver reportes inventario') ||
-                   hasPermission(user, 'ver reportes financieros') ||
-                   hasPermission(user, 'consultar reporte') ||
-                   hasPermission(user, 'Consultar reporte');
-            */
+        case 'reportes-ventas':
+        case 'reportes-inventario':
+        case 'reportes-financieros':
+            return true; // Temporalmente permitir a todos
 
-        // Gestión de pagos
+        // Gestión de pagos - usar permisos básicos
         case 'pagos':
-            return hasPermission(user, 'consultar pago');
+            return hasPermission(user, 'Consultar pago');
 
         default:
             return false;
@@ -174,7 +134,9 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
             id: 'dashboard',
             name: 'Dashboard',
             icon: '📊',
-            children: []
+            children: [
+                { id: 'dashboard-avanzado', name: 'Dashboard Avanzado', icon: '📈' }
+            ]
         },
         {
             id: 'usuarios',
@@ -200,7 +162,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
         },
         {
             id: 'inventario',
-            name: 'Inventario',
+            name: 'Inventario y Operaciones',
             icon: '📦',
             children: [
                 { id: 'almacen', name: 'Almacén', icon: '🏪' },
@@ -225,7 +187,17 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
             icon: '🎊',
             children: [
                 { id: 'eventos', name: 'Eventos', icon: '📅' },
+                { id: 'tipos-evento', name: 'Tipos de Evento', icon: '🎭' },
                 { id: 'ofertas', name: 'Ofertas', icon: '🏷️' }
+            ]
+        },
+        {
+            id: 'compras',
+            name: 'Compras',
+            icon: '🛒',
+            children: [
+                { id: 'compras', name: 'Órdenes de Compra', icon: '📋' },
+                { id: 'estados-compra', name: 'Estados de Compra', icon: '📊' }
             ]
         },
         {

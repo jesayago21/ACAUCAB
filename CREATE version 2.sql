@@ -394,6 +394,7 @@ CREATE TABLE IF NOT EXISTS evento (
     nombre VARCHAR (50) NOT NULL,
     fecha_inicio DATE NOT NULL,
     fecha_fin DATE NOT NULL,
+    hora_inicio TIME NOT NULL,
     direccion TEXT NOT NULL,
     precio_entrada INT,
     fk_evento INT,
@@ -402,7 +403,8 @@ CREATE TABLE IF NOT EXISTS evento (
     CONSTRAINT pk_evento PRIMARY KEY (clave),
     CONSTRAINT fk_evento_evento FOREIGN KEY (fk_evento) REFERENCES evento(clave),
     CONSTRAINT fk_lugar_evento FOREIGN KEY (fk_lugar) REFERENCES lugar(clave),
-    CONSTRAINT fk_tipo_evento_evento FOREIGN KEY (fk_tipo_evento) REFERENCES tipo_evento(clave)
+    CONSTRAINT fk_tipo_evento_evento FOREIGN KEY (fk_tipo_evento) REFERENCES tipo_evento(clave),
+    CONSTRAINT chk_fecha_evento CHECK (fecha_inicio <= fecha_fin)
 );
 
 CREATE TABLE IF NOT EXISTS invitado (
@@ -471,7 +473,7 @@ CREATE TABLE IF NOT EXISTS inventario_evento (
 CREATE TABLE IF NOT EXISTS compra (
     clave SERIAL,
     fecha DATE NOT NULL,
-    monto_total INT NOT NULL,
+    monto_total DECIMAL(10,2) NOT NULL,
     fk_miembro INT NOT NULL,
     CONSTRAINT pk_compra PRIMARY KEY (clave),
     CONSTRAINT fk_miembro_compra FOREIGN KEY (fk_miembro) REFERENCES miembro(rif),

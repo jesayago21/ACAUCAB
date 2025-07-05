@@ -4430,201 +4430,201 @@ INSERT INTO tipo_evento (nombre, descripcion) VALUES
 ('Meet the Brewer', 'Encuentro íntimo con maestros cerveceros para conocer sus procesos creativos.'),
 ('Ponencia', 'Celebración tradicional alemana adaptada con cervezas artesanales locales.'),
 ('Curso de Elaboración', 'Taller práctico para aprender a elaborar cerveza artesanal en casa.'),
-('Expo Ingredientes', 'Exhibición de materias primas para elaboración de cerveza con proveedores especializados.');
-
+('Expo Ingredientes', 'Exhibición de materias primas para elaboración de cerveza con proveedores especializados.'),
+('Actividad', 'Actividad de entretenimiento para los asistentes dentro de un evento.');
 
 --Eventos (5 por cada estado)
 -- Amazonas (fk_lugar = 1)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Cervecero Amazonas', '2024-06-15', '2024-06-17', 'Av. Orinoco, Puerto Ayacucho', 20, NULL, 1, 1),
-('Taller de Cata Selvática', '2024-07-05', '2024-07-05', 'Centro Cultural Amazonas', 15, NULL, 1, 2),
-('Concurso Homebrew Orinoquía', '2024-08-12', '2024-08-13', 'Plaza Bolívar, Puerto Ayacucho', 10, NULL, 1, 3),
-('Tour Cervecero Selva', '2024-09-03', '2024-09-03', 'Cervecería Selva', 25, NULL, 1, 6),
-('Cena Maridaje Amazónico', '2024-10-22', '2024-10-22', 'Restaurante La Jungla', 50, NULL, 1, 5);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Cervecero Amazonas', '2024-06-15', '2024-06-17', '14:00', 'Av. Orinoco, Puerto Ayacucho', 20, NULL, 1, 1),
+('Taller de Cata Selvática', '2024-07-05', '2024-07-05', '16:00', 'Centro Cultural Amazonas', 15, NULL, 1, 2),
+('Concurso Homebrew Orinoquía', '2024-08-12', '2024-08-13', '10:00', 'Plaza Bolívar, Puerto Ayacucho', 10, NULL, 1, 3),
+('Tour Cervecero Selva', '2024-09-03', '2024-09-03', '15:00', 'Cervecería Selva', 25, NULL, 1, 6),
+('Cena Maridaje Amazónico', '2024-10-22', '2024-10-22', '19:00', 'Restaurante La Jungla', 50, NULL, 1, 5);
 
 -- Anzoátegui (fk_lugar = 2)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Cervecero de Barcelona', '2024-06-22', '2024-06-24', 'Paseo Colón, Barcelona', 20, NULL, 2, 1),
-('Taller de Cata Costera', '2024-07-10', '2024-07-10', 'Centro de Convenciones', 15, NULL, 2, 2),
-('Lanzamiento Costa Caribe', '2024-08-18', '2024-08-18', 'C.C. Plaza Mayor', NULL, NULL, 2, 4),
-('Curso Elaboración Anzoátegui', '2024-09-07', '2024-09-08', 'Escuela Gastronómica', 40, NULL, 2, 9),
-('Expo Ingredientes Orientales', '2024-10-25', '2024-10-26', 'Zona Industrial', 10, NULL, 2, 10);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Cervecero de Barcelona', '2024-06-22', '2024-06-24', '14:00', 'Paseo Colón, Barcelona', 20, NULL, 2, 1),
+('Taller de Cata Costera', '2024-07-10', '2024-07-10', '16:00', 'Centro de Convenciones', 15, NULL, 2, 2),
+('Lanzamiento Costa Caribe', '2024-08-18', '2024-08-18', '18:00', 'C.C. Plaza Mayor', NULL, NULL, 2, 4),
+('Curso Elaboración Anzoátegui', '2024-09-07', '2024-09-08', '09:00', 'Escuela Gastronómica', 40, NULL, 2, 9),
+('Expo Ingredientes Orientales', '2024-10-25', '2024-10-26', '10:00', 'Zona Industrial', 10, NULL, 2, 10);
 
 -- Apure (fk_lugar = 3)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Llanero Apure', '2024-06-18', '2024-06-20', 'Av. 23 de Enero, San Fernando', 20, NULL, 3, 1),
-('Meet the Brewer Llanero', '2024-07-08', '2024-07-08', 'Cervecería Llanera', 15, NULL, 3, 7),
-('Concurso Homebrew Apureño', '2024-08-15', '2024-08-16', 'Plaza Los Llanos', 10, NULL, 3, 3),
-('Oktoberfest San Fernando', '2024-09-28', '2024-09-29', 'Club Social', 30, NULL, 3, 8),
-('Taller de Cata Llanera', '2024-10-12', '2024-10-12', 'Biblioteca Pública', 15, NULL, 3, 2);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Llanero Apure', '2024-06-18', '2024-06-20', '14:00', 'Av. 23 de Enero, San Fernando', 20, NULL, 3, 1),
+('Meet the Brewer Llanero', '2024-07-08', '2024-07-08', '17:00', 'Cervecería Llanera', 15, NULL, 3, 7),
+('Concurso Homebrew Apureño', '2024-08-15', '2024-08-16', '10:00', 'Plaza Los Llanos', 10, NULL, 3, 3),
+('Oktoberfest San Fernando', '2024-09-28', '2024-09-29', '16:00', 'Club Social', 30, NULL, 3, 8),
+('Taller de Cata Llanera', '2024-10-12', '2024-10-12', '16:00', 'Biblioteca Pública', 15, NULL, 3, 2);
 
 -- Aragua (fk_lugar = 4)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Cervecero Maracay', '2024-07-12', '2024-07-14', 'Av. Las Delicias', 25, NULL, 4, 1),
-('Tour Cervecero Aragua', '2024-08-05', '2024-08-05', 'Cervecería Jardín', 20, NULL, 4, 6),
-('Cena Maridaje Central', '2024-09-15', '2024-09-15', 'Restaurante Gourmet', 55, NULL, 4, 5),
-('Expo Ingredientes Aragua', '2024-10-30', '2024-10-31', 'Centro de Eventos', 12, NULL, 4, 10),
-('Concurso Homebrew Central', '2024-11-22', '2024-11-23', 'Plaza Bolívar', 10, NULL, 4, 3);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Cervecero Maracay', '2024-07-12', '2024-07-14', '14:00', 'Av. Las Delicias', 25, NULL, 4, 1),
+('Tour Cervecero Aragua', '2024-08-05', '2024-08-05', '15:00', 'Cervecería Jardín', 20, NULL, 4, 6),
+('Cena Maridaje Central', '2024-09-15', '2024-09-15', '19:00', 'Restaurante Gourmet', 55, NULL, 4, 5),
+('Expo Ingredientes Aragua', '2024-10-30', '2024-10-31', '10:00', 'Centro de Eventos', 12, NULL, 4, 10),
+('Concurso Homebrew Central', '2024-11-22', '2024-11-23', '10:00', 'Plaza Bolívar', 10, NULL, 4, 3);
 
 -- Barinas (fk_lugar = 5)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Cervecero Llanero', '2024-07-25', '2024-07-27', 'Av. 23 de Enero, Barinas', 20, NULL, 5, 1),
-('Taller de Cata Barinés', '2024-08-20', '2024-08-20', 'Centro Cultural', 15, NULL, 5, 2),
-('Lanzamiento Sabana', '2024-09-10', '2024-09-10', 'C.C. Llanero', NULL, NULL, 5, 4),
-('Curso Elaboración Barinas', '2024-10-05', '2024-10-06', 'Escuela Técnica', 35, NULL, 5, 9),
-('Meet the Brewer Llanero', '2024-11-15', '2024-11-15', 'Cervecería Sabana', 15, NULL, 5, 7);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Cervecero Llanero', '2024-07-25', '2024-07-27', '14:00', 'Av. 23 de Enero, Barinas', 20, NULL, 5, 1),
+('Taller de Cata Barinés', '2024-08-20', '2024-08-20', '16:00', 'Centro Cultural', 15, NULL, 5, 2),
+('Lanzamiento Sabana', '2024-09-10', '2024-09-10', '18:00', 'C.C. Llanero', NULL, NULL, 5, 4),
+('Curso Elaboración Barinas', '2024-10-05', '2024-10-06', '09:00', 'Escuela Técnica', 35, NULL, 5, 9),
+('Meet the Brewer Llanero', '2024-11-15', '2024-11-15', '17:00', 'Cervecería Sabana', 15, NULL, 5, 7);
 
 -- Bolívar (fk_lugar = 6)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Cervecero Guayana', '2024-08-01', '2024-08-03', 'Paseo Orinoco, Ciudad Guayana', 25, NULL, 6, 1),
-('Tour Cervecero Minero', '2024-09-02', '2024-09-02', 'Cervecería Hierro', 20, NULL, 6, 6),
-('Cena Maridaje Guayanes', '2024-10-18', '2024-10-18', 'Restaurante Río', 60, NULL, 6, 5),
-('Expo Ingredientes del Sur', '2024-11-12', '2024-11-13', 'Poliedro', 10, NULL, 6, 10),
-('Concurso Homebrew Bolívar', '2024-12-07', '2024-12-08', 'Plaza del Hierro', 10, NULL, 6, 3);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Cervecero Guayana', '2024-08-01', '2024-08-03', '14:00', 'Paseo Orinoco, Ciudad Guayana', 25, NULL, 6, 1),
+('Tour Cervecero Minero', '2024-09-02', '2024-09-02', '15:00', 'Cervecería Hierro', 20, NULL, 6, 6),
+('Cena Maridaje Guayanes', '2024-10-18', '2024-10-18', '19:00', 'Restaurante Río', 60, NULL, 6, 5),
+('Expo Ingredientes del Sur', '2024-11-12', '2024-11-13', '10:00', 'Poliedro', 10, NULL, 6, 10),
+('Concurso Homebrew Bolívar', '2024-12-07', '2024-12-08', '10:00', 'Plaza del Hierro', 10, NULL, 6, 3);
 
 -- Carabobo (fk_lugar = 7)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Cervecero Valencia', '2024-08-10', '2024-08-12', 'Av. Bolívar, Valencia', 30, NULL, 7, 1),
-('Taller de Cata Industrial', '2024-09-05', '2024-09-05', 'Centro de Convenciones', 20, NULL, 7, 2),
-('Lanzamiento Puerto Cabello', '2024-10-15', '2024-10-15', 'C.C. Sambil', NULL, NULL, 7, 4),
-('Curso Elaboración Carabobo', '2024-11-08', '2024-11-09', 'Escuela de Cocina', 45, NULL, 7, 9),
-('Oktoberfest Valencia', '2024-12-12', '2024-12-13', 'Club Aleman', 35, NULL, 7, 8);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Cervecero Valencia', '2024-08-10', '2024-08-12', '14:00', 'Av. Bolívar, Valencia', 30, NULL, 7, 1),
+('Taller de Cata Industrial', '2024-09-05', '2024-09-05', '16:00', 'Centro de Convenciones', 20, NULL, 7, 2),
+('Lanzamiento Puerto Cabello', '2024-10-15', '2024-10-15', '18:00', 'C.C. Sambil', NULL, NULL, 7, 4),
+('Curso Elaboración Carabobo', '2024-11-08', '2024-11-09', '09:00', 'Escuela de Cocina', 45, NULL, 7, 9),
+('Oktoberfest Valencia', '2024-12-12', '2024-12-13', '16:00', 'Club Aleman', 35, NULL, 7, 8);
 
 -- Cojedes (fk_lugar = 8)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Cervecero Llanero', '2024-08-22', '2024-08-24', 'Av. Miranda, San Carlos', 20, NULL, 8, 1),
-('Meet the Brewer Cojedeño', '2024-09-18', '2024-09-18', 'Cervecería Sabana', 15, NULL, 8, 7),
-('Concurso Homebrew Cojedes', '2024-10-22', '2024-10-23', 'Plaza Central', 10, NULL, 8, 3),
-('Tour Cervecero Ganadero', '2024-11-20', '2024-11-20', 'Hacienda La Fortuna', 25, NULL, 8, 6),
-('Taller de Cata Llanera', '2024-12-18', '2024-12-18', 'Centro Cultural', 15, NULL, 8, 2);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Cervecero Llanero', '2024-08-22', '2024-08-24', '14:00', 'Av. Miranda, San Carlos', 20, NULL, 8, 1),
+('Meet the Brewer Cojedeño', '2024-09-18', '2024-09-18', '17:00', 'Cervecería Sabana', 15, NULL, 8, 7),
+('Concurso Homebrew Cojedes', '2024-10-22', '2024-10-23', '10:00', 'Plaza Central', 10, NULL, 8, 3),
+('Tour Cervecero Ganadero', '2024-11-20', '2024-11-20', '15:00', 'Hacienda La Fortuna', 25, NULL, 8, 6),
+('Taller de Cata Llanera', '2024-12-18', '2024-12-18', '16:00', 'Centro Cultural', 15, NULL, 8, 2);
 
 -- Delta Amacuro (fk_lugar = 9)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Cervecero Delta', '2024-09-01', '2024-09-03', 'Av. Orinoco, Tucupita', 20, NULL, 9, 1),
-('Taller de Cata Fluvial', '2024-10-02', '2024-10-02', 'Centro Warao', 15, NULL, 9, 2),
-('Lanzamiento Delta', '2024-11-05', '2024-11-05', 'Malecón', NULL, NULL, 9, 4),
-('Curso Elaboración Delta', '2024-12-03', '2024-12-04', 'Escuela Técnica', 35, NULL, 9, 9),
-('Expo Ingredientes Fluviales', '2025-01-14', '2025-01-15', 'Centro de Eventos', 10, NULL, 9, 10);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Cervecero Delta', '2024-09-01', '2024-09-03', '14:00', 'Av. Orinoco, Tucupita', 20, NULL, 9, 1),
+('Taller de Cata Fluvial', '2024-10-02', '2024-10-02', '16:00', 'Centro Warao', 15, NULL, 9, 2),
+('Lanzamiento Delta', '2024-11-05', '2024-11-05', '18:00', 'Malecón', NULL, NULL, 9, 4),
+('Curso Elaboración Delta', '2024-12-03', '2024-12-04', '09:00', 'Escuela Técnica', 35, NULL, 9, 9),
+('Expo Ingredientes Fluviales', '2025-01-14', '2025-01-15', '10:00', 'Centro de Eventos', 10, NULL, 9, 10);
 
 -- Falcón (fk_lugar = 10)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Cervecero Coriano', '2024-09-12', '2024-09-14', 'Paseo Alameda, Coro', 25, NULL, 10, 1),
-('Tour Cervecero Costero', '2024-10-10', '2024-10-10', 'Cervecería Médanos', 20, NULL, 10, 6),
-('Cena Maridaje Falconiana', '2024-11-15', '2024-11-15', 'Restaurante Dunas', 50, NULL, 10, 5),
-('Expo Ingredientes Costeros', '2024-12-12', '2024-12-13', 'Centro de Convenciones', 12, NULL, 10, 10),
-('Concurso Homebrew Falcón', '2025-01-22', '2025-01-23', 'Plaza Bolívar', 10, NULL, 10, 3);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Cervecero Coriano', '2024-09-12', '2024-09-14', '14:00', 'Paseo Alameda, Coro', 25, NULL, 10, 1),
+('Tour Cervecero Costero', '2024-10-10', '2024-10-10', '15:00', 'Cervecería Médanos', 20, NULL, 10, 6),
+('Cena Maridaje Falconiana', '2024-11-15', '2024-11-15', '19:00', 'Restaurante Dunas', 50, NULL, 10, 5),
+('Expo Ingredientes Costeros', '2024-12-12', '2024-12-13', '10:00', 'Centro de Convenciones', 12, NULL, 10, 10),
+('Concurso Homebrew Falcón', '2025-01-22', '2025-01-23', '10:00', 'Plaza Bolívar', 10, NULL, 10, 3);
 
 -- Guárico (fk_lugar = 11)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Cervecero Central', '2024-09-25', '2024-09-27', 'Av. Miranda, San Juan', 20, NULL, 11, 1),
-('Meet the Brewer Guariqueño', '2024-10-25', '2024-10-25', 'Cervecería Llano', 15, NULL, 11, 7),
-('Concurso Homebrew Guárico', '2024-11-25', '2024-11-26', 'Plaza Central', 10, NULL, 11, 3),
-('Oktoberfest San Juan', '2024-12-15', '2024-12-16', 'Club Social', 30, NULL, 11, 8),
-('Taller de Cata Llanera', '2025-01-15', '2025-01-15', 'Centro Cultural', 15, NULL, 11, 2);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Cervecero Central', '2024-09-25', '2024-09-27', '14:00', 'Av. Miranda, San Juan', 20, NULL, 11, 1),
+('Meet the Brewer Guariqueño', '2024-10-25', '2024-10-25', '17:00', 'Cervecería Llano', 15, NULL, 11, 7),
+('Concurso Homebrew Guárico', '2024-11-25', '2024-11-26', '10:00', 'Plaza Central', 10, NULL, 11, 3),
+('Oktoberfest San Juan', '2024-12-15', '2024-12-16', '16:00', 'Club Social', 30, NULL, 11, 8),
+('Taller de Cata Llanera', '2025-01-15', '2025-01-15', '16:00', 'Centro Cultural', 15, NULL, 11, 2);
 
 -- Lara (fk_lugar = 12)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Cervecero Barquisimetano', '2024-10-05', '2024-10-07', 'Av. Morán, Barquisimeto', 30, NULL, 12, 1),
-('Taller de Cata Centroccidental', '2024-11-02', '2024-11-02', 'Centro de Convenciones', 20, NULL, 12, 2),
-('Lanzamiento Lara', '2024-12-05', '2024-12-05', 'C.C. Sambil', NULL, NULL, 12, 4),
-('Curso Elaboración Lara', '2025-01-10', '2025-01-11', 'Escuela Gastronómica', 45, NULL, 12, 9),
-('Tour Cervecero Andino', '2025-02-15', '2025-02-15', 'Cervecería Divina Pastora', 25, NULL, 12, 6);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Cervecero Barquisimetano', '2024-10-05', '2024-10-07', '14:00', 'Av. Morán, Barquisimeto', 30, NULL, 12, 1),
+('Taller de Cata Centroccidental', '2024-11-02', '2024-11-02', '16:00', 'Centro de Convenciones', 20, NULL, 12, 2),
+('Lanzamiento Lara', '2024-12-05', '2024-12-05', '18:00', 'C.C. Sambil', NULL, NULL, 12, 4),
+('Curso Elaboración Lara', '2025-01-10', '2025-01-11', '09:00', 'Escuela Gastronómica', 45, NULL, 12, 9),
+('Tour Cervecero Andino', '2025-02-15', '2025-02-15', '15:00', 'Cervecería Divina Pastora', 25, NULL, 12, 6);
 
 -- Mérida (fk_lugar = 13)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Andino de Cerveza', '2024-10-18', '2024-10-20', 'Av. Urdaneta, Mérida', 35, NULL, 13, 1),
-('Cena Maridaje Andino', '2024-11-20', '2024-11-20', 'Restaurante Pico Águila', 65, NULL, 13, 5),
-('Tour Cervecero Montaña', '2024-12-18', '2024-12-18', 'Cervecería Sierra', 30, NULL, 13, 6),
-('Expo Ingredientes Andinos', '2025-01-22', '2025-01-23', 'Centro de Eventos', 15, NULL, 13, 10),
-('Concurso Homebrew Andino', '2025-02-25', '2025-02-26', 'Plaza Bolívar', 15, NULL, 13, 3);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Andino de Cerveza', '2024-10-18', '2024-10-20', '14:00', 'Av. Urdaneta, Mérida', 35, NULL, 13, 1),
+('Cena Maridaje Andino', '2024-11-20', '2024-11-20', '19:00', 'Restaurante Pico Águila', 65, NULL, 13, 5),
+('Tour Cervecero Montaña', '2024-12-18', '2024-12-18', '15:00', 'Cervecería Sierra', 30, NULL, 13, 6),
+('Expo Ingredientes Andinos', '2025-01-22', '2025-01-23', '10:00', 'Centro de Eventos', 15, NULL, 13, 10),
+('Concurso Homebrew Andino', '2025-02-25', '2025-02-26', '10:00', 'Plaza Bolívar', 15, NULL, 13, 3);
 
 -- Miranda (fk_lugar = 14)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Cervecero Oriental', '2024-11-01', '2024-11-03', 'Av. Miranda, Los Teques', 30, NULL, 14, 1),
-('Taller de Cata Metropolitano', '2024-12-03', '2024-12-03', 'Centro Cultural', 25, NULL, 14, 2),
-('Lanzamiento Miranda', '2025-01-10', '2025-01-10', 'C.C. Lider', NULL, NULL, 14, 4),
-('Curso Elaboración Miranda', '2025-02-14', '2025-02-15', 'Escuela de Cocina', 50, NULL, 14, 9),
-('Meet the Brewer Mirandino', '2025-03-18', '2025-03-18', 'Cervecería Ávila', 20, NULL, 14, 7);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Cervecero Oriental', '2024-11-01', '2024-11-03', '14:00', 'Av. Miranda, Los Teques', 30, NULL, 14, 1),
+('Taller de Cata Metropolitano', '2024-12-03', '2024-12-03', '16:00', 'Centro Cultural', 25, NULL, 14, 2),
+('Lanzamiento Miranda', '2025-01-10', '2025-01-10', '18:00', 'C.C. Lider', NULL, NULL, 14, 4),
+('Curso Elaboración Miranda', '2025-02-14', '2025-02-15', '09:00', 'Escuela de Cocina', 50, NULL, 14, 9),
+('Meet the Brewer Mirandino', '2025-03-18', '2025-03-18', '17:00', 'Cervecería Ávila', 20, NULL, 14, 7);
 
 -- Monagas (fk_lugar = 15)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Cervecero Maturinés', '2024-11-15', '2024-11-17', 'Av. Bolívar, Maturín', 25, NULL, 15, 1),
-('Tour Cervecero Petrolero', '2024-12-12', '2024-12-12', 'Cervecería Petrolera', 20, NULL, 15, 6),
-('Cena Maridaje Oriental', '2025-01-15', '2025-01-15', 'Restaurante El Morichal', 55, NULL, 15, 5),
-('Expo Ingredientes Monagas', '2025-02-18', '2025-02-19', 'Centro de Eventos', 12, NULL, 15, 10),
-('Concurso Homebrew Monagas', '2025-03-22', '2025-03-23', 'Plaza Bolívar', 10, NULL, 15, 3);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Cervecero Maturinés', '2024-11-15', '2024-11-17', '14:00', 'Av. Bolívar, Maturín', 25, NULL, 15, 1),
+('Tour Cervecero Petrolero', '2024-12-12', '2024-12-12', '15:00', 'Cervecería Petrolera', 20, NULL, 15, 6),
+('Cena Maridaje Oriental', '2025-01-15', '2025-01-15', '19:00', 'Restaurante El Morichal', 55, NULL, 15, 5),
+('Expo Ingredientes Monagas', '2025-02-18', '2025-02-19', '10:00', 'Centro de Eventos', 12, NULL, 15, 10),
+('Concurso Homebrew Monagas', '2025-03-22', '2025-03-23', '10:00', 'Plaza Bolívar', 10, NULL, 15, 3);
 
 -- Nueva Esparta (fk_lugar = 16)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Cervecero Isleño', '2024-11-28', '2024-11-30', 'Av. Santiago Mariño, Porlamar', 40, NULL, 16, 1),
-('Taller de Cata en Playa', '2024-12-28', '2024-12-28', 'Playa El Agua', 30, NULL, 16, 2),
-('Lanzamiento Margarita', '2025-01-30', '2025-01-30', 'C.C. Sambil', NULL, NULL, 16, 4),
-('Curso Elaboración Isla', '2025-02-28', '2025-03-01', 'Escuela de Turismo', 60, NULL, 16, 9),
-('Oktoberfest Caribeño', '2025-03-30', '2025-03-31', 'Club Costa Azul', 40, NULL, 16, 8);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Cervecero Isleño', '2024-11-28', '2024-11-30', '14:00', 'Av. Santiago Mariño, Porlamar', 40, NULL, 16, 1),
+('Taller de Cata en Playa', '2024-12-28', '2024-12-28', '16:00', 'Playa El Agua', 30, NULL, 16, 2),
+('Lanzamiento Margarita', '2025-01-30', '2025-01-30', '18:00', 'C.C. Sambil', NULL, NULL, 16, 4),
+('Curso Elaboración Isla', '2025-02-28', '2025-03-01', '09:00', 'Escuela de Turismo', 60, NULL, 16, 9),
+('Oktoberfest Caribeño', '2025-03-30', '2025-03-31', '16:00', 'Club Costa Azul', 40, NULL, 16, 8);
 
 -- Portuguesa (fk_lugar = 17)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Cervecero Llanero', '2024-12-05', '2024-12-07', 'Av. Los Agricultores, Guanare', 25, NULL, 17, 1),
-('Meet the Brewer Portugueseño', '2025-01-07', '2025-01-07', 'Cervecería Agrícola', 20, NULL, 17, 7),
-('Concurso Homebrew Portuguesa', '2025-02-10', '2025-02-11', 'Plaza Bolívar', 15, NULL, 17, 3),
-('Tour Cervecero Agrícola', '2025-03-15', '2025-03-15', 'Hacienda Santa Rosa', 30, NULL, 17, 6),
-('Taller de Cata Llanera', '2025-04-18', '2025-04-18', 'Centro Cultural', 20, NULL, 17, 2);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Cervecero Llanero', '2024-12-05', '2024-12-07', '14:00', 'Av. Los Agricultores, Guanare', 25, NULL, 17, 1),
+('Meet the Brewer Portugueseño', '2025-01-07', '2025-01-07', '17:00', 'Cervecería Agrícola', 20, NULL, 17, 7),
+('Concurso Homebrew Portuguesa', '2025-02-10', '2025-02-11', '10:00', 'Plaza Bolívar', 15, NULL, 17, 3),
+('Tour Cervecero Agrícola', '2025-03-15', '2025-03-15', '15:00', 'Hacienda Santa Rosa', 30, NULL, 17, 6),
+('Taller de Cata Llanera', '2025-04-18', '2025-04-18', '16:00', 'Centro Cultural', 20, NULL, 17, 2);
 
 -- Sucre (fk_lugar = 18)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Cervecero Oriental', '2024-12-15', '2024-12-17', 'Paseo Colón, Cumaná', 30, NULL, 18, 1),
-('Tour Cervecero Costero', '2025-01-15', '2025-01-15', 'Cervecería Caribe', 25, NULL, 18, 6),
-('Cena Maridaje de Mar', '2025-02-18', '2025-02-18', 'Restaurante Puerto', 60, NULL, 18, 5),
-('Expo Ingredientes Costeros', '2025-03-22', '2025-03-23', 'Centro de Eventos', 15, NULL, 18, 10),
-('Concurso Homebrew Sucre', '2025-04-25', '2025-04-26', 'Plaza Bolívar', 15, NULL, 18, 3);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Cervecero Oriental', '2024-12-15', '2024-12-17', '14:00', 'Paseo Colón, Cumaná', 30, NULL, 18, 1),
+('Tour Cervecero Costero', '2025-01-15', '2025-01-15', '15:00', 'Cervecería Caribe', 25, NULL, 18, 6),
+('Cena Maridaje de Mar', '2025-02-18', '2025-02-18', '19:00', 'Restaurante Puerto', 60, NULL, 18, 5),
+('Expo Ingredientes Costeros', '2025-03-22', '2025-03-23', '10:00', 'Centro de Eventos', 15, NULL, 18, 10),
+('Concurso Homebrew Sucre', '2025-04-25', '2025-04-26', '10:00', 'Plaza Bolívar', 15, NULL, 18, 3);
 
 -- Táchira (fk_lugar = 19)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Andino Tachirense', '2025-01-05', '2025-01-07', 'Av. Universidad, San Cristóbal', 35, NULL, 19, 1),
-('Taller de Cata Fronterizo', '2025-02-05', '2025-02-05', 'Centro Cultural', 25, NULL, 19, 2),
-('Lanzamiento Táchira', '2025-03-10', '2025-03-10', 'C.C. Sambil', NULL, NULL, 19, 4),
-('Curso Elaboración Andina', '2025-04-14', '2025-04-15', 'Escuela Gastronómica', 50, NULL, 19, 9),
-('Oktoberfest Andino', '2025-05-20', '2025-05-21', 'Club Alemán', 40, NULL, 19, 8);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Andino Tachirense', '2025-01-05', '2025-01-07', '14:00', 'Av. Universidad, San Cristóbal', 35, NULL, 19, 1),
+('Taller de Cata Fronterizo', '2025-02-05', '2025-02-05', '16:00', 'Centro Cultural', 25, NULL, 19, 2),
+('Lanzamiento Táchira', '2025-03-10', '2025-03-10', '18:00', 'C.C. Sambil', NULL, NULL, 19, 4),
+('Curso Elaboración Andina', '2025-04-14', '2025-04-15', '09:00', 'Escuela Gastronómica', 50, NULL, 19, 9),
+('Oktoberfest Andino', '2025-05-20', '2025-05-21', '16:00', 'Club Alemán', 40, NULL, 19, 8);
 
 -- Trujillo (fk_lugar = 20)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Cervecero Trujillano', '2025-01-15', '2025-01-17', 'Av. Bolívar, Valera', 30, NULL, 20, 1),
-('Meet the Brewer Andino', '2025-02-15', '2025-02-15', 'Cervecería Valle', 20, NULL, 20, 7),
-('Concurso Homebrew Trujillo', '2025-03-22', '2025-03-23', 'Plaza Bolívar', 15, NULL, 20, 3),
-('Tour Cervecero Agrícola', '2025-04-25', '2025-04-25', 'Hacienda Café', 30, NULL, 20, 6),
-('Taller de Cata Andina', '2025-05-28', '2025-05-28', 'Centro Cultural', 20, NULL, 20, 2);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Cervecero Trujillano', '2025-01-15', '2025-01-17', '14:00', 'Av. Bolívar, Valera', 30, NULL, 20, 1),
+('Meet the Brewer Andino', '2025-02-15', '2025-02-15', '17:00', 'Cervecería Valle', 20, NULL, 20, 7),
+('Concurso Homebrew Trujillo', '2025-03-22', '2025-03-23', '10:00', 'Plaza Bolívar', 15, NULL, 20, 3),
+('Tour Cervecero Agrícola', '2025-04-25', '2025-04-25', '15:00', 'Hacienda Café', 30, NULL, 20, 6),
+('Taller de Cata Andina', '2025-05-28', '2025-05-28', '16:00', 'Centro Cultural', 20, NULL, 20, 2);
 
 -- Vargas (fk_lugar = 21)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Cervecero Costero', '2025-02-01', '2025-02-03', 'Av. La Costa, La Guaira', 40, NULL, 21, 1),
-('Taller de Cata en Playa', '2025-03-05', '2025-03-05', 'Playa Camurí Chico', 30, NULL, 21, 2),
-('Lanzamiento Vargas', '2025-04-10', '2025-04-10', 'C.C. Macuto', NULL, NULL, 21, 4),
-('Curso Elaboración Costero', '2025-05-15', '2025-05-16', 'Escuela de Turismo', 60, NULL, 21, 9),
-('Cena Maridaje del Mar', '2025-06-20', '2025-06-20', 'Restaurante Bahía', 70, NULL, 21, 5);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Cervecero Costero', '2025-02-01', '2025-02-03', '14:00', 'Av. La Costa, La Guaira', 40, NULL, 21, 1),
+('Taller de Cata en Playa', '2025-03-05', '2025-03-05', '16:00', 'Playa Camurí Chico', 30, NULL, 21, 2),
+('Lanzamiento Vargas', '2025-04-10', '2025-04-10', '18:00', 'C.C. Macuto', NULL, NULL, 21, 4),
+('Curso Elaboración Costero', '2025-05-15', '2025-05-16', '09:00', 'Escuela de Turismo', 60, NULL, 21, 9),
+('Cena Maridaje del Mar', '2025-06-20', '2025-06-20', '19:00', 'Restaurante Bahía', 70, NULL, 21, 5);
 
 -- Yaracuy (fk_lugar = 22)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Cervecero Yaracuyano', '2025-02-15', '2025-02-17', 'Av. Yaracuy, San Felipe', 30, NULL, 22, 1),
-('Tour Cervecero Agrícola', '2025-03-18', '2025-03-18', 'Cervecería Cacao', 25, NULL, 22, 6),
-('Cena Maridaje de Montaña', '2025-04-22', '2025-04-22', 'Restaurante El Cacao', 55, NULL, 22, 5),
-('Expo Ingredientes Yaracuy', '2025-05-26', '2025-05-27', 'Centro de Eventos', 15, NULL, 22, 10),
-('Concurso Homebrew Yaracuy', '2025-06-30', '2025-07-01', 'Plaza Bolívar', 15, NULL, 22, 3);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Cervecero Yaracuyano', '2025-02-15', '2025-02-17', '14:00', 'Av. Yaracuy, San Felipe', 30, NULL, 22, 1),
+('Tour Cervecero Agrícola', '2025-03-18', '2025-03-18', '15:00', 'Cervecería Cacao', 25, NULL, 22, 6),
+('Cena Maridaje de Montaña', '2025-04-22', '2025-04-22', '19:00', 'Restaurante El Cacao', 55, NULL, 22, 5),
+('Expo Ingredientes Yaracuy', '2025-05-26', '2025-05-27', '10:00', 'Centro de Eventos', 15, NULL, 22, 10),
+('Concurso Homebrew Yaracuy', '2025-06-30', '2025-07-01', '10:00', 'Plaza Bolívar', 15, NULL, 22, 3);
 
 -- Zulia (fk_lugar = 23)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Cervecero del Lago', '2025-03-01', '2025-03-03', 'Paseo del Lago, Maracaibo', 40, NULL, 23, 1),
-('Taller de Cata Zuliano', '2025-04-03', '2025-04-03', 'Centro de Convenciones', 30, NULL, 23, 2),
-('Lanzamiento Petrolero', '2025-05-08', '2025-05-08', 'C.C. Lago Mall', NULL, NULL, 23, 4),
-('Curso Elaboración Zulia', '2025-06-12', '2025-06-13', 'Escuela Gastronómica', 55, NULL, 23, 9),
-('Oktoberfest Marabino', '2025-07-18', '2025-07-19', 'Club Aleman', 45, NULL, 23, 8);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Cervecero del Lago', '2025-03-01', '2025-03-03', '14:00', 'Paseo del Lago, Maracaibo', 40, NULL, 23, 1),
+('Taller de Cata Zuliano', '2025-04-03', '2025-04-03', '16:00', 'Centro de Convenciones', 30, NULL, 23, 2),
+('Lanzamiento Petrolero', '2025-05-08', '2025-05-08', '18:00', 'C.C. Lago Mall', NULL, NULL, 23, 4),
+('Curso Elaboración Zulia', '2025-06-12', '2025-06-13', '09:00', 'Escuela Gastronómica', 55, NULL, 23, 9),
+('Oktoberfest Marabino', '2025-07-18', '2025-07-19', '16:00', 'Club Aleman', 45, NULL, 23, 8);
 
 -- Dependencias Federales (fk_lugar = 24)
-INSERT INTO evento (nombre, fecha_inicio, fecha_fin, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
-('Festival Cervecero Isla', '2025-03-15', '2025-03-17', 'Playa El Yaque, Isla Margarita', 50, NULL, 24, 1),
-('Cena Maridaje en Playa', '2025-04-18', '2025-04-18', 'Restaurante El Yaque', 80, NULL, 24, 5),
-('Tour Cervecero Caribeño', '2025-05-22', '2025-05-22', 'Cervecería Isla Bonita', 40, NULL, 24, 6),
-('Expo Ingredientes Insulares', '2025-06-26', '2025-06-27', 'Centro de Eventos', 20, NULL, 24, 10),
-('Concurso Homebrew Caribe', '2025-07-30', '2025-07-31', 'Playa Parguito', 20, NULL, 24, 3);
+INSERT INTO evento (nombre, fecha_inicio, fecha_fin, hora_inicio, direccion, precio_entrada, fk_evento, fk_lugar, fk_tipo_evento) VALUES
+('Festival Cervecero Isla', '2025-03-15', '2025-03-17', '14:00', 'Playa El Yaque, Isla Margarita', 50, NULL, 24, 1),
+('Cena Maridaje en Playa', '2025-04-18', '2025-04-18', '19:00', 'Restaurante El Yaque', 80, NULL, 24, 5),
+('Tour Cervecero Caribeño', '2025-05-22', '2025-05-22', '15:00', 'Cervecería Isla Bonita', 40, NULL, 24, 6),
+('Expo Ingredientes Insulares', '2025-06-26', '2025-06-27', '10:00', 'Centro de Eventos', 20, NULL, 24, 10),
+('Concurso Homebrew Caribe', '2025-07-30', '2025-07-31', '10:00', 'Playa Parguito', 20, NULL, 24, 3);
 
 --Tipo invitado
 INSERT INTO tipo_invitado (nombre) VALUES
@@ -4916,7 +4916,6 @@ INSERT INTO telefono (codigo, numero, extension, fk_empleado, fk_cliente, fk_mie
 (0426, 1122334, 10, NULL, 10, NULL, NULL);
 
 --Insertar privilegios
-
 -- Tabla: receta
 INSERT INTO privilegio (clave, nombre, descripcion) VALUES
 (1, 'Crear receta', 'Permite registrar una nueva receta de cerveza.'),

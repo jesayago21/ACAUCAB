@@ -11,6 +11,14 @@ import PuntosManagement from './PuntosManagement';
 
 import ReposicionManagement from './ReposicionManagement';
 import ReportesManagement from './ReportesManagement';
+
+// Nuevos módulos implementados
+import EventosManagement from './EventosManagement';
+import TiposEventoManagement from './TiposEventoManagement';
+import DashboardAvanzado from './DashboardAvanzado';
+import OfertasManagement from './OfertasManagement';
+import ComprasManagement from './ComprasManagement';
+
 import type { Usuario } from '../../types/auth';
 
 /** Interfaz para los permisos del usuario */
@@ -55,6 +63,9 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
         switch (activeModule) {
             case 'dashboard':
                 return <DashboardOverview user={user} />;
+            
+            case 'dashboard-avanzado':
+                return <DashboardAvanzado />;
             
             case 'usuarios':
                 return <UserManagement user={user} />;
@@ -132,9 +143,13 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             
             // Módulos de eventos y ofertas
             case 'eventos':
-                return <ModulePlaceholder title="Gestión de Eventos" user={user} />;
+                return <EventosManagement />;
+            case 'tipos-evento':
+                return <TiposEventoManagement />;
             case 'ofertas':
-                return <ModulePlaceholder title="Gestión de Ofertas" user={user} />;
+                return <OfertasManagement />;
+            case 'compras':
+                return <ComprasManagement user={user} />;
             
             // Módulos de reportes
             case 'reportes':
@@ -159,6 +174,7 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
     const getModuleTitle = () => {
         const moduleNames: { [key: string]: string } = {
             'dashboard': 'Dashboard Principal',
+            'dashboard-avanzado': 'Dashboard Avanzado',
             'usuarios': 'Gestión de Usuarios',
             'usuarios-lista': 'Lista de Usuarios',
             'usuarios-crear': 'Crear Usuario',
@@ -183,7 +199,9 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             'ventas-eventos': 'Ventas en Eventos',
 
             'eventos': 'Gestión de Eventos',
+            'tipos-evento': 'Tipos de Evento',
             'ofertas': 'Gestión de Ofertas',
+            'compras': 'Gestión de Compras',
             'reportes': 'Gestión de Reportes',
             'reportes-ventas': 'Reportes de Ventas',
             'reportes-inventario': 'Reportes de Inventario',

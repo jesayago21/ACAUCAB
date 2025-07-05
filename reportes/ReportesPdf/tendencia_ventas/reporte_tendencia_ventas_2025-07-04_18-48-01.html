@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Tendencia de Ventas - ACAUCAB</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .meta-info {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 500px;
+            width: 100%;
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .resumen-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .resumen-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .resumen-item {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .resumen-item h3 {
+            font-size: 2.2em;
+            margin-bottom: 5px;
+            font-weight: 300;
+        }
+        
+        .resumen-item p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <div class="header">
+            <h1>Reporte de Tendencia de Ventas</h1>
+            <p>Período por defecto: Del 3/6/2025 al 3/7/2025</p>
+        </div>
+        <div class="meta-info">
+             <div>
+                <strong>Fecha de Generación:</strong> 4/7/2025 - 18:47:59
+            </div>
+        </div>
+        <div class="content">
+            <div class="resumen-section">
+                <h2>Resumen General del Período</h2>
+                <div class="resumen-grid">
+                    <div class="resumen-item">
+                        <h3>$188849.00</h3>
+                        <p>Ingresos Totales</p>
+                    </div>
+                    <div class="resumen-item">
+                        <h3>8</h3>
+                        <p>Días con Ventas</p>
+                    </div>
+                    <div class="resumen-item">
+                        <h3>$57218.00</h3>
+                        <p>Pico de Ventas (20/6/2025)</p>
+                    </div>
+                    <div class="resumen-item">
+                        <h3>$110.00</h3>
+                        <p>Venta más Baja (24/6/2025)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="salesTrendChart" data-labels='["17/6/2025","18/6/2025","19/6/2025","20/6/2025","21/6/2025","22/6/2025","23/6/2025","24/6/2025"]' data-data='[38173,39668,25656,57218,27788,116,120,110]'></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('salesTrendChart');
+        const labels = JSON.parse(canvas.dataset.labels);
+        const dataPoints = JSON.parse(canvas.dataset.data);
+
+        const salesTrendChart = new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Ingresos por Día ($)',
+                    data: dataPoints,
+                    backgroundColor: 'rgba(118, 75, 162, 0.2)',
+                    borderColor: 'rgba(118, 75, 162, 1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value, index, values) {
+                                return '$' + value.toLocaleString('es-ES');
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += '$' + context.parsed.y.toLocaleString('es-ES', { minimumFractionDigits: 2 });
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

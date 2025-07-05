@@ -89,7 +89,7 @@ const ARCHIVOS_SQL = [
 
 /** Función principal */
 async function resetearBaseDatos() {
-  console.log('🚀 Iniciando reseteo COMPLETO de la base de datos ACAUCAB...\n');
+    console.log('🚀 Iniciando reseteo COMPLETO de la base de datos ACAUCAB...\n');
   
   const tiempoInicio = Date.now();
   let archivosEjecutados = 0;

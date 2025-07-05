@@ -215,7 +215,9 @@ INSERT INTO tipo_evento (nombre, descripcion) VALUES
 ('Meet the Brewer', 'Encuentro íntimo con maestros cerveceros para conocer sus procesos creativos.'),
 ('Ponencia', 'Celebración tradicional alemana adaptada con cervezas artesanales locales.'),
 ('Curso de Elaboración', 'Taller práctico para aprender a elaborar cerveza artesanal en casa.'),
-('Expo Ingredientes', 'Exhibición de materias primas para elaboración de cerveza con proveedores especializados.');
+('Expo Ingredientes', 'Exhibición de materias primas para elaboración de cerveza con proveedores especializados.'),
+('Actividad', 'Actividad de entretenimiento para los asistentes dentro de un evento.');
+
 
 
 --Eventos (5 por cada estado)
