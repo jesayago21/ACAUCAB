@@ -415,6 +415,8 @@ const getDashboardCompleto = async (req, res) => {
       });
     }
 
+    console.log('Dashboard completo - Fechas recibidas:', { fecha_inicio, fecha_fin });
+
     // Calcular fechas del período anterior para comparación
     const fechaInicio = new Date(fecha_inicio);
     const fechaFin = new Date(fecha_fin);
@@ -426,38 +428,130 @@ const getDashboardCompleto = async (req, res) => {
     const fechaFinAnterior = new Date(fechaInicio);
     fechaFinAnterior.setDate(fechaFinAnterior.getDate() - 1);
 
-    // Ejecutar todas las consultas en paralelo
-    const [
-      ventasTotales,
-      crecimientoVentas,
-      ticketPromedio,
-      volumenUnidades,
-      ventasEstilo,
-      clientesNuevos,
-      tasaRetencion,
-      rotacionInventario,
-      rupturaStock,
-      ventasEmpleado,
-      ventasCanal,
-      tendenciaVentas
-    ] = await Promise.all([
-      pool.query('SELECT * FROM obtener_ventas_totales($1, $2, $3)', [fecha_inicio, fecha_fin, null]),
-      pool.query('SELECT * FROM obtener_crecimiento_ventas($1, $2, $3, $4)', [
+    console.log('Dashboard completo - Fechas calculadas:', {
+      diasPeriodo,
+      fechaInicioAnterior: fechaInicioAnterior.toISOString().split('T')[0],
+      fechaFinAnterior: fechaFinAnterior.toISOString().split('T')[0]
+    });
+
+    // Ejecutar consultas individualmente para mejor debugging
+    let ventasTotales, crecimientoVentas, ticketPromedio, volumenUnidades;
+    let ventasEstilo, clientesNuevos, tasaRetencion, rotacionInventario;
+    let rupturaStock, ventasEmpleado, ventasCanal, tendenciaVentas;
+
+    try {
+      console.log('Ejecutando obtener_ventas_totales...');
+      ventasTotales = await pool.query('SELECT * FROM obtener_ventas_totales($1, $2, $3)', [fecha_inicio, fecha_fin, null]);
+      console.log('✅ obtener_ventas_totales completado');
+    } catch (error) {
+      console.error('❌ Error en obtener_ventas_totales:', error.message);
+      ventasTotales = { rows: [] };
+    }
+
+    try {
+      console.log('Ejecutando obtener_crecimiento_ventas...');
+      crecimientoVentas = await pool.query('SELECT * FROM obtener_crecimiento_ventas($1, $2, $3, $4)', [
         fecha_inicio, fecha_fin, 
         fechaInicioAnterior.toISOString().split('T')[0], 
         fechaFinAnterior.toISOString().split('T')[0]
-      ]),
-      pool.query('SELECT * FROM calcular_ticket_promedio($1, $2)', [fecha_inicio, fecha_fin]),
-      pool.query('SELECT * FROM obtener_volumen_unidades_vendidas($1, $2)', [fecha_inicio, fecha_fin]),
-      pool.query('SELECT * FROM obtener_ventas_por_estilo_cerveza($1, $2)', [fecha_inicio, fecha_fin]),
-      pool.query('SELECT * FROM obtener_clientes_nuevos_vs_recurrentes($1, $2)', [fecha_inicio, fecha_fin]),
-      pool.query('SELECT * FROM calcular_tasa_retencion_clientes($1, $2)', [fecha_inicio, fecha_fin]),
-      pool.query('SELECT * FROM calcular_rotacion_inventario($1, $2)', [fecha_inicio, fecha_fin]),
-      pool.query('SELECT * FROM obtener_tasa_ruptura_stock()'),
-      pool.query('SELECT * FROM obtener_ventas_por_empleado($1, $2)', [fecha_inicio, fecha_fin]),
-      pool.query('SELECT * FROM reporte_ventas_por_canal($1, $2)', [fecha_inicio, fecha_fin]),
-      pool.query('SELECT * FROM reporte_tendencia_ventas($1, $2)', [fecha_inicio, fecha_fin])
-    ]);
+      ]);
+      console.log('✅ obtener_crecimiento_ventas completado');
+    } catch (error) {
+      console.error('❌ Error en obtener_crecimiento_ventas:', error.message);
+      crecimientoVentas = { rows: [{}] };
+    }
+
+    try {
+      console.log('Ejecutando calcular_ticket_promedio...');
+      ticketPromedio = await pool.query('SELECT * FROM calcular_ticket_promedio($1, $2)', [fecha_inicio, fecha_fin]);
+      console.log('✅ calcular_ticket_promedio completado');
+    } catch (error) {
+      console.error('❌ Error en calcular_ticket_promedio:', error.message);
+      ticketPromedio = { rows: [] };
+    }
+
+    try {
+      console.log('Ejecutando obtener_volumen_unidades_vendidas...');
+      volumenUnidades = await pool.query('SELECT * FROM obtener_volumen_unidades_vendidas($1, $2)', [fecha_inicio, fecha_fin]);
+      console.log('✅ obtener_volumen_unidades_vendidas completado');
+    } catch (error) {
+      console.error('❌ Error en obtener_volumen_unidades_vendidas:', error.message);
+      volumenUnidades = { rows: [] };
+    }
+
+    try {
+      console.log('Ejecutando obtener_ventas_por_estilo_cerveza...');
+      ventasEstilo = await pool.query('SELECT * FROM obtener_ventas_por_estilo_cerveza($1, $2)', [fecha_inicio, fecha_fin]);
+      console.log('✅ obtener_ventas_por_estilo_cerveza completado');
+    } catch (error) {
+      console.error('❌ Error en obtener_ventas_por_estilo_cerveza:', error.message);
+      ventasEstilo = { rows: [] };
+    }
+
+    try {
+      console.log('Ejecutando obtener_clientes_nuevos_vs_recurrentes...');
+      clientesNuevos = await pool.query('SELECT * FROM obtener_clientes_nuevos_vs_recurrentes($1, $2)', [fecha_inicio, fecha_fin]);
+      console.log('✅ obtener_clientes_nuevos_vs_recurrentes completado');
+    } catch (error) {
+      console.error('❌ Error en obtener_clientes_nuevos_vs_recurrentes:', error.message);
+      clientesNuevos = { rows: [] };
+    }
+
+    try {
+      console.log('Ejecutando calcular_tasa_retencion_clientes...');
+      tasaRetencion = await pool.query('SELECT * FROM calcular_tasa_retencion_clientes($1, $2)', [fecha_inicio, fecha_fin]);
+      console.log('✅ calcular_tasa_retencion_clientes completado');
+    } catch (error) {
+      console.error('❌ Error en calcular_tasa_retencion_clientes:', error.message);
+      tasaRetencion = { rows: [{}] };
+    }
+
+    try {
+      console.log('Ejecutando calcular_rotacion_inventario...');
+      rotacionInventario = await pool.query('SELECT * FROM calcular_rotacion_inventario($1, $2)', [fecha_inicio, fecha_fin]);
+      console.log('✅ calcular_rotacion_inventario completado');
+    } catch (error) {
+      console.error('❌ Error en calcular_rotacion_inventario:', error.message);
+      rotacionInventario = { rows: [] };
+    }
+
+    try {
+      console.log('Ejecutando obtener_tasa_ruptura_stock...');
+      rupturaStock = await pool.query('SELECT * FROM obtener_tasa_ruptura_stock()');
+      console.log('✅ obtener_tasa_ruptura_stock completado');
+    } catch (error) {
+      console.error('❌ Error en obtener_tasa_ruptura_stock:', error.message);
+      rupturaStock = { rows: [] };
+    }
+
+    try {
+      console.log('Ejecutando obtener_ventas_por_empleado...');
+      ventasEmpleado = await pool.query('SELECT * FROM obtener_ventas_por_empleado($1, $2)', [fecha_inicio, fecha_fin]);
+      console.log('✅ obtener_ventas_por_empleado completado');
+    } catch (error) {
+      console.error('❌ Error en obtener_ventas_por_empleado:', error.message);
+      ventasEmpleado = { rows: [] };
+    }
+
+    try {
+      console.log('Ejecutando reporte_ventas_por_canal...');
+      ventasCanal = await pool.query('SELECT * FROM reporte_ventas_por_canal($1, $2)', [fecha_inicio, fecha_fin]);
+      console.log('✅ reporte_ventas_por_canal completado');
+    } catch (error) {
+      console.error('❌ Error en reporte_ventas_por_canal:', error.message);
+      ventasCanal = { rows: [] };
+    }
+
+    try {
+      console.log('Ejecutando reporte_tendencia_ventas...');
+      tendenciaVentas = await pool.query('SELECT * FROM reporte_tendencia_ventas($1, $2)', [fecha_inicio, fecha_fin]);
+      console.log('✅ reporte_tendencia_ventas completado');
+    } catch (error) {
+      console.error('❌ Error en reporte_tendencia_ventas:', error.message);
+      tendenciaVentas = { rows: [] };
+    }
+
+    console.log('Dashboard completo - Todas las consultas completadas');
 
     res.json({
       success: true,
@@ -469,7 +563,7 @@ const getDashboardCompleto = async (req, res) => {
         },
         indicadores_ventas: {
           ventas_totales: ventasTotales.rows,
-          crecimiento_ventas: crecimientoVentas.rows[0],
+          crecimiento_ventas: crecimientoVentas.rows[0] || {},
           ticket_promedio: ticketPromedio.rows,
           volumen_unidades: volumenUnidades.rows,
           ventas_por_estilo: ventasEstilo.rows,
@@ -478,7 +572,7 @@ const getDashboardCompleto = async (req, res) => {
         },
         indicadores_clientes: {
           clientes_nuevos_vs_recurrentes: clientesNuevos.rows,
-          tasa_retencion: tasaRetencion.rows[0]
+          tasa_retencion: tasaRetencion.rows[0] || {}
         },
         indicadores_inventario: {
           rotacion_inventario: rotacionInventario.rows,

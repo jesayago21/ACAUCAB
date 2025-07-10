@@ -38,27 +38,34 @@ export default function DashboardAvanzado({ onClose }: DashboardAvanzadoProps) {
     loadDashboard();
   };
 
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value: any) => {
+    const num = parseFloat(value);
     return new Intl.NumberFormat('es-VE', {
       style: 'currency',
       currency: 'VES',
       minimumFractionDigits: 2,
-    }).format(value);
+    }).format(isNaN(num) ? 0 : num);
   };
 
-  const formatPercentage = (value: number) => {
-    return `${value.toFixed(1)}%`;
+  const formatPercentage = (value: any) => {
+    const num = parseFloat(value);
+    if (isNaN(num)) return '0.0%';
+    return `${num.toFixed(1)}%`;
   };
 
-  const getGrowthColor = (value: number) => {
-    if (value > 0) return 'text-green-600';
-    if (value < 0) return 'text-red-600';
+  const getGrowthColor = (value: any) => {
+    const num = parseFloat(value);
+    if (isNaN(num)) return 'text-gray-600';
+    if (num > 0) return 'text-green-600';
+    if (num < 0) return 'text-red-600';
     return 'text-gray-600';
   };
 
-  const getGrowthIcon = (value: number) => {
-    if (value > 0) return '↗️';
-    if (value < 0) return '↘️';
+  const getGrowthIcon = (value: any) => {
+    const num = parseFloat(value);
+    if (isNaN(num)) return '➡️';
+    if (num > 0) return '↗️';
+    if (num < 0) return '↘️';
     return '➡️';
   };
 
@@ -193,7 +200,7 @@ export default function DashboardAvanzado({ onClose }: DashboardAvanzadoProps) {
                   {formatCurrency(dashboard.indicadores_ventas.ticket_promedio.find(t => t.tipo_venta === 'total')?.ticket_promedio || 0)}
                 </p>
                 <p className="text-sm text-gray-500">
-                  {dashboard.indicadores_ventas.ticket_promedio.find(t => t.tipo_venta === 'total')?.cantidad_items_promedio.toFixed(1)} items/venta
+                  {parseFloat(String(dashboard.indicadores_ventas.ticket_promedio.find(t => t.tipo_venta === 'total')?.cantidad_items_promedio) || '0').toFixed(1)} items/venta
                 </p>
               </div>
               <div className="ml-4">
@@ -326,7 +333,7 @@ export default function DashboardAvanzado({ onClose }: DashboardAvanzadoProps) {
                     {rotacion.tipo_inventario}
                   </span>
                   <span className="text-sm text-gray-500">
-                    {rotacion.rotacion_inventario.toFixed(2)}x rotación
+                    {parseFloat(String(rotacion.rotacion_inventario) || '0').toFixed(2)}x rotación
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-xs text-gray-600">
@@ -369,7 +376,7 @@ export default function DashboardAvanzado({ onClose }: DashboardAvanzadoProps) {
                   <div
                     className="w-8 bg-blue-600 rounded-t"
                     style={{
-                      height: `${Math.max(20, (dia.total_ventas / Math.max(...dashboard.indicadores_ventas.tendencia_ventas.map(d => d.total_ventas))) * 100)}px`
+                      height: `${Math.max(20, (parseFloat(String(dia.total_ventas) || '0') / Math.max(1, ...dashboard.indicadores_ventas.tendencia_ventas.map(d => parseFloat(String(d.total_ventas) || '0')))) * 100)}px`
                     }}
                   ></div>
                   <div className="text-xs text-gray-600 mt-1 transform -rotate-45 origin-top-left">
