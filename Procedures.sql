@@ -1135,35 +1135,45 @@ BEGIN
         guardar_como_favorito BOOLEAN
     )
     LOOP
-        -- Obtener tasa de cambio (para VES por defecto)
-        SELECT clave INTO v_tasa_cambio_id
-        FROM tasa_cambio
-        WHERE moneda = 'VES'
-            AND CURRENT_DATE >= fecha_inicio
-            AND (fecha_fin IS NULL OR CURRENT_DATE <= fecha_fin)
-        ORDER BY fecha_inicio DESC
-        LIMIT 1;
-
-        IF v_tasa_cambio_id IS NULL THEN
-            RAISE EXCEPTION 'No se encontró una tasa de cambio activa para VES';
-        END IF;
-        
-        -- Crear método de pago temporal o usar existente
+        -- Crear método de pago y obtener tasa de cambio según el tipo
         IF pago.tipo = 'Puntos' THEN
-            -- Para puntos, crear método temporal
+            -- Para puntos, se busca una tasa de cambio específica para PUNTOS.
+            SELECT clave INTO v_tasa_cambio_id
+            FROM tasa_cambio
+            WHERE moneda = 'PUNTOS' AND (fecha_fin IS NULL OR CURRENT_DATE <= fecha_fin)
+            ORDER BY fecha_inicio DESC
+            LIMIT 1;
+
+            IF v_tasa_cambio_id IS NULL THEN
+                RAISE EXCEPTION 'No se encontró una tasa de cambio activa para PUNTOS. Verifique que exista una tasa para la moneda PUNTOS.';
+            END IF;
+
+            -- Crear método de pago para Puntos
             INSERT INTO metodo_de_pago (moneda, tipo, fk_cliente)
-            SELECT 'PUNTOS', 'Puntos', u.fk_cliente
+            SELECT 'PUNTOS', 'Puntos'::tipo_metodo_pago, u.fk_cliente
             FROM usuario u WHERE u.clave = p_usuario_id
             RETURNING clave INTO v_metodo_pago_id;
         ELSE
-            -- Para tarjetas, crear método de pago
+            -- Para tarjetas (y otros tipos que usen VES por defecto)
+            SELECT clave INTO v_tasa_cambio_id
+            FROM tasa_cambio
+            WHERE moneda = 'VES'
+                AND (fecha_fin IS NULL OR CURRENT_DATE <= fecha_fin)
+            ORDER BY fecha_inicio DESC
+            LIMIT 1;
+
+            IF v_tasa_cambio_id IS NULL THEN
+                RAISE EXCEPTION 'No se encontró una tasa de cambio activa para VES';
+            END IF;
+            
+            -- Crear método de pago para Tarjeta
             INSERT INTO metodo_de_pago (
                 moneda, tipo, numero_tarjeta, fecha_vencimiento, banco, 
                 metodo_preferido, fk_cliente
             )
             SELECT 
                 'VES', 
-                pago.tipo, 
+                pago.tipo::tipo_metodo_pago, 
                 pago.numero_tarjeta, 
                 pago.fecha_vencimiento, 
                 pago.banco,
@@ -3563,6 +3573,8 @@ DECLARE
     v_precio_final DECIMAL(10,2);
     v_almacen_id INT;
     v_estado_inicial_id INT;
+    v_metodo_pago_id INT;
+    v_tasa_cambio_id INT;
 BEGIN
     -- Obtener cliente del usuario
     SELECT fk_cliente INTO v_cliente_id
@@ -3650,19 +3662,80 @@ BEGIN
     
     -- Procesar pagos
     FOR pago IN SELECT * FROM json_to_recordset(p_pagos) AS x(
-        metodo_pago_id INT, 
+        tipo VARCHAR, 
         monto NUMERIC, 
-        tasa_cambio_id INT
+        numero_tarjeta BIGINT, 
+        fecha_vencimiento DATE,
+        banco VARCHAR,
+        puntos_usados INT,
+        guardar_como_favorito BOOLEAN
     )
     LOOP
+        -- Crear método de pago y obtener tasa de cambio según el tipo
+        IF pago.tipo = 'Puntos' THEN
+            -- Para puntos, se busca una tasa de cambio específica para PUNTOS.
+            SELECT clave INTO v_tasa_cambio_id
+            FROM tasa_cambio
+            WHERE moneda = 'PUNTOS' AND (fecha_fin IS NULL OR CURRENT_DATE <= fecha_fin)
+            ORDER BY fecha_inicio DESC
+            LIMIT 1;
+
+            IF v_tasa_cambio_id IS NULL THEN
+                RAISE EXCEPTION 'No se encontró una tasa de cambio activa para PUNTOS. Verifique que exista una tasa para la moneda PUNTOS.';
+            END IF;
+
+            -- Crear método de pago para Puntos
+            INSERT INTO metodo_de_pago (moneda, tipo, fk_cliente)
+            SELECT 'PUNTOS', 'Puntos'::tipo_metodo_pago, u.fk_cliente
+            FROM usuario u WHERE u.clave = p_usuario_id
+            RETURNING clave INTO v_metodo_pago_id;
+        ELSE
+            -- Para tarjetas (y otros tipos que usen VES por defecto)
+            SELECT clave INTO v_tasa_cambio_id
+            FROM tasa_cambio
+            WHERE moneda = 'VES'
+                AND (fecha_fin IS NULL OR CURRENT_DATE <= fecha_fin)
+            ORDER BY fecha_inicio DESC
+            LIMIT 1;
+
+            IF v_tasa_cambio_id IS NULL THEN
+                RAISE EXCEPTION 'No se encontró una tasa de cambio activa para VES';
+            END IF;
+            
+            -- Crear método de pago para Tarjeta
+            INSERT INTO metodo_de_pago (
+                moneda, tipo, numero_tarjeta, fecha_vencimiento, banco, 
+                metodo_preferido, fk_cliente
+            )
+            SELECT 
+                'VES', 
+                pago.tipo::tipo_metodo_pago, 
+                pago.numero_tarjeta, 
+                pago.fecha_vencimiento, 
+                pago.banco,
+                COALESCE(pago.guardar_como_favorito, FALSE),
+                u.fk_cliente
+            FROM usuario u WHERE u.clave = p_usuario_id
+            RETURNING clave INTO v_metodo_pago_id;
+        END IF;
+
+        -- Insertar el pago
         INSERT INTO pago (fecha_pago, monto_total, fk_tasa_cambio, fk_metodo_de_pago, fk_venta_online)
-        VALUES (CURRENT_DATE, pago.monto, pago.tasa_cambio_id, pago.metodo_pago_id, v_venta_id);
+        VALUES (CURRENT_DATE, pago.monto, v_tasa_cambio_id, v_metodo_pago_id, v_venta_id);
+
+        -- Para puntos, descontar del cliente (las ventas online NO generan puntos)
+        IF pago.tipo = 'Puntos' AND pago.puntos_usados > 0 THEN
+            UPDATE cliente 
+            SET puntos_acumulados = puntos_acumulados - pago.puntos_usados
+            FROM usuario u
+            WHERE cliente.clave = u.fk_cliente AND u.clave = p_usuario_id;
+        END IF;
     END LOOP;
     
     -- Crear estado inicial
     SELECT clave INTO v_estado_inicial_id
     FROM estatus 
-    WHERE estado = 'procesando' AND aplicable_a = 'venta online'
+    WHERE estatus.estado = 'procesando' AND estatus.aplicable_a = 'venta online'
     LIMIT 1;
     
     INSERT INTO historico (fecha, fk_estatus, fk_venta_online, comentario)

@@ -214,11 +214,15 @@ export const clienteService = {
   },
 
   /** Obtener todos los lugares (estados, municipios, parroquias) */
-  async obtenerLugares(): Promise<Lugar[]> {
+  async obtenerLugares(): Promise<any[]> {
     try {
       const response = await fetchWithTimeout(`${API_BASE_URL}/clientes/lugares`);
-      const data = await handleResponse<{success: boolean, lugares: Lugar[]}>(response);
-      return data.success ? data.lugares : [];
+      const data = await handleResponse<{ message: string, lugares: { estados: any[] } }>(response);
+      // La API devuelve una estructura anidada, extraemos solo el array de estados.
+      if (data.lugares && data.lugares.estados) {
+        return data.lugares.estados;
+      }
+      return [];
     } catch (error) {
       console.error('Error obteniendo lugares:', error);
       return [];

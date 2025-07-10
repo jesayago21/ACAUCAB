@@ -1,5 +1,5 @@
 /** Componente para gestión de métodos de pago específicos del ecommerce */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ecommerceService, tasaCambioService } from '../services/api';
 import type { ClienteNatural, ClienteJuridico, TasaCambio } from '../types/api';
 import type { UseCarritoReturn } from '../hooks/useCarrito';
@@ -94,9 +94,9 @@ export default function MetodosPagoEcommerce({
     }
   };
 
-  const handleDireccionChange = (direccion: string, lugarId: number | null) => {
+  const handleDireccionChange = useCallback((direccion: string, lugarId: number | null) => {
     setDireccionEnvio({ direccion, lugarId });
-  };
+  }, []);
 
   /** Aplicar pago */
   const aplicarPago = (tipoPago: PagoAplicado['tipo'], monto: number, detalles?: any) => {
@@ -206,9 +206,14 @@ export default function MetodosPagoEcommerce({
 
   /** Usar tarjeta favorita */
   const usarTarjetaFavorita = (metodo: any) => {
+    // Formatear la fecha de YYYY-MM-DD a YYYY-MM
+    const fechaVencimientoFormateada = metodo.fecha_vencimiento 
+      ? new Date(metodo.fecha_vencimiento).toISOString().slice(0, 7) 
+      : '';
+      
     setDatosTarjeta({
       numero: metodo.numero_tarjeta || '',
-      vencimiento: metodo.fecha_vencimiento || '',
+      vencimiento: fechaVencimientoFormateada,
       banco: metodo.banco || '',
       guardarComoFavorito: false
     });
