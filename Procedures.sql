@@ -2391,7 +2391,6 @@ BEGIN
     ORDER BY e.fecha_inicio;
 END;
 $$;
-$$;
 
 -- 3. Gestión de sub-eventos
 CREATE OR REPLACE FUNCTION obtener_subeventos_por_evento(p_evento_id INT)
