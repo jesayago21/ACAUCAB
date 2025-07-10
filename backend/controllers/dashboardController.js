@@ -415,174 +415,105 @@ const getDashboardCompleto = async (req, res) => {
       });
     }
 
-    console.log('Dashboard completo - Fechas recibidas:', { fecha_inicio, fecha_fin });
+    // Calcular fechas para el período anterior
+    const fechaInicioActual = new Date(fecha_inicio);
+    const fechaFinActual = new Date(fecha_fin);
+    const dias_periodo = Math.round((fechaFinActual - fechaInicioActual) / (1000 * 60 * 60 * 24)) + 1;
+    
+    const fechaInicioAnterior = new Date(fechaInicioActual);
+    fechaInicioAnterior.setDate(fechaInicioAnterior.getDate() - dias_periodo);
+    
+    const fechaFinAnterior = new Date(fechaFinActual);
+    fechaFinAnterior.setDate(fechaFinAnterior.getDate() - dias_periodo);
 
-    // Calcular fechas del período anterior para comparación
-    const fechaInicio = new Date(fecha_inicio);
-    const fechaFin = new Date(fecha_fin);
-    const diasPeriodo = Math.ceil((fechaFin - fechaInicio) / (1000 * 60 * 60 * 24));
-    
-    const fechaInicioAnterior = new Date(fechaInicio);
-    fechaInicioAnterior.setDate(fechaInicioAnterior.getDate() - diasPeriodo);
-    
-    const fechaFinAnterior = new Date(fechaInicio);
-    fechaFinAnterior.setDate(fechaFinAnterior.getDate() - 1);
+    const fecha_inicio_actual = fechaInicioActual.toISOString().split('T')[0];
+    const fecha_fin_actual = fechaFinActual.toISOString().split('T')[0];
+    const fecha_inicio_anterior = fechaInicioAnterior.toISOString().split('T')[0];
+    const fecha_fin_anterior = fechaFinAnterior.toISOString().split('T')[0];
 
     console.log('Dashboard completo - Fechas calculadas:', {
-      diasPeriodo,
-      fechaInicioAnterior: fechaInicioAnterior.toISOString().split('T')[0],
-      fechaFinAnterior: fechaFinAnterior.toISOString().split('T')[0]
+      diasPeriodo: dias_periodo,
+      fechaInicioAnterior: fecha_inicio_anterior,
+      fechaFinAnterior: fecha_fin_anterior
     });
 
-    // Ejecutar consultas individualmente para mejor debugging
-    let ventasTotales, crecimientoVentas, ticketPromedio, volumenUnidades;
-    let ventasEstilo, clientesNuevos, tasaRetencion, rotacionInventario;
-    let rupturaStock, ventasEmpleado, ventasCanal, tendenciaVentas;
+    const data = {};
+    const errors = [];
 
-    try {
-      console.log('Ejecutando obtener_ventas_totales...');
-      ventasTotales = await pool.query('SELECT * FROM obtener_ventas_totales($1, $2, $3)', [fecha_inicio, fecha_fin, null]);
-      console.log('✅ obtener_ventas_totales completado');
-    } catch (error) {
-      console.error('❌ Error en obtener_ventas_totales:', error.message);
-      ventasTotales = { rows: [] };
-    }
-
-    try {
-      console.log('Ejecutando obtener_crecimiento_ventas...');
-      crecimientoVentas = await pool.query('SELECT * FROM obtener_crecimiento_ventas($1, $2, $3, $4)', [
-        fecha_inicio, fecha_fin, 
-        fechaInicioAnterior.toISOString().split('T')[0], 
-        fechaFinAnterior.toISOString().split('T')[0]
-      ]);
-      console.log('✅ obtener_crecimiento_ventas completado');
-    } catch (error) {
-      console.error('❌ Error en obtener_crecimiento_ventas:', error.message);
-      crecimientoVentas = { rows: [{}] };
-    }
-
-    try {
-      console.log('Ejecutando calcular_ticket_promedio...');
-      ticketPromedio = await pool.query('SELECT * FROM calcular_ticket_promedio($1, $2)', [fecha_inicio, fecha_fin]);
-      console.log('✅ calcular_ticket_promedio completado');
-    } catch (error) {
-      console.error('❌ Error en calcular_ticket_promedio:', error.message);
-      ticketPromedio = { rows: [] };
-    }
-
-    try {
-      console.log('Ejecutando obtener_volumen_unidades_vendidas...');
-      volumenUnidades = await pool.query('SELECT * FROM obtener_volumen_unidades_vendidas($1, $2)', [fecha_inicio, fecha_fin]);
-      console.log('✅ obtener_volumen_unidades_vendidas completado');
-    } catch (error) {
-      console.error('❌ Error en obtener_volumen_unidades_vendidas:', error.message);
-      volumenUnidades = { rows: [] };
-    }
-
-    try {
-      console.log('Ejecutando obtener_ventas_por_estilo_cerveza...');
-      ventasEstilo = await pool.query('SELECT * FROM obtener_ventas_por_estilo_cerveza($1, $2)', [fecha_inicio, fecha_fin]);
-      console.log('✅ obtener_ventas_por_estilo_cerveza completado');
-    } catch (error) {
-      console.error('❌ Error en obtener_ventas_por_estilo_cerveza:', error.message);
-      ventasEstilo = { rows: [] };
-    }
-
-    try {
-      console.log('Ejecutando obtener_clientes_nuevos_vs_recurrentes...');
-      clientesNuevos = await pool.query('SELECT * FROM obtener_clientes_nuevos_vs_recurrentes($1, $2)', [fecha_inicio, fecha_fin]);
-      console.log('✅ obtener_clientes_nuevos_vs_recurrentes completado');
-    } catch (error) {
-      console.error('❌ Error en obtener_clientes_nuevos_vs_recurrentes:', error.message);
-      clientesNuevos = { rows: [] };
-    }
-
-    try {
-      console.log('Ejecutando calcular_tasa_retencion_clientes...');
-      tasaRetencion = await pool.query('SELECT * FROM calcular_tasa_retencion_clientes($1, $2)', [fecha_inicio, fecha_fin]);
-      console.log('✅ calcular_tasa_retencion_clientes completado');
-    } catch (error) {
-      console.error('❌ Error en calcular_tasa_retencion_clientes:', error.message);
-      tasaRetencion = { rows: [{}] };
-    }
-
-    try {
-      console.log('Ejecutando calcular_rotacion_inventario...');
-      rotacionInventario = await pool.query('SELECT * FROM calcular_rotacion_inventario($1, $2)', [fecha_inicio, fecha_fin]);
-      console.log('✅ calcular_rotacion_inventario completado');
-    } catch (error) {
-      console.error('❌ Error en calcular_rotacion_inventario:', error.message);
-      rotacionInventario = { rows: [] };
-    }
-
-    try {
-      console.log('Ejecutando obtener_tasa_ruptura_stock...');
-      rupturaStock = await pool.query('SELECT * FROM obtener_tasa_ruptura_stock()');
-      console.log('✅ obtener_tasa_ruptura_stock completado');
-    } catch (error) {
-      console.error('❌ Error en obtener_tasa_ruptura_stock:', error.message);
-      rupturaStock = { rows: [] };
-    }
-
-    try {
-      console.log('Ejecutando obtener_ventas_por_empleado...');
-      ventasEmpleado = await pool.query('SELECT * FROM obtener_ventas_por_empleado($1, $2)', [fecha_inicio, fecha_fin]);
-      console.log('✅ obtener_ventas_por_empleado completado');
-    } catch (error) {
-      console.error('❌ Error en obtener_ventas_por_empleado:', error.message);
-      ventasEmpleado = { rows: [] };
-    }
-
-    try {
-      console.log('Ejecutando reporte_ventas_por_canal...');
-      ventasCanal = await pool.query('SELECT * FROM reporte_ventas_por_canal($1, $2)', [fecha_inicio, fecha_fin]);
-      console.log('✅ reporte_ventas_por_canal completado');
-    } catch (error) {
-      console.error('❌ Error en reporte_ventas_por_canal:', error.message);
-      ventasCanal = { rows: [] };
-    }
-
-    try {
-      console.log('Ejecutando reporte_tendencia_ventas...');
-      tendenciaVentas = await pool.query('SELECT * FROM reporte_tendencia_ventas($1, $2)', [fecha_inicio, fecha_fin]);
-      console.log('✅ reporte_tendencia_ventas completado');
-    } catch (error) {
-      console.error('❌ Error en reporte_tendencia_ventas:', error.message);
-      tendenciaVentas = { rows: [] };
-    }
-
-    console.log('Dashboard completo - Todas las consultas completadas');
-
-    res.json({
-      success: true,
-      data: {
-        periodo: {
-          fecha_inicio,
-          fecha_fin,
-          dias_periodo: diasPeriodo
-        },
-        indicadores_ventas: {
-          ventas_totales: ventasTotales.rows,
-          crecimiento_ventas: crecimientoVentas.rows[0] || {},
-          ticket_promedio: ticketPromedio.rows,
-          volumen_unidades: volumenUnidades.rows,
-          ventas_por_estilo: ventasEstilo.rows,
-          ventas_por_canal: ventasCanal.rows,
-          tendencia_ventas: tendenciaVentas.rows
-        },
-        indicadores_clientes: {
-          clientes_nuevos_vs_recurrentes: clientesNuevos.rows,
-          tasa_retencion: tasaRetencion.rows[0] || {}
-        },
-        indicadores_inventario: {
-          rotacion_inventario: rotacionInventario.rows,
-          tasa_ruptura_stock: rupturaStock.rows
-        },
-        indicadores_operaciones: {
-          ventas_por_empleado: ventasEmpleado.rows
+    const executeQuery = async (name, query, params, isSingleResult = false) => {
+        try {
+            console.log(`Ejecutando ${name}...`);
+            const result = await pool.query(query, params);
+            data[name] = isSingleResult ? (result.rows[0] || {}) : result.rows;
+            console.log(`✅ ${name} completado.`);
+        } catch (error) {
+            console.error(`❌ Error en ${name}:`, error.message);
+            errors.push({ function: name, error: error.message });
+            data[name] = isSingleResult ? {} : [];
         }
-      }
-    });
+    };
+
+    try {
+        await executeQuery('ventas_totales', 'SELECT * FROM obtener_ventas_totales($1, $2)', [fecha_inicio, fecha_fin]);
+        await executeQuery('crecimiento_ventas', 'SELECT * FROM obtener_crecimiento_ventas($1, $2, $3, $4)', [fecha_inicio_actual, fecha_fin_actual, fecha_inicio_anterior, fecha_fin_anterior], true);
+        await executeQuery('ticket_promedio', 'SELECT * FROM calcular_ticket_promedio($1, $2)', [fecha_inicio, fecha_fin]);
+        await executeQuery('ventas_por_estilo', 'SELECT * FROM obtener_ventas_por_estilo_cerveza($1, $2)', [fecha_inicio, fecha_fin]);
+        await executeQuery('clientes_nuevos_vs_recurrentes', 'SELECT * FROM obtener_clientes_nuevos_vs_recurrentes($1, $2)', [fecha_inicio, fecha_fin]);
+        await executeQuery('tasa_retencion', 'SELECT * FROM calcular_tasa_retencion_clientes($1, $2)', [fecha_inicio, fecha_fin], true);
+        await executeQuery('rotacion_inventario', 'SELECT * FROM calcular_rotacion_inventario($1, $2)', [fecha_inicio, fecha_fin]);
+        await executeQuery('tasa_ruptura_stock', 'SELECT * FROM obtener_tasa_ruptura_stock()', []);
+        await executeQuery('ventas_por_empleado', 'SELECT * FROM obtener_ventas_por_empleado($1, $2)', [fecha_inicio, fecha_fin]);
+        await executeQuery('ventas_por_canal', 'SELECT * FROM reporte_ventas_por_canal($1, $2)', [fecha_inicio, fecha_fin]);
+        await executeQuery('tendencia_ventas', 'SELECT * FROM reporte_tendencia_ventas($1, $2)', [fecha_inicio, fecha_fin]);
+        await executeQuery('mejores_productos', 'SELECT * FROM obtener_mejores_productos($1, $2)', [fecha_inicio, fecha_fin]);
+        await executeQuery('inventario_actual', 'SELECT * FROM reporte_inventario_actual()', []);
+
+        if (errors.length > 0) {
+            console.warn('El dashboard se generó con algunos errores:', errors);
+        }
+
+        const dashboardData = {
+            periodo: {
+                fecha_inicio,
+                fecha_fin,
+                dias_periodo
+            },
+            indicadores_ventas: {
+                ventas_totales: data.ventas_totales,
+                crecimiento_ventas: data.crecimiento_ventas,
+                ticket_promedio: data.ticket_promedio,
+                ventas_por_estilo: data.ventas_por_estilo,
+                ventas_por_canal: data.ventas_por_canal,
+                tendencia_ventas: data.tendencia_ventas,
+                mejores_productos: data.mejores_productos
+            },
+            indicadores_clientes: {
+                clientes_nuevos_vs_recurrentes: data.clientes_nuevos_vs_recurrentes,
+                tasa_retencion: data.tasa_retencion,
+            },
+            indicadores_inventario: {
+                rotacion_inventario: data.rotacion_inventario,
+                tasa_ruptura_stock: data.tasa_ruptura_stock,
+                inventario_actual: data.inventario_actual
+            },
+            indicadores_operaciones: {
+                ventas_por_empleado: data.ventas_por_empleado,
+            },
+        };
+
+        res.json({
+            success: true,
+            data: dashboardData
+        });
+
+    } catch (error) {
+        console.error('Error al obtener dashboard completo:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener dashboard completo',
+            error: error.message
+        });
+    }
   } catch (error) {
     console.error('Error al obtener dashboard completo:', error);
     res.status(500).json({

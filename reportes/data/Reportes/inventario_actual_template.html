@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Inventario Actual - ACAUCAB</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; line-height: 1.6; color: #333; }
+        .content { padding: 20px; }
+        .header { background: #2c3e50; color: white; padding: 20px; text-align: center; }
+        .header h1 { font-size: 2em; }
+        .meta-info { background: #f8f9fa; padding: 15px; border-bottom: 1px solid #e9ecef; }
+        .resumen-section { background: #667eea; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .resumen-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .resumen-item { text-align: center; }
+        .resumen-item h3 { font-size: 1.8em; }
+        table { width: 100%; border-collapse: collapse; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        th, td { padding: 12px 15px; text-align: left; }
+        th { background: #34495e; color: white; }
+        tbody tr:nth-child(even) { background: #f8f9fa; }
+        tbody tr:hover { background: #e3f2fd; }
+        .estado-stock {
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+        .sin-stock { background: #fee2e2; color: #991b1b; }
+        .stock-bajo { background: #fef3c7; color: #92400e; }
+        .stock-normal { background: #d1fae5; color: #065f46; }
+        .stock-alto { background: #dbeafe; color: #1e40af; }
+    </style>
+</head>
+<body>
+    <div>
+        <div class="header">
+            <h1>Reporte de Inventario Actual</h1>
+            <p>Generado el {{fechaGeneracion}} a las {{horaGeneracion}}</p>
+        </div>
+        <div class="content">
+            <div class="resumen-section">
+                <div class="resumen-grid">
+                    <div class="resumen-item">
+                        <h3>{{resumen.total_productos}}</h3>
+                        <p>Productos en Inventario</p>
+                    </div>
+                    <div class="resumen-item">
+                        <h3>${{resumen.valor_total}}</h3>
+                        <p>Valor Total del Inventario</p>
+                    </div>
+                    <div class="resumen-item">
+                        <h3>{{resumen.productos_stock_bajo}}</h3>
+                        <p>Productos con Stock Bajo</p>
+                    </div>
+                    <div class="resumen-item">
+                        <h3>{{resumen.productos_stock_normal}}</h3>
+                        <p>Productos con Stock Normal</p>
+                    </div>
+                </div>
+            </div>
+
+            <h2>Detalle del Inventario</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Presentación</th>
+                        <th>Tipo</th>
+                        <th style="text-align: right;">Stock Actual</th>
+                        <th style="text-align: right;">Valor</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each inventario}}
+                    <tr>
+                        <td>{{cerveza_nombre}}</td>
+                        <td>{{presentacion_nombre}}</td>
+                        <td>{{tipo_cerveza}}</td>
+                        <td style="text-align: right;">{{stock_actual}}</td>
+                        <td style="text-align: right;">${{valor_inventario}}</td>
+                        <td>
+                            <span class="estado-stock {{#if (eq estado_stock 'Sin Stock')}}sin-stock{{/if}}{{#if (eq estado_stock 'Stock Bajo')}}stock-bajo{{/if}}{{#if (eq estado_stock 'Stock Normal')}}stock-normal{{/if}}{{#if (eq estado_stock 'Stock Alto')}}stock-alto{{/if}}">
+                                {{estado_stock}}
+                            </span>
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html> 

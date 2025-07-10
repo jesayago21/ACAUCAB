@@ -306,4 +306,44 @@ router.get('/reporte-mejores-productos', (req, res) => {
     });
 });
 
+// Reporte 8: Inventario Actual
+router.get('/reporte-inventario', (req, res) => {
+    const scriptPath = path.resolve(__dirname, '../../reportes/generar_reporte_inventario.js');
+    
+    exec(`node "${scriptPath}"`, (error, stdout, stderr) => {
+        if (error) {
+            console.error('Error generando reporte de inventario:', stderr);
+            return res.status(500).send('Error generando el reporte de inventario.');
+        }
+
+        const match = stdout.match(/ARCHIVO_REPORTE:\\s*(.*\\.html)/);
+        let filePath;
+        if (match && match[1]) {
+            filePath = match[1].trim();
+        } else {
+            const fs = require('fs');
+            const outputDir = path.resolve(__dirname, '../../reportes/ReportesPdf/inventario_actual');
+            if (fs.existsSync(outputDir)) {
+                const files = fs.readdirSync(outputDir)
+                    .filter(f => f.endsWith('.html'))
+                    .sort((a, b) => fs.statSync(path.join(outputDir, b)).mtime - fs.statSync(path.join(outputDir, a)).mtime);
+                if (files.length > 0) filePath = path.join(outputDir, files[0]);
+            }
+        }
+
+        if (filePath) {
+            res.sendFile(filePath, (err) => {
+                if (err) {
+                    console.error("Error enviando el archivo de reporte:", err);
+                    if (!res.headersSent) {
+                        res.status(500).send("Error al leer el archivo de reporte.");
+                    }
+                }
+            });
+        } else {
+            res.status(404).send("No se pudo generar o encontrar el archivo del reporte.");
+        }
+    });
+});
+
 module.exports = router;
