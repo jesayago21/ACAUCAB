@@ -747,3 +747,51 @@ GROUP BY
     productor,
     categoria_cerveza,
     tipo_cerveza;
+
+-- =============================================
+-- VISTA PARA JERARQUÍA DE TIPOS DE CERVEZA
+-- Muestra la relación padre-hijo de los tipos de cerveza
+-- de forma recursiva.
+-- NOTA: Requiere que la columna 'fk_tipo_cerveza' en la
+-- tabla 'tipo_cerveza' permita valores NULL para los
+-- elementos raíz de la jerarquía.
+-- =============================================
+
+CREATE OR REPLACE VIEW vista_jerarquia_cerveza AS
+WITH RECURSIVE jerarquia_cerveza AS (
+    -- Caso base: Selecciona los tipos de cerveza raíz (sin padre)
+    SELECT 
+        clave,
+        nombre,
+        fk_tipo_cerveza,
+        1 AS nivel,
+        CAST(nombre AS TEXT) AS path
+    FROM 
+        tipo_cerveza
+    WHERE 
+        fk_tipo_cerveza IS NULL
+
+    UNION ALL
+
+    -- Paso recursivo: Une los hijos con sus padres
+    SELECT 
+        tc.clave,
+        tc.nombre,
+        tc.fk_tipo_cerveza,
+        jc.nivel + 1,
+        CAST(jc.path || ' -> ' || tc.nombre AS TEXT)
+    FROM 
+        tipo_cerveza tc
+    JOIN 
+        jerarquia_cerveza jc ON tc.fk_tipo_cerveza = jc.clave
+)
+SELECT 
+    clave,
+    nombre,
+    fk_tipo_cerveza,
+    nivel,
+    path
+FROM 
+    jerarquia_cerveza
+ORDER BY 
+    path;

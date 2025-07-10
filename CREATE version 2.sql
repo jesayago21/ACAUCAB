@@ -486,9 +486,11 @@ CREATE TABLE IF NOT EXISTS venta_tienda_fisica (
     total_venta DECIMAL(10,2) NOT NULL,
     fk_tienda_fisica INT NOT NULL,
     fk_cliente INT NOT NULL,
+    fk_empleado INT NOT NULL,
     CONSTRAINT pk_venta_tienda_fisica PRIMARY KEY (clave), 
     CONSTRAINT fk_tienda_fisica_venta_tienda_fisica FOREIGN KEY (fk_tienda_fisica) REFERENCES tienda_fisica(clave),
     CONSTRAINT fk_cliente_venta_tienda_fisica FOREIGN KEY (fk_cliente) REFERENCES cliente(clave),
+    CONSTRAINT fk_empleado_venta_tienda_fisica FOREIGN KEY (fk_empleado) REFERENCES empleado(ci),
     CONSTRAINT chk_total_venta CHECK (total_venta > 0)
 );
 

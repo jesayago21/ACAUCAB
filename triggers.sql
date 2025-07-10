@@ -319,7 +319,7 @@ BEGIN
 
         -- Validar que el tipo de pago sea uno de los permitidos para ventas online
         -- Actualmente, la simulación usa 'Tarjeta de credito'.
-        IF v_tipo_pago <> 'Tarjeta de credito' THEN
+        IF v_tipo_pago NOT IN ('Tarjeta de credito', 'Puntos') THEN
             RAISE EXCEPTION 'El método de pago para ventas online debe ser Tarjeta de crédito. Se intentó usar: %', v_tipo_pago;
         END IF;
     END IF;

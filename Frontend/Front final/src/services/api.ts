@@ -12,6 +12,8 @@ import type {
   MetodoPago
 } from '../types/api';
 
+export type { Lugar };
+
 // Configuración de la API usando variables de entorno
 const API_BASE_URL = `${import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:5000'}/api`;
 const API_TIMEOUT = parseInt(import.meta.env.PUBLIC_API_TIMEOUT || '20000');
@@ -214,11 +216,15 @@ export const clienteService = {
   },
 
   /** Obtener todos los lugares (estados, municipios, parroquias) */
-  async obtenerLugares(): Promise<Lugar[]> {
+  async obtenerLugares(): Promise<any[]> {
     try {
       const response = await fetchWithTimeout(`${API_BASE_URL}/clientes/lugares`);
-      const data = await handleResponse<{success: boolean, lugares: Lugar[]}>(response);
-      return data.success ? data.lugares : [];
+      const data = await handleResponse<{ message: string, lugares: { estados: any[] } }>(response);
+      // La API devuelve una estructura anidada, extraemos solo el array de estados.
+      if (data.lugares && data.lugares.estados) {
+        return data.lugares.estados;
+      }
+      return [];
     } catch (error) {
       console.error('Error obteniendo lugares:', error);
       return [];

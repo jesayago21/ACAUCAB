@@ -5542,10 +5542,10 @@ INSERT INTO contrato (clave, fecha_inicio, fecha_fin, monto_salario, fk_empleado
 (4,'2022-02-10', NULL, 1600, 345678901, 2,  2), -- Ana (2) es Jefe de Despacho (4) en Despacho (2) de la Sede Principal
 (5,'2022-05-01', NULL, 1500, 456789012, 5,  3), -- Javier (5) es Jefe de Entrega (5) en Entrega (3) de la Sede Principal
 (6,'2023-01-20', NULL, 1400, 567890123, 10, 4),-- Valeria (10) es Analista Inventario (6) en Compras (4) de la Sede Principal
-(7,'2023-08-01', NULL, 900, 678901234,8, 5),  -- Camila (8) es Vendedora (7) en Ventas (5) de Valencia
+(7,'2023-08-01', NULL, 900, 678901234,7, 1),  -- Camila (8) es Vendedora (7) en Ventas (5) de Valencia
 (8,'2023-09-15', NULL, 750, 789012345, 6, 5),  -- Sofía (6) es Cajera (8) en Ventas (5) de Valencia
-(9,'2018-11-05', NULL, 1000,890123456,9, 2), -- Ricardo (9) fue Operador Almacén (9) en Despacho (2) [Contrato finalizado]
-(10,'2023-10-01', NULL, 850, 901234567, 1, 3); -- Carlos (1) es Repartidor (10) en Entrega (3) de la Sede Principal
+(9,'2018-11-05', NULL, 1000,890123456,7, 1), -- Ricardo (9) fue Operador Almacén (9) en Despacho (2) [Contrato finalizado]
+(10,'2023-10-01', NULL, 850, 901234567, 7, 1); -- Carlos (1) es Repartidor (10) en Entrega (3) de la Sede Principal
 
 -- =================================================================
 -- TABLAS CON DEPENDENCIAS DE SEGUNDO NIVEL
@@ -5889,17 +5889,17 @@ INSERT INTO venta_entrada (fecha, monto_total, fk_evento, fk_cliente, fk_usuario
 ('2025-06-25', 80.00, 4, 5, NULL),
 ('2025-06-26', 100.00, 5, NULL, 5);
 
-INSERT INTO venta_tienda_fisica (clave, fecha, total_venta, fk_tienda_fisica, fk_cliente) VALUES
-(1, '2025-06-17', 150.75, 1, 1),
-(2, '2025-06-17', 230.00, 1, 2),
-(3, '2025-06-18', 85.50, 1, 3),
-(4, '2025-06-18', 310.20, 1, 4),
-(5, '2025-06-19', 190.00, 1, 5),
-(6, '2025-06-19', 65.40, 1, 1),
-(7, '2025-06-20', 450.00, 1, 2),
-(8, '2025-06-20', 120.00, 1, 3),
-(9, '2025-06-21', 75.80, 1, 4),
-(10, '2025-06-21', 200.00, 1, 5);
+INSERT INTO venta_tienda_fisica (clave, fecha, total_venta, fk_tienda_fisica, fk_cliente, fk_empleado) VALUES
+(1, '2025-06-17', 150.75, 1, 1, 987654321),
+(2, '2025-06-17', 230.00, 1, 2, 987654321),
+(3, '2025-06-18', 85.50, 1, 3, 890123456),
+(4, '2025-06-18', 310.20, 1, 4, 890123456),
+(5, '2025-06-19', 190.00, 1, 5, 890123456),
+(6, '2025-06-19', 65.40, 1, 1, 890123456),
+(7, '2025-06-20', 450.00, 1, 2, 678901234),
+(8, '2025-06-20', 120.00, 1, 3, 987654321),
+(9, '2025-06-21', 75.80, 1, 4, 987654321),
+(10, '2025-06-21', 200.00, 1, 5, 678901234);
 
 INSERT INTO tienda_online (clave, nombre, url_web) VALUES
 (1,'Cervezas Venezuela Online', 'https://www.cervezasvenezuela.com');
