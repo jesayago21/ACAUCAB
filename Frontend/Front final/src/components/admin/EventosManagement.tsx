@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { eventService, type Evento, type TipoEvento } from '../../services/eventService';
 import { lugarService, type Lugar } from '../../services/api';
+import SubeventosManagement from './SubeventosManagement';
 
 interface EventosManagementProps {
   onClose?: () => void;
@@ -42,8 +43,19 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
   const loadInitialData = async () => {
     try {
       setLoading(true);
+
+      const filtrosApi = {
+        fecha_inicio: filtros.fecha_inicio || undefined,
+        fecha_fin: filtros.fecha_fin || undefined,
+        tipo: filtros.tipo || undefined,
+        lugar_id: filtros.lugar_id ? parseInt(filtros.lugar_id, 10) : undefined,
+      };
+      const filtrosLimpios = Object.fromEntries(
+        Object.entries(filtrosApi).filter(([, value]) => value != null && value !== '')
+      ) as { [key: string]: any };
+
       const [eventosData, tiposData, lugaresData] = await Promise.all([
-        eventService.getEventos(filtros),
+        eventService.getEventos(filtrosLimpios),
         eventService.getTiposEvento(),
         lugarService.obtenerEstados()
       ]);
@@ -65,9 +77,18 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
   const aplicarFiltros = async () => {
     try {
       setLoading(true);
+      const filtrosApi = {
+        fecha_inicio: filtros.fecha_inicio || undefined,
+        fecha_fin: filtros.fecha_fin || undefined,
+        tipo: filtros.tipo || undefined,
+        lugar_id: filtros.lugar_id ? parseInt(filtros.lugar_id, 10) : undefined,
+      };
+
+      // Eliminar claves con valores undefined o vacíos
       const filtrosLimpios = Object.fromEntries(
-        Object.entries(filtros).filter(([_, value]) => value !== '')
-      );
+        Object.entries(filtrosApi).filter(([, value]) => value != null && value !== '')
+      ) as { [key: string]: any };
+
       const eventosData = await eventService.getEventos(filtrosLimpios);
       setEventos(eventosData);
     } catch (err) {
@@ -107,14 +128,27 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
 
   const handleEdit = (evento: Evento) => {
     setEditingEvent(evento);
+
+    const tipoEvento = tiposEvento.find(t => t.nombre === evento.tipo_evento);
+    const lugar = lugares.find(l => l.nombre === evento.lugar);
+
+    // Helper para formatear la fecha a YYYY-MM-DD
+    const formatDate = (dateString: string) => {
+      try {
+        return new Date(dateString).toISOString().split('T')[0];
+      } catch {
+        return ''; // Retorna vacío si la fecha es inválida
+      }
+    };
+    
     setFormData({
       nombre: evento.nombre,
-      fecha_inicio: evento.fecha_inicio,
-      fecha_fin: evento.fecha_fin,
+      fecha_inicio: formatDate(evento.fecha_inicio),
+      fecha_fin: formatDate(evento.fecha_fin),
       direccion: evento.direccion,
       precio_entrada: evento.precio_entrada?.toString() || '',
-      fk_lugar: '', // Se necesitaría obtener del backend
-      fk_tipo_evento: '', // Se necesitaría obtener del backend
+      fk_lugar: lugar ? lugar.clave.toString() : '',
+      fk_tipo_evento: tipoEvento ? tipoEvento.clave.toString() : '',
       fk_evento: evento.evento_padre_id?.toString() || ''
     });
     setShowForm(true);
@@ -233,6 +267,23 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
               {tiposEvento.map((tipo) => (
                 <option key={tipo.clave} value={tipo.nombre}>
                   {tipo.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Lugar
+            </label>
+            <select
+              value={filtros.lugar_id}
+              onChange={(e) => handleFiltroChange('lugar_id', e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2"
+            >
+              <option value="">Todos los lugares</option>
+              {lugares.map((lugar) => (
+                <option key={lugar.clave} value={lugar.clave}>
+                  {lugar.nombre}
                 </option>
               ))}
             </select>
@@ -491,7 +542,7 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
             <div className="mt-3">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-medium text-gray-900">
-                  Sub-eventos de: {selectedEvent.nombre}
+                  Actividades de: {selectedEvent.nombre}
                 </h3>
                 <button
                   onClick={() => setShowSubeventos(false)}
@@ -503,10 +554,14 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
                 </button>
               </div>
               
-              {/* Aquí iría el componente de sub-eventos */}
-              <div className="text-center py-8 text-gray-500">
-                Gestión de sub-eventos en desarrollo...
-              </div>
+              <SubeventosManagement
+                eventoPadre={selectedEvent}
+                tiposEvento={tiposEvento}
+                lugares={lugares}
+                onClose={() => setShowSubeventos(false)}
+                onUpdate={loadInitialData}
+              />
+
             </div>
           </div>
         </div>

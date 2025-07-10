@@ -12,6 +12,8 @@ import type {
   MetodoPago
 } from '../types/api';
 
+export type { Lugar };
+
 // Configuración de la API usando variables de entorno
 const API_BASE_URL = `${import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:5000'}/api`;
 const API_TIMEOUT = parseInt(import.meta.env.PUBLIC_API_TIMEOUT || '20000');

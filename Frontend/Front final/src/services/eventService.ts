@@ -128,7 +128,7 @@ export const eventService = {
     return data.data;
   },
 
-  async createEvento(evento: Omit<Evento, 'clave' | 'cantidad_subeventos' | 'cantidad_asistentes' | 'ingresos_totales'> & {
+  async createEvento(evento: Omit<Evento, 'clave' | 'cantidad_subeventos' | 'cantidad_asistentes' | 'ingresos_totales' | 'tipo_evento' | 'lugar'> & {
     fk_lugar: number;
     fk_tipo_evento: number;
     fk_evento?: number;

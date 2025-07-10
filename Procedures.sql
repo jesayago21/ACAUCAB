@@ -70,9 +70,12 @@ DROP FUNCTION IF EXISTS obtener_reposiciones_por_tienda(INT);
 DROP FUNCTION IF EXISTS obtener_reposicion_por_id(INT);
 DROP FUNCTION IF EXISTS actualizar_estado_reposicion(INT, INT, TEXT);
 DROP FUNCTION IF EXISTS obtener_jefes_pasillo_por_tienda(INT);
-DROP FUNCTION IF EXISTS crear_reposicion_manual(INT, INT, INT, INT);
+DROP FUNCTION IF EXISTS crear_reposicion_manual(INT, INT, INT, TEXT);
 DROP FUNCTION IF EXISTS obtener_reposiciones_con_detalles();
 DROP FUNCTION IF EXISTS obtener_estadisticas_reposiciones(INT);
+
+-- Reportes
+DROP FUNCTION IF EXISTS reporte_tendencia_ventas(DATE, DATE);
 
 -- =============================================
 -- PROCEDIMIENTOS PARA AUTHENTICATION (authController.js)
@@ -2377,6 +2380,7 @@ BEGIN
       AND e.fk_evento IS NULL
     ORDER BY e.fecha_inicio;
 END;
+$$;
 $$;
 
 -- 3. Gestión de sub-eventos
