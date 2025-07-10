@@ -1,0 +1,249 @@
+---
+// Página principal del ecommerce ACAUCAB
+import Layout from "../layouts/Layout.astro";
+import "../styles/globals.css";
+export const prerender = false;
+---
+
+<Layout title="ACAUCAB - Cervezas Artesanales">
+  <div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+      <div class="container mx-auto px-4">
+        <div class="flex items-center justify-between h-16">
+          <!-- Logo -->
+          <div class="flex items-center">
+            <div class="w-10 h-10 bg-[#3D4A3A] rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+            </div>
+            <h1 class="ml-3 text-xl font-bold text-[#3D4A3A]">ACAUCAB</h1>
+          </div>
+
+          <!-- Navigation -->
+          <nav class="hidden md:flex items-center space-x-6">
+            <a href="/home" class="text-gray-700 hover:text-[#3D4A3A] transition">Inicio</a>
+            <a href="/catalogo" class="text-gray-700 hover:text-[#3D4A3A] transition">Catálogo</a>
+            <a href="#ofertas" class="text-gray-700 hover:text-[#3D4A3A] transition">Ofertas</a>
+            <a href="#nosotros" class="text-gray-700 hover:text-[#3D4A3A] transition">Nosotros</a>
+          </nav>
+
+          <!-- Actions -->
+          <div class="flex items-center space-x-4">
+            <a 
+              href="/login"
+              class="bg-[#3D4A3A] hover:bg-[#2C3631] text-white px-4 py-2 rounded-lg transition"
+            >
+              Iniciar Sesión
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="relative">
+      <div class="bg-gradient-to-r from-[#3D4A3A] to-[#2C3631] text-white">
+        <div class="container mx-auto px-4 py-20">
+          <div class="grid md:grid-cols-2 gap-8 items-center">
+            <div>
+              <h2 class="text-4xl md:text-5xl font-bold mb-6">
+                Las Mejores Cervezas Artesanales de Venezuela
+              </h2>
+              <p class="text-xl mb-8 text-gray-200">
+                Descubre nuestra selección exclusiva de cervezas artesanales, 
+                elaboradas con los mejores ingredientes y procesos tradicionales.
+              </p>
+              <div class="flex flex-col sm:flex-row gap-4">
+                <a 
+                  href="/catalogo"
+                  class="bg-white text-[#3D4A3A] hover:bg-gray-100 px-6 py-3 rounded-lg font-semibold transition text-center"
+                >
+                  Ver Catálogo
+                </a>
+                <a 
+                  href="/login"
+                  class="border-2 border-white text-white hover:bg-white hover:text-[#3D4A3A] px-6 py-3 rounded-lg font-semibold transition text-center"
+                >
+                  Registrarse
+                </a>
+              </div>
+            </div>
+            <div class="hidden md:block">
+              <img 
+                src="/images/products/beer-sixpack-default.jpeg" 
+                alt="Cervezas ACAUCAB"
+                class="rounded-lg shadow-2xl"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="py-16">
+      <div class="container mx-auto px-4">
+        <h3 class="text-3xl font-bold text-center mb-12 text-gray-900">
+          ¿Por qué elegir ACAUCAB?
+        </h3>
+        <div class="grid md:grid-cols-3 gap-8">
+          <!-- Feature 1 -->
+          <div class="text-center">
+            <div class="w-16 h-16 bg-[#A1B5A0] rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h4 class="text-xl font-semibold mb-2">Calidad Premium</h4>
+            <p class="text-gray-600">
+              Cervezas artesanales elaboradas con los mejores ingredientes seleccionados
+            </p>
+          </div>
+
+          <!-- Feature 2 -->
+          <div class="text-center">
+            <div class="w-16 h-16 bg-[#A1B5A0] rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <h4 class="text-xl font-semibold mb-2">Entrega Rápida</h4>
+            <p class="text-gray-600">
+              Recibe tu pedido en la comodidad de tu hogar en tiempo récord
+            </p>
+          </div>
+
+          <!-- Feature 3 -->
+          <div class="text-center">
+            <div class="w-16 h-16 bg-[#A1B5A0] rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h4 class="text-xl font-semibold mb-2">Sistema de Puntos</h4>
+            <p class="text-gray-600">
+              Acumula puntos con cada compra y canjéalos por productos exclusivos
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="bg-[#3D4A3A] text-white py-16" id="ofertas">
+      <div class="container mx-auto px-4 text-center">
+        <h3 class="text-3xl font-bold mb-4">
+          ¡Ofertas Especiales!
+        </h3>
+        <p class="text-xl mb-8">
+          Regístrate ahora y obtén 10% de descuento en tu primera compra
+        </p>
+        <a 
+          href="/catalogo"
+          class="bg-white text-[#3D4A3A] hover:bg-gray-100 px-8 py-3 rounded-lg font-semibold transition inline-block"
+        >
+          Explorar Ofertas
+        </a>
+      </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="py-16" id="nosotros">
+      <div class="container mx-auto px-4">
+        <div class="grid md:grid-cols-2 gap-8 items-center">
+          <div>
+            <h3 class="text-3xl font-bold mb-4 text-gray-900">
+              Sobre ACAUCAB
+            </h3>
+            <p class="text-gray-600 mb-4">
+              Somos la distribuidora líder de cervezas artesanales en Venezuela, 
+              comprometidos con ofrecer productos de la más alta calidad a nuestros clientes.
+            </p>
+            <p class="text-gray-600 mb-4">
+              Trabajamos directamente con los mejores productores artesanales del país, 
+              garantizando frescura y autenticidad en cada botella.
+            </p>
+            <ul class="space-y-2 text-gray-600">
+              <li class="flex items-center">
+                <svg class="w-5 h-5 text-[#A1B5A0] mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Más de 50 variedades de cervezas
+              </li>
+              <li class="flex items-center">
+                <svg class="w-5 h-5 text-[#A1B5A0] mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Envíos a todo el territorio nacional
+              </li>
+              <li class="flex items-center">
+                <svg class="w-5 h-5 text-[#A1B5A0] mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Atención personalizada 24/7
+              </li>
+            </ul>
+          </div>
+          <div class="bg-gray-200 rounded-lg h-64 md:h-96 flex items-center justify-center">
+            <p class="text-gray-500">Imagen de la empresa</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-8">
+      <div class="container mx-auto px-4">
+        <div class="grid md:grid-cols-4 gap-8">
+          <div>
+            <h4 class="text-lg font-semibold mb-4">ACAUCAB</h4>
+            <p class="text-gray-400">
+              Tu distribuidora de confianza para las mejores cervezas artesanales.
+            </p>
+          </div>
+          <div>
+            <h4 class="text-lg font-semibold mb-4">Enlaces Rápidos</h4>
+            <ul class="space-y-2 text-gray-400">
+              <li><a href="/home" class="hover:text-white transition">Inicio</a></li>
+              <li><a href="/catalogo" class="hover:text-white transition">Catálogo</a></li>
+              <li><a href="/login" class="hover:text-white transition">Mi Cuenta</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-lg font-semibold mb-4">Contacto</h4>
+            <ul class="space-y-2 text-gray-400">
+              <li>📍 Caracas, Venezuela</li>
+              <li>📞 +58 212-555-0123</li>
+              <li>✉️ info@acaucab.com</li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-lg font-semibold mb-4">Síguenos</h4>
+            <div class="flex space-x-4">
+              <a href="#" class="text-gray-400 hover:text-white transition">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+              </a>
+              <a href="#" class="text-gray-400 hover:text-white transition">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                </svg>
+              </a>
+              <a href="#" class="text-gray-400 hover:text-white transition">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM5.838 12a6.162 6.162 0 1112.324 0 6.162 6.162 0 01-12.324 0zM12 16a4 4 0 110-8 4 4 0 010 8zm4.965-10.405a1.44 1.44 0 112.881.001 1.44 1.44 0 01-2.881-.001z"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-400">
+          <p>&copy; 2024 ACAUCAB. Todos los derechos reservados.</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+</Layout> 

@@ -1,0 +1,11 @@
+---
+// Página del dashboard administrativo
+import AdminDashboardWrapper from "../components/AdminDashboardWrapper.tsx";
+import Layout from "../layouts/Layout.astro";
+import "../styles/globals.css";
+export const prerender = false;
+---
+
+<Layout title="ACAUCAB - Panel Administrativo">
+  <AdminDashboardWrapper client:load />
+</Layout> 

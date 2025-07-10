@@ -1,6 +1,6 @@
 /** Vista principal de compra con productos y carrito */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { productoService, debounce } from '../services/api';
+import { ecommerceService, debounce } from '../services/api';
 import { useCarrito } from '../hooks/useCarrito';
 import ProductCard from './ProductCard';
 import Carrito from './Carrito';
@@ -86,8 +86,9 @@ export default function VistaPrincipalCompra({
     console.log('🔍 Código escaneado:', ean);
     
     try {
-      // Buscar producto específicamente por EAN usando el nuevo endpoint
-      const producto = await productoService.buscarProductoPorEAN(ean);
+      // Usar el servicio de ecommerce para buscar por EAN
+      const productos = await ecommerceService.obtenerProductos({ busqueda: ean, limite: 1 });
+      const producto = productos.find(p => p.ean_13?.toString() === ean);
       
       if (producto) {
         carrito.agregarItem(producto, 1);
@@ -143,7 +144,7 @@ export default function VistaPrincipalCompra({
       setCargando(true);
       setError(null);
       
-      const productosData = await productoService.obtenerProductos({
+      const productosData = await ecommerceService.obtenerProductos({
         busqueda: filtros?.busqueda || busqueda,
         tipo: filtros?.tipo || filtroTipo,
         limite: 50
@@ -156,8 +157,8 @@ export default function VistaPrincipalCompra({
       setTiposDisponibles(tipos);
       
     } catch (err) {
-      console.error('Error cargando productos:', err);
-      setError('Error al cargar los productos. Intente nuevamente.');
+      console.error('Error cargando productos del ecommerce:', err);
+      setError('Error al cargar los productos del catálogo. Intente nuevamente.');
     } finally {
       setCargando(false);
     }
@@ -224,11 +225,6 @@ export default function VistaPrincipalCompra({
                 <p className="text-sm text-gray-600">
                   Cliente {cliente.tipo === 'natural' ? 'Natural' : 'Jurídico'} • {cliente.rif}
                 </p>
-                {cliente.puntos_acumulados !== undefined && cliente.puntos_acumulados > 0 && (
-                  <p className="text-sm text-green-600 font-medium mt-1">
-                    🎯 {cliente.puntos_acumulados} puntos disponibles
-                  </p>
-                )}
               </div>
             </div>
 

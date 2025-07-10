@@ -1,0 +1,11 @@
+---
+// Página del catálogo de productos
+import CatalogoProductos from "../components/CatalogoProductos.tsx";
+import Layout from "../layouts/Layout.astro";
+import "../styles/globals.css";
+export const prerender = false;
+---
+
+<Layout title="ACAUCAB - Catálogo de Productos">
+  <CatalogoProductos client:load />
+</Layout> 

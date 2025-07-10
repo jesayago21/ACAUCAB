@@ -11,6 +11,7 @@ const eventRoutes = require('./routes/eventRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const offerRoutes = require('./routes/offerRoutes');
 const comprasRoutes = require('./routes/comprasRoutes');
+const ecommerceRoutes = require('./routes/ecommerceRoutes');
 const { specs, swaggerUi } = require('./config/swagger');
 const db = require('./config/db');
 require('dotenv').config();
@@ -87,6 +88,7 @@ app.use('/api/eventos', eventRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/ofertas', offerRoutes);
 app.use('/api/compras', comprasRoutes);
+app.use('/api/ecommerce', ecommerceRoutes);
 
 /** rutas para los reportes */
 const reportRoutes = require('./routes/reportesRouter');

@@ -21,32 +21,35 @@ export interface ClienteBase {
   documento?: number;
   correo?: string | null;
   puntos_acumulados?: number;
+  tipo: 'natural' | 'juridico';
 }
 
 export interface ClienteNatural extends ClienteBase {
-  ci: string;
+  tipo: 'natural';
+  ci: number;
   primer_nombre: string;
   segundo_nombre?: string;
   primer_apellido: string;
   segundo_apellido?: string;
   direccion_habitacion: string;
-  tipo: 'natural';
   nombre?: string;
   apellido?: string;
   direccion?: string;
   lugar?: string;
   lugar_habitacion?: string;
+  fk_direccion_habitacion: number;
 }
 
 export interface ClienteJuridico extends ClienteBase {
+  tipo: 'juridico';
   razon_social: string;
   denominacion_comercial: string;
   url_pagina_web: string;
   capital_disponible: number;
   direccion_fiscal: string;
   direccion_fisica: string;
-  personas_contacto: PersonaContacto[];
-  tipo: 'juridico';
+  fk_direccion_fiscal: number;
+  fk_direccion_fisica: number;
 }
 
 export interface Producto {

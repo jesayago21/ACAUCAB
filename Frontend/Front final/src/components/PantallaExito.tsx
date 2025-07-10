@@ -108,9 +108,10 @@ export default function PantallaExito({
               </div>
             </div>
           </div>
+          {/* Para ventas online no se muestran puntos ganados ya que no se generan puntos */}
           <div className="text-center mt-6 pt-6 border-t border-gray-200">
-            <p className="text-lg font-semibold text-green-600">¡Ha ganado {carrito.puntosGanados} puntos con esta compra!</p>
-            <p className="text-sm text-gray-600">Total de puntos disponibles: {cliente.puntos_acumulados}</p>
+            <p className="text-lg font-semibold text-green-600">¡Compra realizada exitosamente!</p>
+            <p className="text-sm text-gray-600">Su pedido será procesado y enviado a la brevedad.</p>
           </div>
         </div>
 

@@ -211,6 +211,18 @@ export const clienteService = {
       console.error('Error obteniendo métodos favoritos:', error);
       return [];
     }
+  },
+
+  /** Obtener todos los lugares (estados, municipios, parroquias) */
+  async obtenerLugares(): Promise<Lugar[]> {
+    try {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/clientes/lugares`);
+      const data = await handleResponse<{success: boolean, lugares: Lugar[]}>(response);
+      return data.success ? data.lugares : [];
+    } catch (error) {
+      console.error('Error obteniendo lugares:', error);
+      return [];
+    }
   }
 };
 
@@ -365,6 +377,172 @@ export const productoService = {
       console.error('Error buscando producto por EAN:', error);
       return null;
     }
+  }
+};
+
+/** Servicios para Ecommerce (del almacén central) */
+export const ecommerceService = {
+  /** Obtener productos del almacén central para ecommerce */
+  async obtenerProductos(filtros?: {
+    busqueda?: string;
+    tipo?: string;
+    limite?: number;
+    offset?: number;
+  }): Promise<Producto[]> {
+    const params = new URLSearchParams();
+    
+    if (filtros?.busqueda) params.append('busqueda', filtros.busqueda);
+    if (filtros?.tipo) params.append('tipo', filtros.tipo);
+    if (filtros?.limite) params.append('limite', filtros.limite.toString());
+    if (filtros?.offset) params.append('offset', filtros.offset.toString());
+
+    const response = await fetchWithTimeout(`${API_BASE_URL}/ecommerce/productos?${params.toString()}`);
+    const data = await handleResponse<{productos: Producto[]}>(response);
+    
+    // Log para debugging
+    console.log('🔍 Datos de productos del ecommerce recibidos del backend:', data);
+    if (data.productos && data.productos.length > 0) {
+      console.log('📦 Primer producto de ejemplo del ecommerce:', data.productos[0]);
+    }
+    
+    const timestamp = Date.now();
+    
+    // Mapear las propiedades para compatibilidad con componentes existentes
+    return data.productos.map((producto, index) => {
+      // Asegurar que el precio sea un número válido
+      const precioNumerico = typeof producto.precio === 'number' 
+        ? producto.precio 
+        : (producto.precio ? parseFloat(producto.precio) : 0) || 0;
+      
+      const porcentajeDescuento = typeof producto.porcentaje_descuento === 'number' 
+        ? producto.porcentaje_descuento 
+        : (producto.porcentaje_descuento ? parseFloat(producto.porcentaje_descuento) : 0) || 0;
+
+      // Validar campos requeridos
+      const nombreCerveza = producto.nombre_cerveza || 'Cerveza';
+      const nombrePresentacion = producto.nombre_presentacion || 'Presentación';
+      const clave = producto.clave || 0;
+      const ean13 = producto.ean_13 || '0';
+
+      return {
+        ...producto,
+        id: clave,
+        id_presentacion: clave,
+        nombre: `${nombreCerveza} - ${nombrePresentacion}`,
+        precio_original: parseFloat(precioNumerico.toFixed(2)),
+        precio_oferta: producto.tiene_oferta && porcentajeDescuento > 0
+          ? parseFloat((precioNumerico * (1 - porcentajeDescuento / 100)).toFixed(2))
+          : null,
+        stock_disponible: producto.cantidad_disponible || 0,
+        // Generar unique_key verdaderamente único
+        unique_key: `ecommerce-${clave}-${ean13}-${timestamp}-${index}`
+      };
+    });
+  },
+
+  /** Obtener ofertas activas para ecommerce */
+  async obtenerOfertas(): Promise<Producto[]> {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/ecommerce/ofertas`);
+    const data = await handleResponse<{productos: Producto[]}>(response);
+    
+    const timestamp = Date.now();
+    
+    // Mapear las propiedades para compatibilidad con componentes existentes
+    return data.productos.map((producto, index) => {
+      // Asegurar que el precio sea un número válido
+      const precioNumerico = typeof producto.precio === 'number' 
+        ? producto.precio 
+        : (producto.precio ? parseFloat(producto.precio) : 0) || 0;
+      
+      const porcentajeDescuento = typeof producto.porcentaje_descuento === 'number' 
+        ? producto.porcentaje_descuento 
+        : (producto.porcentaje_descuento ? parseFloat(producto.porcentaje_descuento) : 0) || 0;
+
+      // Validar campos requeridos
+      const nombreCerveza = producto.nombre_cerveza || 'Cerveza';
+      const nombrePresentacion = producto.nombre_presentacion || 'Presentación';
+      const clave = producto.clave || 0;
+      const ean13 = producto.ean_13 || '0';
+
+      return {
+        ...producto,
+        id: clave,
+        id_presentacion: clave,
+        nombre: `${nombreCerveza} - ${nombrePresentacion}`,
+        precio_original: parseFloat(precioNumerico.toFixed(2)),
+        precio_oferta: producto.tiene_oferta && porcentajeDescuento > 0
+          ? parseFloat((precioNumerico * (1 - porcentajeDescuento / 100)).toFixed(2))
+          : null,
+        stock_disponible: producto.cantidad_disponible || 0,
+        // Generar unique_key verdaderamente único para ofertas
+        unique_key: `ecommerce-oferta-${clave}-${ean13}-${timestamp}-${index}`
+      };
+    });
+  },
+
+  /** Obtener métodos de pago disponibles para ecommerce */
+  async obtenerMetodosPago(clienteId: number): Promise<any[]> {
+    try {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/ecommerce/metodos-pago/${clienteId}`);
+      const data = await handleResponse<{success: boolean, metodos_pago: any[]}>(response);
+      
+      if (data.success && data.metodos_pago) {
+        return data.metodos_pago;
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('Error obteniendo métodos de pago del ecommerce:', error);
+      return [];
+    }
+  },
+
+  /** Validar stock de productos para ecommerce */
+  async validarStock(items: Array<{presentacion_id: number, cantidad: number}>): Promise<{valid: boolean, errors: string[]}> {
+    try {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/ecommerce/validar-stock`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ items }),
+      });
+      
+      const data = await handleResponse<{valid: boolean, errors: string[]}>(response);
+      return data;
+    } catch (error) {
+      console.error('Error validando stock del ecommerce:', error);
+      return { valid: false, errors: ['Error validando stock'] };
+    }
+  },
+
+  /** Crear venta online completa */
+  async crearVentaOnline(venta: {
+    usuario_id: number;
+    items: Array<{
+      presentacion_id: number;
+      cantidad: number;
+      precio_unitario: number;
+    }>;
+    metodos_pago: Array<{
+      tipo: string;
+      monto: number;
+      numero_tarjeta?: string;
+      fecha_vencimiento?: string;
+      banco?: string;
+      puntos_usados?: number;
+      guardar_como_favorito?: boolean;
+    }>;
+    direccion_envio: string;
+  }): Promise<{ success: boolean; venta_id: number; message: string }> {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/ecommerce/crear-venta`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(venta),
+    });
+    return handleResponse<{ success: boolean; venta_id: number; message: string }>(response);
   }
 };
 

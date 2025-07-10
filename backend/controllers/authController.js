@@ -106,10 +106,26 @@ exports.login = async (req, res) => {
                 -- Datos del miembro
                 m.rif as miembro_rif,
                 m.razon_social as miembro_razon_social,
-                -- Datos del cliente
+                -- Datos completos del cliente
                 cl.clave as cliente_id,
+                cl.rif as cliente_rif,
+                cl.puntos_acumulados as cliente_puntos,
+                cl.tipo as cliente_tipo,
+                cl.ci as cliente_ci,
                 cl.primer_nombre as cliente_primer_nombre,
-                cl.primer_apellido as cliente_primer_apellido
+                cl.segundo_nombre as cliente_segundo_nombre,
+                cl.primer_apellido as cliente_primer_apellido,
+                cl.segundo_apellido as cliente_segundo_apellido,
+                cl.direccion_habitacion as cliente_direccion_habitacion,
+                cl.fk_direccion_habitacion as cliente_fk_direccion_habitacion,
+                cl.razon_social as cliente_razon_social,
+                cl.denominacion_comercial as cliente_denominacion_comercial,
+                cl.url_pagina_web as cliente_url_pagina_web,
+                cl.capital_disponible as cliente_capital_disponible,
+                cl.direccion_fiscal as cliente_direccion_fiscal,
+                cl.direccion_fisica as cliente_direccion_fisica,
+                cl.fk_direccion_fiscal as cliente_fk_direccion_fiscal,
+                cl.fk_direccion_fisica as cliente_fk_direccion_fisica
             FROM usuario u
             JOIN rol r ON u.fk_rol = r.clave
             LEFT JOIN empleado e ON u.fk_empleado = e.ci
@@ -180,11 +196,39 @@ exports.login = async (req, res) => {
                 razon_social: userData.miembro_razon_social
             };
         } else if (userData.tipo_entidad === 'cliente') {
+            // Incluir todos los datos del cliente según su tipo
             user.entidad = {
-                id: userData.cliente_id,
-                primer_nombre: userData.cliente_primer_nombre,
-                primer_apellido: userData.cliente_primer_apellido
+                clave: userData.cliente_id,
+                rif: userData.cliente_rif,
+                puntos_acumulados: userData.cliente_puntos,
+                tipo: userData.cliente_tipo
             };
+            
+            // Agregar campos específicos según el tipo de cliente
+            if (userData.cliente_tipo === 'natural') {
+                user.entidad = {
+                    ...user.entidad,
+                    ci: userData.cliente_ci,
+                    primer_nombre: userData.cliente_primer_nombre,
+                    segundo_nombre: userData.cliente_segundo_nombre,
+                    primer_apellido: userData.cliente_primer_apellido,
+                    segundo_apellido: userData.cliente_segundo_apellido,
+                    direccion_habitacion: userData.cliente_direccion_habitacion,
+                    fk_direccion_habitacion: userData.cliente_fk_direccion_habitacion
+                };
+            } else if (userData.cliente_tipo === 'juridico') {
+                user.entidad = {
+                    ...user.entidad,
+                    razon_social: userData.cliente_razon_social,
+                    denominacion_comercial: userData.cliente_denominacion_comercial,
+                    url_pagina_web: userData.cliente_url_pagina_web,
+                    capital_disponible: userData.cliente_capital_disponible,
+                    direccion_fiscal: userData.cliente_direccion_fiscal,
+                    direccion_fisica: userData.cliente_direccion_fisica,
+                    fk_direccion_fiscal: userData.cliente_fk_direccion_fiscal,
+                    fk_direccion_fisica: userData.cliente_fk_direccion_fisica
+                };
+            }
         }
 
         res.json({

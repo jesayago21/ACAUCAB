@@ -40,7 +40,8 @@ export interface EntidadCliente {
   puntos_acumulados: number;
 }
 
-export type Entidad = EntidadEmpleado | EntidadMiembro | EntidadCliente;
+// Usar any para entidad ya que puede tener muchos campos según el tipo
+export type Entidad = any;
 
 export interface Usuario {
   id: number;

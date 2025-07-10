@@ -1,9 +1,11 @@
 ---
-/** Página de login administrativo */
+// Página de login centralizada para el ecommerce ACAUCAB
+import CentralizedLogin from "../components/CentralizedLogin.tsx";
 import Layout from "../layouts/Layout.astro";
-import LoginPage from "../components/admin/LoginPage.tsx";
+import "../styles/globals.css";
+export const prerender = false;
 ---
 
-<Layout title="Login - ACAUCAB">
-  <LoginPage client:load />
+<Layout title="ACAUCAB - Iniciar Sesión">
+  <CentralizedLogin client:load />
 </Layout>

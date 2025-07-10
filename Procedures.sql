@@ -947,6 +947,77 @@ BEGIN
 END;
 $$;
 
+-- 1. Obtener productos disponibles en online (unificado)
+CREATE OR REPLACE FUNCTION obtener_productos_disponibles_ecommerce(
+    p_busqueda TEXT,
+    p_tipo_cerveza TEXT,
+    p_solo_con_oferta BOOLEAN,
+    p_limite INT,
+    p_offset INT
+)
+RETURNS TABLE (
+    clave INT,
+    ean_13 BIGINT,
+    nombre_presentacion VARCHAR(50),
+    cantidad_unidades INT,
+    precio NUMERIC,
+    nombre_cerveza VARCHAR(50),
+    grado_alcohol INT,
+    tipo_cerveza VARCHAR(50),
+    miembro VARCHAR(50),
+    cantidad_disponible INT,
+    tiene_oferta BOOLEAN,
+    porcentaje_descuento INT,
+    precio_oferta NUMERIC
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        p.clave,
+        p.ean_13,
+        p.nombre AS nombre_presentacion,
+        p.cantidad_unidades,
+        p.precio,
+        c.nombre AS nombre_cerveza,
+        c.grado_alcohol,
+        tc.nombre AS tipo_cerveza,
+        m.razon_social AS miembro,
+        SUM(a.cantidad_unidades)::INT AS cantidad_disponible,
+        CASE 
+          WHEN o.clave IS NOT NULL AND CURRENT_DATE BETWEEN o.fecha_inicio AND o.fecha_fin 
+          THEN true 
+          ELSE false 
+        END AS tiene_oferta,
+        o.porcentaje_descuento,
+        ROUND((p.precio * (1 - (COALESCE(o.porcentaje_descuento, 0)::DECIMAL / 100))), 2) AS precio_oferta
+    FROM presentacion p
+    INNER JOIN cerveza c ON p.fk_cerveza = c.clave
+    INNER JOIN tipo_cerveza tc ON c.fk_tipo_cerveza = tc.clave
+    INNER JOIN miembro m ON c.fk_miembro = m.rif
+    INNER JOIN almacen a ON p.clave = a.fk_presentacion
+    LEFT JOIN oferta o ON p.clave = o.fk_presentacion AND CURRENT_DATE BETWEEN o.fecha_inicio AND o.fecha_fin
+    WHERE a.cantidad_unidades > 0
+      AND (p_busqueda IS NULL OR (
+          LOWER(c.nombre) LIKE LOWER('%' || p_busqueda || '%') OR
+          LOWER(p.nombre) LIKE LOWER('%' || p_busqueda || '%') OR
+          CAST(p.ean_13 AS TEXT) LIKE '%' || p_busqueda || '%'
+      ))
+      AND (p_tipo_cerveza IS NULL OR LOWER(tc.nombre) = LOWER(p_tipo_cerveza))
+      AND (p_solo_con_oferta IS FALSE OR o.clave IS NOT NULL)
+    GROUP BY p.clave, p.ean_13, p.nombre, p.cantidad_unidades, p.precio, 
+             c.nombre, c.grado_alcohol, tc.nombre, m.razon_social, 
+             o.clave, o.fecha_inicio, o.fecha_fin, o.porcentaje_descuento
+    ORDER BY p.clave, p.nombre
+    LIMIT p_limite OFFSET p_offset;
+END;
+$$;
+
+
+
+
+
 -- 2. Obtener métodos de pago favoritos de un cliente
 CREATE OR REPLACE FUNCTION obtener_metodos_pago_favoritos(p_cliente_id INT)
 RETURNS TABLE (
@@ -999,7 +1070,7 @@ BEGIN
 END;
 $$;
 
--- 5. Crear Venta Online
+-- 5. Crear Venta Online (actualizada para ecommerce)
 CREATE OR REPLACE FUNCTION crear_venta_online(
     p_usuario_id INT,
     p_direccion_envio VARCHAR,
@@ -1016,8 +1087,17 @@ DECLARE
     total_venta NUMERIC := 0;
     v_venta_id INT;
     v_almacen_id INT;
+    v_metodo_pago_id INT;
+    v_tasa_cambio_id INT;
+    v_lugar_tipo VARCHAR;
     DEFAULT_TIENDA_ONLINE_ID INT := 1; -- Asumiendo que existe una tienda online con id 1
 BEGIN
+    -- Validar que el lugar de envío sea una parroquia
+    SELECT tipo INTO v_lugar_tipo FROM lugar WHERE clave = p_lugar_id;
+    IF v_lugar_tipo <> 'parroquia' THEN
+        RAISE EXCEPTION 'La dirección de envío debe corresponder a una parroquia. Se proporcionó un lugar de tipo: %', v_lugar_tipo;
+    END IF;
+
     -- Calcular el monto total de la venta a partir de los items
     FOR item IN SELECT * FROM json_to_recordset(p_items) AS x(presentacion_id INT, cantidad INT, precio_unitario NUMERIC)
     LOOP
@@ -1044,11 +1124,66 @@ BEGIN
         UPDATE almacen SET cantidad_unidades = cantidad_unidades - item.cantidad WHERE clave = v_almacen_id;
     END LOOP;
 
-    -- Insertar los registros de pago asociados a la venta
-    FOR pago IN SELECT * FROM json_to_recordset(p_pagos) AS x(metodo_pago_id INT, monto NUMERIC, tasa_cambio_id INT)
+    -- Insertar los registros de pago asociados a la venta (adaptado para ecommerce)
+    FOR pago IN SELECT * FROM json_to_recordset(p_pagos) AS x(
+        tipo VARCHAR, 
+        monto NUMERIC, 
+        numero_tarjeta BIGINT, 
+        fecha_vencimiento DATE,
+        banco VARCHAR,
+        puntos_usados INT,
+        guardar_como_favorito BOOLEAN
+    )
     LOOP
+        -- Obtener tasa de cambio (para VES por defecto)
+        SELECT clave INTO v_tasa_cambio_id
+        FROM tasa_cambio
+        WHERE moneda = 'VES'
+            AND CURRENT_DATE >= fecha_inicio
+            AND (fecha_fin IS NULL OR CURRENT_DATE <= fecha_fin)
+        ORDER BY fecha_inicio DESC
+        LIMIT 1;
+
+        IF v_tasa_cambio_id IS NULL THEN
+            RAISE EXCEPTION 'No se encontró una tasa de cambio activa para VES';
+        END IF;
+        
+        -- Crear método de pago temporal o usar existente
+        IF pago.tipo = 'Puntos' THEN
+            -- Para puntos, crear método temporal
+            INSERT INTO metodo_de_pago (moneda, tipo, fk_cliente)
+            SELECT 'PUNTOS', 'Puntos', u.fk_cliente
+            FROM usuario u WHERE u.clave = p_usuario_id
+            RETURNING clave INTO v_metodo_pago_id;
+        ELSE
+            -- Para tarjetas, crear método de pago
+            INSERT INTO metodo_de_pago (
+                moneda, tipo, numero_tarjeta, fecha_vencimiento, banco, 
+                metodo_preferido, fk_cliente
+            )
+            SELECT 
+                'VES', 
+                pago.tipo, 
+                pago.numero_tarjeta, 
+                pago.fecha_vencimiento, 
+                pago.banco,
+                COALESCE(pago.guardar_como_favorito, FALSE),
+                u.fk_cliente
+            FROM usuario u WHERE u.clave = p_usuario_id
+            RETURNING clave INTO v_metodo_pago_id;
+        END IF;
+
+        -- Insertar el pago
         INSERT INTO pago (fecha_pago, monto_total, fk_tasa_cambio, fk_metodo_de_pago, fk_venta_online)
-        VALUES (CURRENT_DATE, pago.monto, pago.tasa_cambio_id, pago.metodo_pago_id, v_venta_id);
+        VALUES (CURRENT_DATE, pago.monto, v_tasa_cambio_id, v_metodo_pago_id, v_venta_id);
+        
+        -- Para puntos, descontar del cliente (las ventas online NO generan puntos)
+        IF pago.tipo = 'Puntos' AND pago.puntos_usados > 0 THEN
+            UPDATE cliente 
+            SET puntos_acumulados = puntos_acumulados - pago.puntos_usados
+            FROM usuario u
+            WHERE cliente.clave = u.fk_cliente AND u.clave = p_usuario_id;
+        END IF;
     END LOOP;
     
     RETURN v_venta_id;
@@ -3063,7 +3198,7 @@ BEGIN
     SELECT 
         c.tipo as tipo_cliente,
         c.cantidad_clientes::INT as cantidad,
-        ROUND((c.cantidad_clientes::DECIMAL / t.total_clientes * 100), 2) as porcentaje
+        ROUND((c.cantidad_clientes::DECIMAL / NULLIF(t.total_clientes, 0) * 100), 2) as porcentaje
     FROM conteos c
     CROSS JOIN total t;
 END;
@@ -3219,9 +3354,9 @@ BEGIN
     -- Almacén central
     SELECT 
         'almacen'::VARCHAR(20) as tipo_inventario,
-        COUNT(*) as total_productos,
-        COUNT(*) FILTER (WHERE cantidad_unidades = 0) as productos_sin_stock,
-        ROUND((COUNT(*) FILTER (WHERE cantidad_unidades = 0)::DECIMAL / COUNT(*) * 100), 2) as tasa_ruptura
+        COUNT(*)::INT as total_productos,
+        COUNT(*) FILTER (WHERE cantidad_unidades = 0)::INT as productos_sin_stock,
+        ROUND((COUNT(*) FILTER (WHERE cantidad_unidades = 0)::DECIMAL / NULLIF(COUNT(*), 0) * 100), 2) as tasa_ruptura
     FROM almacen
     
     UNION ALL
@@ -3229,10 +3364,10 @@ BEGIN
     -- Tiendas físicas (agregado)
     SELECT 
         'tienda'::VARCHAR(20) as tipo_inventario,
-        COUNT(DISTINCT fk_presentacion) as total_productos,
-        COUNT(DISTINCT fk_presentacion) FILTER (WHERE total_cantidad = 0) as productos_sin_stock,
+        COUNT(DISTINCT fk_presentacion)::INT as total_productos,
+        COUNT(DISTINCT fk_presentacion) FILTER (WHERE total_cantidad = 0)::INT as productos_sin_stock,
         ROUND((COUNT(DISTINCT fk_presentacion) FILTER (WHERE total_cantidad = 0)::DECIMAL / 
-               COUNT(DISTINCT fk_presentacion) * 100), 2) as tasa_ruptura
+               NULLIF(COUNT(DISTINCT fk_presentacion), 0) * 100), 2) as tasa_ruptura
     FROM (
         SELECT fk_presentacion, SUM(cantidad) as total_cantidad
         FROM inventario_tienda
@@ -3844,27 +3979,27 @@ BEGIN
         SELECT 
             'Online' as canal,
             COUNT(*) as ventas,
-            SUM(monto_total) as monto
-        FROM venta_online
-        WHERE fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+            SUM(vo.monto_total) as monto
+        FROM venta_online vo
+        WHERE vo.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
         
         UNION ALL
         
         SELECT 
             'Tienda Física' as canal,
             COUNT(*) as ventas,
-            SUM(total_venta) as monto
-        FROM venta_tienda_fisica
-        WHERE fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+            SUM(vtf.total_venta) as monto
+        FROM venta_tienda_fisica vtf
+        WHERE vtf.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
         
         UNION ALL
         
         SELECT 
             'Eventos' as canal,
             COUNT(*) as ventas,
-            SUM(monto_total) as monto
-        FROM venta_evento
-        WHERE fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+            SUM(ve.monto_total) as monto
+        FROM venta_evento ve
+        WHERE ve.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
     ),
     total AS (
         SELECT SUM(monto) as total_general FROM ventas_por_canal
@@ -3873,7 +4008,7 @@ BEGIN
         vpc.canal,
         vpc.ventas as cantidad_ventas,
         vpc.monto as monto_total,
-        ROUND((vpc.monto / t.total_general * 100)::NUMERIC, 2) as porcentaje_del_total
+        ROUND((vpc.monto / NULLIF(t.total_general, 0) * 100)::NUMERIC, 2) as porcentaje_del_total
     FROM ventas_por_canal vpc
     CROSS JOIN total t
     ORDER BY vpc.monto DESC;
