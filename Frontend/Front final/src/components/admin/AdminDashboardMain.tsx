@@ -7,7 +7,6 @@ import StatusManagement from './StatusManagement';
 import VentasManagement from './VentasManagement';
 import VentasWebManagement from './VentasWebManagement';
 import VentasTiendaManagement from './VentasTiendaManagement';
-
 import ReposicionManagement from './ReposicionManagement';
 import ReportesManagement from './ReportesManagement';
 
@@ -19,6 +18,7 @@ import OfertasManagement from './OfertasManagement';
 import ComprasManagement from './ComprasManagement';
 import EntradasManagement from './EntradasManagement';
 import AsistenciaManagement from './AsistenciaManagement';
+import VentasEventoManagement from './VentasEventoManagement';
 
 import type { Usuario } from '../../types/auth';
 
@@ -33,8 +33,8 @@ interface Permission {
 
 /** Props del componente */
 interface AdminDashboardMainProps {
-    user: Usuario;
-    onLogout: () => void;
+  user: Usuario;
+  onLogout: () => void;
 }
 
 /** Componente principal del dashboard administrativo */
@@ -124,7 +124,7 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             case 'ventas-online':
                 return <ModulePlaceholder title="Ventas Online" user={user} />;
             case 'ventas-eventos':
-                return <ModulePlaceholder title="Ventas en Eventos" user={user} />;
+                return <VentasEventoManagement />;
             
             // Módulos eliminados: compras-mayoristas, clientes, empleados, miembros
             
@@ -189,7 +189,7 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
         return moduleNames[activeModule] || 'Módulo Desconocido';
     };
 
-    return (
+   return (
         <div className="flex h-screen bg-gray-100">
             {/* Sidebar - Ahora es fijo */}
             <AdminSidebar
@@ -251,7 +251,7 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
                 </main>
             </div>
         </div>
-    );
+   );
 };
 
 /** Componente de overview del dashboard */

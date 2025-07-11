@@ -61,4 +61,4 @@ export default function AdminDashboard({ usuario, onLogout }: AdminDashboardProp
       onLogout={onLogout} 
     />
   );
-} 
+}

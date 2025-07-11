@@ -109,6 +109,8 @@ RETURNS TRIGGER AS $$
 DECLARE
     v_miembro_id INT;
     v_compra_id INT;
+    v_precio_unitario DECIMAL(10,2);
+    v_monto_total DECIMAL(10,2);
 BEGIN
     -- Si la cantidad es menor o igual a 100 unidades
     IF NEW.cantidad_unidades <= 100 THEN
@@ -124,14 +126,29 @@ BEGIN
             RAISE EXCEPTION 'No se encontró el miembro correspondiente para esta cerveza';
         END IF;
         
+        -- Obtener el precio unitario de la presentación (precio de compra al proveedor)
+        -- Por defecto, usar el 70% del precio de venta como precio de compra
+        SELECT (p.precio * 0.7) INTO v_precio_unitario
+        FROM presentacion p
+        JOIN almacen a ON a.fk_presentacion = p.clave
+        WHERE a.clave = NEW.clave;
+        
+        -- Si no se encuentra precio, usar un valor por defecto
+        IF v_precio_unitario IS NULL OR v_precio_unitario <= 0 THEN
+            v_precio_unitario := 10.00; -- Precio por defecto
+        END IF;
+        
+        -- Calcular el monto total (10000 unidades * precio unitario)
+        v_monto_total := 10000 * v_precio_unitario;
+        
         -- Crear nueva compra
         INSERT INTO compra (fecha, monto_total, fk_miembro)
-        VALUES (CURRENT_DATE, 0, v_miembro_id)
+        VALUES (CURRENT_DATE, v_monto_total, v_miembro_id)
         RETURNING clave INTO v_compra_id;
         
         -- Crear detalle de compra con 10000 unidades
         INSERT INTO detalle_compra (fk_almacen, fk_compra, cantidad, precio_unitario)
-        VALUES (NEW.clave, v_compra_id, 10000, 0);  -- El precio_unitario debería definirse según la lógica de negocio
+        VALUES (NEW.clave, v_compra_id, 10000, v_precio_unitario);
         
         -- Insertar el primer estado en histórico
         INSERT INTO historico (fecha, fk_estatus, fk_compra)
@@ -258,8 +275,8 @@ BEGIN
         
         -- Crear la reposición si se encontró un jefe de pasillo
         IF v_usuario_id IS NOT NULL THEN
-            INSERT INTO reposicion (fecha_solicitud, fk_almacen, fk_inventario_tienda, fk_usuario)
-            VALUES (CURRENT_DATE, v_almacen_id, NEW.clave, v_usuario_id);
+            INSERT INTO reposicion (fecha, fk_almacen, fk_inventario_tienda, fk_usuario, cantidad)
+            VALUES (CURRENT_DATE, v_almacen_id, NEW.clave, v_usuario_id, 1000);
         END IF;
     END IF;
     
