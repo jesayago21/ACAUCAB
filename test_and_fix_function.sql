@@ -342,9 +342,8 @@ BEGIN
         AVG(vf.total_venta)::DECIMAL(10,2)
     FROM venta_tienda_fisica vf
     JOIN tienda_fisica tf ON vf.fk_tienda_fisica = tf.clave
-    JOIN departamento d ON d.fk_tienda_fisica = tf.clave
-    JOIN contrato ct ON ct.fk_departamento = d.clave AND ct.fecha_fin IS NULL
-    JOIN empleado e ON ct.fk_empleado = e.ci
+    JOIN empleado e ON vf.fk_empleado = e.ci
+    JOIN contrato ct ON ct.fk_empleado = e.ci AND ct.fecha_fin IS NULL
     JOIN cargo c ON ct.fk_cargo = c.clave
     WHERE vf.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
     GROUP BY e.ci, e.primer_nombre, e.primer_apellido, c.nombre, tf.nombre

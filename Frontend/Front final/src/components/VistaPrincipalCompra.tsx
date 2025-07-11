@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ecommerceService, debounce } from '../services/api';
 import { useCarrito } from '../hooks/useCarrito';
+import { useBarcodeScanner } from '../hooks/useBarcodeScanner';
 import ProductCard from './ProductCard';
 import Carrito from './Carrito';
 import type { Producto, ClienteNatural, ClienteJuridico } from '../types/api';
@@ -26,60 +27,74 @@ export default function VistaPrincipalCompra({
   const [filtroTipo, setFiltroTipo] = useState('');
   const [tiposDisponibles, setTiposDisponibles] = useState<string[]>([]);
   
-  // Estados para detección de escáner
-  const [barcodeBuffer, setBarcodeBuffer] = useState('');
-  const [lastKeystroke, setLastKeystroke] = useState(0);
-  const [scannerDetected, setScannerDetected] = useState(false);
+  // Hook para el scanner de códigos de barras
+  const {
+    isScanning,
+    lastScannedCode,
+    scannedProduct,
+    startScanning,
+    stopScanning,
+    onProductFound,
+    onProductNotFound
+  } = useBarcodeScanner();
+  
   const inputRef = useRef<HTMLInputElement>(null);
 
   /** Cargar productos al montar el componente */
   useEffect(() => {
     cargarProductos();
+    // Iniciar automáticamente el scanner
+    startScanning();
   }, []);
 
-  /** Detectar escáner de código de barras */
+  /** Configurar callbacks del scanner */
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const now = Date.now();
-      const timeDiff = now - lastKeystroke;
+    // Configurar callback para cuando se encuentra un producto
+    const handleProductFound = (producto: Producto) => {
+      console.log('✅ Producto encontrado por scanner:', producto.nombre_cerveza);
+      carrito.agregarItem(producto, 1);
       
-      // Si el tiempo entre teclas es muy corto (< 50ms), probablemente sea un escáner
-      if (timeDiff < 50 && barcodeBuffer.length > 0) {
-        setScannerDetected(true);
-      }
-      
-      setLastKeystroke(now);
-      
-      // Si es Enter y tenemos datos en el buffer
-      if (e.key === 'Enter' && barcodeBuffer.length > 0) {
-        e.preventDefault();
-        handleBarcodeScanned(barcodeBuffer);
-        setBarcodeBuffer('');
-        setScannerDetected(false);
-        return;
-      }
-      
-      // Si es un número, agregarlo al buffer
-      if (/\d/.test(e.key)) {
-        setBarcodeBuffer(prev => prev + e.key);
-        
-        // Limpiar buffer después de 1 segundo de inactividad
-        setTimeout(() => {
-          if (Date.now() - lastKeystroke > 1000) {
-            setBarcodeBuffer('');
-            setScannerDetected(false);
-          }
-        }, 1000);
-      }
+      // Mostrar notificación visual de éxito
+      mostrarNotificacion('success', `✅ ${producto.nombre_cerveza} agregado al carrito`);
     };
 
-    // Solo agregar el listener si estamos en la página de carrito
-    document.addEventListener('keydown', handleKeyDown);
-    
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+    // Configurar callback para cuando no se encuentra un producto
+    const handleProductNotFound = (code: string) => {
+      console.log('❌ Producto no encontrado para código:', code);
+      mostrarNotificacion('error', `❌ Producto con código ${code} no encontrado`);
     };
-  }, [barcodeBuffer, lastKeystroke]);
+
+    // Asignar los callbacks
+    onProductFound.current = handleProductFound;
+    onProductNotFound.current = handleProductNotFound;
+  }, [carrito]);
+
+  /** Función para mostrar notificaciones */
+  const mostrarNotificacion = (tipo: 'success' | 'error', mensaje: string) => {
+    const notification = document.createElement('div');
+    const bgColor = tipo === 'success' ? 'bg-green-500' : 'bg-red-500';
+    const animation = tipo === 'success' ? 'animate-bounce' : 'animate-pulse';
+    
+    notification.className = `fixed top-4 right-4 ${bgColor} text-white px-4 py-2 rounded-lg shadow-lg z-50 ${animation}`;
+    notification.innerHTML = `
+      <div class="flex items-center space-x-2">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          ${tipo === 'success' 
+            ? '<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>'
+            : '<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>'
+          }
+        </svg>
+        <span>${mensaje}</span>
+      </div>
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      if (document.body.contains(notification)) {
+        document.body.removeChild(notification);
+      }
+    }, 3000);
+  };
 
   /** Manejar código escaneado */
   const handleBarcodeScanned = async (ean: string) => {
@@ -237,14 +252,14 @@ export default function VistaPrincipalCompra({
         </div>
       </div>
 
-      {/* Indicador de escáner activo */}
-      {scannerDetected && (
+      {/* Indicador de scanner activo */}
+      {isScanning && (
         <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-pulse">
           <div className="flex items-center space-x-2">
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M3 7v2h1v8H3v2h2V7H3zm16 0v12h2v-2h-1V9h1V7h-2zm-6-4H8v2h5V3zm5 0v2h3v2h2V3h-5zM6 3H3v2h2v2h2V3H6zm0 16v2h3v2h2v-2H6v-2z"/>
             </svg>
-            <span className="font-medium">Escáner detectado: {barcodeBuffer}</span>
+            <span className="font-medium">Scanner activo - Escanee un código de barras</span>
           </div>
         </div>
       )}
@@ -266,7 +281,7 @@ export default function VistaPrincipalCompra({
                     value={busqueda}
                     onChange={handleBusquedaChange}
                     className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#A1B5A0] focus:border-transparent transition-all ${
-                      scannerDetected 
+                      isScanning 
                         ? 'border-green-500 bg-green-50' 
                         : 'border-gray-300'
                     }`}
@@ -275,14 +290,14 @@ export default function VistaPrincipalCompra({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                   
-                  {/* Indicador de escáner detectado */}
-                  {scannerDetected && (
+                  {/* Indicador de scanner activo */}
+                  {isScanning && (
                     <div className="absolute right-2 top-2.5">
                       <div className="flex items-center space-x-1 text-green-600">
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M3 7v2h1v8H3v2h2V7H3zm16 0v12h2v-2h-1V9h1V7h-2zm-6-4H8v2h5V3zm5 0v2h3v2h2V3h-5zM6 3H3v2h2v2h2V3H6zm0 16v2h3v2h2v-2H6v-2z"/>
                         </svg>
-                        <span className="text-xs font-medium">Escáner</span>
+                        <span className="text-xs font-medium">Scanner</span>
                       </div>
                     </div>
                   )}
@@ -311,6 +326,21 @@ export default function VistaPrincipalCompra({
                     Limpiar
                   </button>
                 )}
+
+                {/* Botón controlar scanner */}
+                <button
+                  onClick={isScanning ? stopScanning : startScanning}
+                  className={`px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 ${
+                    isScanning 
+                      ? 'bg-red-500 hover:bg-red-600 text-white' 
+                      : 'bg-green-500 hover:bg-green-600 text-white'
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M3 7v2h1v8H3v2h2V7H3zm16 0v12h2v-2h-1V9h1V7h-2zm-6-4H8v2h5V3zm5 0v2h3v2h2V3h-5zM6 3H3v2h2v2h2V3H6zm0 16v2h3v2h2v-2H6v-2z"/>
+                  </svg>
+                  <span>{isScanning ? 'Detener Scanner' : 'Activar Scanner'}</span>
+                </button>
               </div>
 
               {/* Información de resultados */}
@@ -321,12 +351,38 @@ export default function VistaPrincipalCompra({
                   {filtroTipo && ` en ${filtroTipo}`}
                 </span>
                 
-                {carrito.totalItems > 0 && (
-                  <span className="text-[#3D4A3A] font-medium">
-                    {carrito.totalItems} artículo{carrito.totalItems !== 1 ? 's' : ''} en el carrito
-                  </span>
-                )}
+                <div className="flex items-center space-x-4">
+                  {carrito.totalItems > 0 && (
+                    <span className="text-[#3D4A3A] font-medium">
+                      {carrito.totalItems} artículo{carrito.totalItems !== 1 ? 's' : ''} en el carrito
+                    </span>
+                  )}
+                  
+                  {isScanning && (
+                    <span className="text-green-600 font-medium flex items-center space-x-1">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M3 7v2h1v8H3v2h2V7H3zm16 0v12h2v-2h-1V9h1V7h-2zm-6-4H8v2h5V3zm5 0v2h3v2h2V3h-5zM6 3H3v2h2v2h2V3H6zm0 16v2h3v2h2v-2H6v-2z"/>
+                      </svg>
+                      <span>Scanner activo</span>
+                    </span>
+                  )}
+                </div>
               </div>
+
+              {/* Instrucciones del scanner */}
+              {isScanning && (
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                    <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                    <div className="text-sm text-blue-800">
+                      <p className="font-medium mb-1">Scanner de códigos de barras activo</p>
+                      <p>Use su scanner USB para escanear códigos de barras. Los productos se agregarán automáticamente al carrito.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Grid de productos */}

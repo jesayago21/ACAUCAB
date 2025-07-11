@@ -394,7 +394,6 @@ CREATE TABLE IF NOT EXISTS evento (
     nombre VARCHAR (50) NOT NULL,
     fecha_inicio DATE NOT NULL,
     fecha_fin DATE NOT NULL,
-    hora_inicio TIME NOT NULL,
     direccion TEXT NOT NULL,
     precio_entrada INT,
     fk_evento INT,

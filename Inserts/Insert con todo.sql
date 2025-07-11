@@ -5679,7 +5679,7 @@ INSERT INTO lugar_tienda (clave, nombre, tipo, fk_lugar_tienda) VALUES
 
 --Insertar presentacion (10 ejemplos)
 INSERT INTO presentacion (EAN_13, nombre, cantidad_unidades, precio, fk_cerveza) VALUES
-(7501234567890, 'Botella 330ml', 1, 200.00, 1),
+(613008735807, 'Botella 330ml', 1, 200.00, 1),
 (7501234567891, 'Lata 355ml', 1, 160.00, 2),
 (7501234567892, 'Pack 6 Botellas 330ml', 6, 1000.00, 3),
 (7501234567893, 'Botella 500ml', 1, 250.00, 4),
@@ -5829,7 +5829,7 @@ INSERT INTO detalle_venta_evento (cantidad, precio_unitario, fk_venta_evento, fk
 (3, 10526, (SELECT MAX(clave) FROM venta_evento WHERE fecha = '2025-07-04'), 5);
 
 INSERT INTO usuario ( username, contrasena, fk_rol, fk_empleado, fk_miembro, fk_cliente) VALUES
-( 'admin', 'admin', 4, 678901234, NULL, NULL),
+( 'admin', 'admin', 1, 678901234, NULL, NULL),
 ( 'supervisor', 'supervisor123', 2, 234567890, NULL, NULL),
 ( 'soporte', 'soporte123', 5, 567890123, NULL, NULL),
 ( 'gerente', 'gerente123', 4, 345678901, NULL, NULL),
