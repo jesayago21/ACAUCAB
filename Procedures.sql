@@ -76,6 +76,7 @@ DROP FUNCTION IF EXISTS obtener_estadisticas_reposiciones(INT);
 
 -- Reportes
 DROP FUNCTION IF EXISTS reporte_tendencia_ventas(DATE, DATE);
+DROP FUNCTION IF EXISTS reporte_ventas_por_canal(DATE, DATE);
 
 -- =============================================
 -- PROCEDIMIENTOS PARA AUTHENTICATION (authController.js)
