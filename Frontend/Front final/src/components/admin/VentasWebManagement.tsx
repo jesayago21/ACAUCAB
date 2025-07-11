@@ -610,7 +610,7 @@ const VentasWebManagement: React.FC<VentasWebManagementProps> = ({
                                                 )}
                                                 <p>
                                                     <span className="text-gray-600">Monto:</span>
-                                                    <span className="ml-2 font-medium">{formatAmount(pago.monto_total)}</span>
+                                                    <span className="ml-2 font-medium">{formatAmount(pago.monto)}</span>
                                                 </p>
                                             </div>
                                         ))}
