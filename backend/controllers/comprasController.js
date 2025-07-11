@@ -51,7 +51,7 @@ const getDetalleOrdenCompra = async (req, res) => {
     }
 
     // Agrupar los resultados por compra y detalles
-    const  = {
+    const compra = {
       clave: result.rows[0].compra_clave,
       fecha: result.rows[0].compra_fecha,
       monto_total: result.rows[0].compra_monto_total,

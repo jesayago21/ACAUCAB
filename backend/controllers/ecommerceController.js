@@ -6,6 +6,28 @@
 const db = require('../config/db');
 
 /**
+ * Obtiene todas las ventas online para el dashboard de administración.
+ */
+const obtenerTodasLasVentasOnline = async (req, res) => {
+    try {
+        const query = 'SELECT * FROM obtener_listado_ventas_online()';
+        const { rows } = await db.query(query);
+
+        res.json({
+            success: true,
+            data: rows
+        });
+    } catch (error) {
+        console.error('Error al obtener el listado de ventas online:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor al obtener las ventas online.',
+            error: error.message
+        });
+    }
+};
+
+/**
  * Obtener productos disponibles para venta online desde el almacén central
  */
 const obtenerProductosEcommerce = async (req, res) => {
@@ -372,6 +394,7 @@ const obtenerVentaOnlineCompleta = async (req, res) => {
 };
 
 module.exports = {
+    obtenerTodasLasVentasOnline,
     obtenerProductosEcommerce,
     obtenerMetodosPagoEcommerce,
     validarStockEcommerce,

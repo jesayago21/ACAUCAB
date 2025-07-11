@@ -69,62 +69,30 @@ const VentasTiendaManagement: React.FC<VentasTiendaManagementProps> = ({
     const loadVentas = async () => {
         try {
             setLoading(true);
-            // Datos mock hasta crear el endpoint
-            const mockVentas: VentaTienda[] = [
-                {
-                    clave: 1,
-                    fecha: '2024-01-15T10:30:00',
-                    total_venta: 67.50,
-                    tienda_fisica_nombre: 'ACAUCAB Caracas Centro',
-                    cliente_nombre: 'Carlos López',
-                    productos_cantidad: 3,
-                    metodo_pago: 'Tarjeta de crédito',
-                    puntos_otorgados: 3
-                },
-                {
-                    clave: 2,
-                    fecha: '2024-01-15T14:20:00',
-                    total_venta: 125.00,
-                    tienda_fisica_nombre: 'ACAUCAB Caracas Centro',
-                    cliente_nombre: 'María Rodríguez',
-                    productos_cantidad: 6,
-                    metodo_pago: 'Efectivo USD',
-                    puntos_otorgados: 6
-                },
-                {
-                    clave: 3,
-                    fecha: '2024-01-15T16:45:00',
-                    total_venta: 200.00,
-                    tienda_fisica_nombre: 'ACAUCAB Caracas Centro',
-                    cliente_nombre: 'Empresa XYZ C.A.',
-                    productos_cantidad: 10,
-                    metodo_pago: 'Cheque',
-                    puntos_otorgados: 10
-                },
-                {
-                    clave: 4,
-                    fecha: '2024-01-14T09:15:00',
-                    total_venta: 45.00,
-                    tienda_fisica_nombre: 'ACAUCAB Caracas Centro',
-                    cliente_nombre: 'Pedro Martínez',
-                    productos_cantidad: 2,
-                    metodo_pago: 'Puntos',
-                    puntos_otorgados: 0
-                },
-                {
-                    clave: 5,
-                    fecha: '2024-01-14T11:30:00',
-                    total_venta: 89.90,
-                    tienda_fisica_nombre: 'ACAUCAB Caracas Centro',
-                    cliente_nombre: 'Ana García',
-                    productos_cantidad: 4,
-                    metodo_pago: 'Tarjeta de débito',
-                    puntos_otorgados: 4
-                }
-            ];
-            setVentas(mockVentas);
-        } catch (error) {
-            setError('Error al cargar las ventas de tienda');
+            setError('');
+            const response = await fetch('http://localhost:5000/api/shop/ventas-tienda');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error al cargar las ventas desde la API');
+            }
+            const result = await response.json();
+            if (result.success) {
+                const mappedVentas = result.data.map((v: any) => ({
+                    clave: v.clave_venta,
+                    fecha: v.fecha_venta,
+                    total_venta: Number(v.monto_total_venta),
+                    tienda_fisica_nombre: v.nombre_tienda,
+                    cliente_nombre: v.nombre_cliente,
+                    productos_cantidad: Number(v.cantidad_productos),
+                    metodo_pago: v.metodo_pago_principal,
+                    puntos_otorgados: Math.floor(Number(v.monto_total_venta) / 10)
+                }));
+                setVentas(mappedVentas);
+            } else {
+                throw new Error(result.message || 'La API no devolvió una respuesta exitosa');
+            }
+        } catch (error: any) {
+            setError(`Error al cargar las ventas de tienda: ${error.message}`);
         } finally {
             setLoading(false);
         }
@@ -132,65 +100,49 @@ const VentasTiendaManagement: React.FC<VentasTiendaManagementProps> = ({
 
     /** Cargar detalle de venta */
     const loadVentaDetalle = async (ventaId: number) => {
+        // Limpiar estado anterior y mostrar loading
+        setVentaDetalle(null);
+        setLoadingDetalle(true);
+        setSelectedVenta(ventaId);
+        setError('');
+
         try {
-            setLoadingDetalle(true);
+            const response = await fetch(`http://localhost:5000/api/shop/venta-completa/${ventaId}`);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error al cargar el detalle desde la API');
+            }
             
-            // Llamar al endpoint real cuando esté listo
-            // const response = await fetch(`/api/shop/venta-completa/${ventaId}`);
-            // const data = await response.json();
+            const result = await response.json();
             
-            // Mock data por ahora
-            const mockDetalle: VentaCompleta = {
-                venta: ventas.find(v => v.clave === ventaId)!,
-                cliente: {
-                    clave: 1,
-                    rif: 12345678,
-                    tipo: 'natural',
-                    primer_nombre: 'Carlos',
-                    primer_apellido: 'López',
-                    puntos_acumulados: 156
-                },
-                detalle: [
-                    {
-                        clave: 1,
-                        cantidad: 2,
-                        precio_unitario: 25.00,
-                        producto_nombre: 'Cerveza IPA Six Pack',
-                        subtotal: 50.00
-                    },
-                    {
-                        clave: 2,
-                        cantidad: 1,
-                        precio_unitario: 17.50,
-                        producto_nombre: 'Cerveza Lager Premium',
-                        subtotal: 17.50
-                    }
-                ],
-                pagos: [
-                    {
-                        clave: 1,
-                        fecha_pago: '2024-01-15',
-                        monto_total: 67.50,
-                        metodo_pago: {
-                            tipo: 'Tarjeta de crédito',
-                            moneda: 'USD',
-                            banco: 'Banco Provincial'
-                        }
-                    }
-                ],
-                resumen: {
-                    total_productos: 3,
-                    total_items: 2,
-                    total_venta: 67.50,
-                    total_pagado: 67.50,
-                    puntos_otorgados: 3
-                }
-            };
-            
-            setVentaDetalle(mockDetalle);
-            setSelectedVenta(ventaId);
-        } catch (error) {
-            setError('Error al cargar el detalle de la venta');
+            if (result.success && result.data) {
+                const ventaCompleta = result.data;
+
+                // Calcular resumen en el frontend
+                const detalleItems = ventaCompleta.detalle || [];
+                const pagosItems = ventaCompleta.pagos || [];
+                const resumenCalculado = {
+                    total_productos: detalleItems.length,
+                    total_items: detalleItems.reduce((acc, item) => acc + (item.cantidad || 0), 0),
+                    total_venta: Number(ventaCompleta.venta?.total_venta || 0),
+                    total_pagado: pagosItems.reduce((acc, pago) => acc + Number(pago.monto || 0), 0),
+                    puntos_otorgados: Math.floor(Number(ventaCompleta.venta?.total_venta || 0) / 10)
+                };
+
+                const mappedDetalle: VentaCompleta = {
+                    venta: ventaCompleta.venta,
+                    cliente: ventaCompleta.cliente,
+                    detalle: detalleItems.map(d => ({...d, subtotal: (d.cantidad || 0) * (d.precio_unitario || 0)})),
+                    pagos: pagosItems,
+                    resumen: resumenCalculado,
+                };
+
+                setVentaDetalle(mappedDetalle);
+            } else {
+                throw new Error(result.message || 'La API no devolvió una respuesta exitosa');
+            }
+        } catch (error: any) {
+            setError(`Error al cargar el detalle de la venta: ${error.message}`);
         } finally {
             setLoadingDetalle(false);
         }
@@ -414,16 +366,16 @@ const VentasTiendaManagement: React.FC<VentasTiendaManagementProps> = ({
                                             {formatAmount(venta.total_venta)}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                            venta.metodo_pago === 'Puntos' 
-                                                ? 'bg-yellow-100 text-yellow-800'
-                                                : venta.metodo_pago.includes('Efectivo')
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : 'bg-blue-100 text-blue-800'
-                                        }`}>
-                                            {venta.metodo_pago}
-                                        </span>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <div className="flex items-center">
+                                            <span className={`h-2.5 w-2.5 rounded-full mr-2 ${
+                                                (venta.metodo_pago || '').includes('Tarjeta') ? 'bg-blue-500' :
+                                                (venta.metodo_pago || '').includes('Efectivo') ? 'bg-green-500' :
+                                                (venta.metodo_pago || '').includes('Puntos') ? 'bg-yellow-500' :
+                                                'bg-gray-400'
+                                            }`}></span>
+                                            {venta.metodo_pago || 'No definido'}
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         {venta.puntos_otorgados > 0 ? (

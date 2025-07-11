@@ -763,6 +763,34 @@ const getProductByEAN = async (req, res) => {
   }
 };
 
+/** Obtener una venta completa por su ID */
+const getCompleteSale = async (req, res) => {
+    const { ventaId } = req.params;
+    try {
+        const { rows } = await db.query('SELECT * FROM obtener_venta_completa($1)', [ventaId]);
+        const ventaCompleta = rows[0];
+        if (ventaCompleta) {
+            res.json({ success: true, data: ventaCompleta });
+        } else {
+            res.status(404).json({ success: false, message: 'Venta no encontrada.' });
+        }
+    } catch (error) {
+        console.error('Error al obtener venta completa:', error);
+        res.status(500).json({ success: false, message: 'Error interno del servidor.' });
+    }
+};
+
+// Obtener listado de todas las ventas en tienda física
+const getVentasTienda = async (req, res) => {
+    try {
+        const { rows } = await db.query('SELECT * FROM obtener_listado_ventas_tienda()');
+        res.json({ success: true, data: rows });
+    } catch (error) {
+        console.error('Error al obtener el listado de ventas en tienda:', error);
+        res.status(500).json({ success: false, message: 'Error interno del servidor.' });
+    }
+};
+
 module.exports = {
   getAvailableProducts,
   getUserPaymentMethods,
@@ -775,4 +803,6 @@ module.exports = {
   getAllTasasCambio,
   createVentaFisica,
   getProductByEAN,
+  getCompleteSale,
+  getVentasTienda
 };
