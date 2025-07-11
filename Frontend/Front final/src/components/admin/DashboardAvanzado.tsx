@@ -240,11 +240,11 @@ const DashboardAvanzado: React.FC = () => {
             )}
 
             {/* Análisis de Clientes */}
-            {dashboard.indicadores_clientes && dashboard.indicadores_clientes.clientes_nuevos_vs_recurrentes && (
+            {dashboard.indicadores_clientes && (
                 <div className="bg-white p-6 rounded-lg shadow border">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Análisis de Clientes</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {dashboard.indicadores_clientes.clientes_nuevos_vs_recurrentes.map((cliente) => (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {dashboard.indicadores_clientes.clientes_nuevos_vs_recurrentes?.map((cliente) => (
                             <div key={cliente.tipo_cliente} className="bg-gray-50 p-4 rounded-lg border flex items-center">
                                 <div className="mr-4">
                                     <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
@@ -266,6 +266,26 @@ const DashboardAvanzado: React.FC = () => {
                                 </div>
                             </div>
                         ))}
+                        {dashboard.indicadores_clientes.tasa_retencion && (
+                            <div className="bg-gray-50 p-4 rounded-lg border flex items-center">
+                                <div className="mr-4">
+                                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-purple-100 text-purple-700">
+                                        <span className="text-2xl">🎯</span>
+                                    </div>
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-sm font-medium text-gray-600">
+                                        Tasa de Retención
+                                    </p>
+                                    <p className="text-2xl font-bold text-gray-900">
+                                        {formatPercentage(dashboard.indicadores_clientes.tasa_retencion.tasa_retencion)}
+                                    </p>
+                                    <p className="text-sm text-gray-500">
+                                        {dashboard.indicadores_clientes.tasa_retencion.clientes_retenidos.toLocaleString()} clientes retenidos
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
@@ -462,11 +482,11 @@ const DashboardAvanzado: React.FC = () => {
             )}
 
             {/* Rotación de Inventario */}
-            {dashboard.indicadores_inventario.rotacion_inventario && dashboard.indicadores_inventario.rotacion_inventario.length > 0 && (
+            {dashboard.indicadores_inventario && (dashboard.indicadores_inventario.rotacion_inventario?.length > 0 || dashboard.indicadores_inventario.tasa_ruptura_stock?.length > 0) && (
                 <div className="bg-white p-6 rounded-lg shadow border">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Eficiencia del Inventario</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {dashboard.indicadores_inventario.rotacion_inventario.map((item) => (
+                        {dashboard.indicadores_inventario.rotacion_inventario?.map((item) => (
                             <div key={item.tipo_inventario} className="bg-gray-50 p-4 rounded-lg border">
                                 <p className="text-sm font-medium text-gray-600 mb-2">
                                     Inventario de {item.tipo_inventario}
@@ -481,6 +501,24 @@ const DashboardAvanzado: React.FC = () => {
                                 </div>
                                 <div className="mt-2 text-xs text-gray-500">
                                     Valor Promedio: {safeFormatCurrency(item.valor_promedio_inventario)}
+                                </div>
+                            </div>
+                        ))}
+                        {dashboard.indicadores_inventario.tasa_ruptura_stock?.map((item) => (
+                            <div key={`ruptura-${item.tipo_inventario}`} className="bg-gray-50 p-4 rounded-lg border">
+                                <p className="text-sm font-medium text-gray-600 mb-2">
+                                    Ruptura de Stock ({item.tipo_inventario})
+                                </p>
+                                <div className="flex justify-between items-center mb-1">
+                                    <p className="text-gray-800">Tasa de Ruptura</p>
+                                    <p className="text-lg font-bold text-red-600">{formatPercentage(item.tasa_ruptura)}</p>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <p className="text-gray-800">Productos sin Stock</p>
+                                    <p className="text-lg font-bold text-red-600">{(item.productos_sin_stock || 0).toLocaleString()}</p>
+                                </div>
+                                <div className="mt-2 text-xs text-gray-500">
+                                    Total de Productos: {(item.total_productos || 0).toLocaleString()}
                                 </div>
                             </div>
                         ))}
