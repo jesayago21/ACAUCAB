@@ -394,6 +394,7 @@ CREATE TABLE IF NOT EXISTS evento (
     nombre VARCHAR (50) NOT NULL,
     fecha_inicio DATE NOT NULL,
     fecha_fin DATE NOT NULL,
+    hora_inicio TIME,
     direccion TEXT NOT NULL,
     precio_entrada INT,
     fk_evento INT,
@@ -423,7 +424,7 @@ CREATE TABLE IF NOT EXISTS almacen (
     CONSTRAINT pk_almacen PRIMARY KEY (clave),
     CONSTRAINT fk_presentacion_almacen FOREIGN KEY (fk_presentacion) REFERENCES presentacion(clave),
     CONSTRAINT unq_fk_presentacion_almacen UNIQUE (fk_presentacion),
-    CONSTRAINT chk_cantidad_unidades CHECK (cantidad_unidades > 0)--creo que no podia llegar a 0 jamas
+    CONSTRAINT chk_cantidad_unidades CHECK (cantidad_unidades >= 0)--creo que no podia llegar a 0 jamas
 );
 
 CREATE TABLE IF NOT EXISTS persona_contacto (
