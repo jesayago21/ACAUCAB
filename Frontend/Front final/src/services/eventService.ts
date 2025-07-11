@@ -53,6 +53,16 @@ export interface Invitado {
   fecha_salida?: string;
 }
 
+export interface EstadisticasEntrada {
+  evento_id: number;
+  evento_nombre: string;
+  fecha_evento: string;
+  tipo_evento: string;
+  entradas_vendidas: number;
+  ingresos_totales: number;
+}
+
+
 /** Función utilitaria para realizar peticiones */
 async function fetchAPI(endpoint: string, options?: RequestInit) {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -283,5 +293,18 @@ export const eventService = {
       body: JSON.stringify(invitado),
     });
     return data.data;
+  },
+  
+  // =============================================
+  // ESTADÍSTICAS Y REPORTES
+  // =============================================
+
+  async getEstadisticasEntradas(fecha_inicio?: string, fecha_fin?: string): Promise<EstadisticasEntrada[]> {
+    const params = new URLSearchParams();
+    if (fecha_inicio) params.append('fecha_inicio', fecha_inicio);
+    if (fecha_fin) params.append('fecha_fin', fecha_fin);
+    
+    const data = await fetchAPI(`/eventos/estadisticas/entradas?${params.toString()}`);
+    return data.data || [];
   },
 }; 

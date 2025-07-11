@@ -784,6 +784,34 @@ const agregarInvitado = async (req, res) => {
   }
 };
 
+// 7. ESTADÍSTICAS Y REPORTES DE EVENTOS
+// ---------------------------------------------
+
+// Obtener estadísticas de ventas de entradas por evento
+const getEstadisticasEntradas = async (req, res) => {
+  try {
+    const { fecha_inicio, fecha_fin } = req.query;
+
+    const result = await pool.query(
+      'SELECT * FROM obtener_estadisticas_entradas_por_evento($1, $2)',
+      [fecha_inicio || null, fecha_fin || null]
+    );
+
+    res.json({
+      success: true,
+      data: result.rows
+    });
+  } catch (error) {
+    console.error('Error al obtener estadísticas de entradas:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener estadísticas de entradas',
+      error: error.message
+    });
+  }
+};
+
+
 module.exports = {
   // Tipos de evento
   getTiposEvento,
@@ -816,5 +844,8 @@ module.exports = {
   getAsistentes,
   venderEntrada,
   getInvitados,
-  agregarInvitado
+  agregarInvitado,
+
+  // Estadísticas
+  getEstadisticasEntradas
 }; 

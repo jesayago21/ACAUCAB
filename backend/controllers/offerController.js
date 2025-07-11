@@ -231,8 +231,8 @@ const getEstadisticasOfertas = async (req, res) => {
           ROUND(p.precio * (1 - o.porcentaje_descuento::DECIMAL / 100), 2) as precio_oferta
         FROM oferta o
         JOIN presentacion p ON o.fk_presentacion = p.clave
-        WHERE ($1 IS NULL OR o.fecha_inicio >= $1::date)
-          AND ($2 IS NULL OR o.fecha_fin <= $2::date)
+        WHERE (CAST($1 AS DATE) IS NULL OR o.fecha_inicio >= CAST($1 AS DATE))
+          AND (CAST($2 AS DATE) IS NULL OR o.fecha_fin <= CAST($2 AS DATE))
       ),
       ventas_con_oferta AS (
         SELECT 

@@ -458,6 +458,7 @@ const getDashboardCompleto = async (req, res) => {
         await executeQuery('crecimiento_ventas', 'SELECT * FROM obtener_crecimiento_ventas($1, $2, $3, $4)', [fecha_inicio_actual, fecha_fin_actual, fecha_inicio_anterior, fecha_fin_anterior], true);
         await executeQuery('ticket_promedio', 'SELECT * FROM calcular_ticket_promedio($1, $2)', [fecha_inicio, fecha_fin]);
         await executeQuery('ventas_por_estilo', 'SELECT * FROM obtener_ventas_por_estilo_cerveza($1, $2)', [fecha_inicio, fecha_fin]);
+        await executeQuery('volumen_unidades', 'SELECT * FROM obtener_volumen_unidades_vendidas($1, $2)', [fecha_inicio, fecha_fin]);
         await executeQuery('clientes_nuevos_vs_recurrentes', 'SELECT * FROM obtener_clientes_nuevos_vs_recurrentes($1, $2)', [fecha_inicio, fecha_fin]);
         await executeQuery('tasa_retencion', 'SELECT * FROM calcular_tasa_retencion_clientes($1, $2)', [fecha_inicio, fecha_fin], true);
         await executeQuery('rotacion_inventario', 'SELECT * FROM calcular_rotacion_inventario($1, $2)', [fecha_inicio, fecha_fin]);
@@ -483,6 +484,7 @@ const getDashboardCompleto = async (req, res) => {
                 crecimiento_ventas: data.crecimiento_ventas,
                 ticket_promedio: data.ticket_promedio,
                 ventas_por_estilo: data.ventas_por_estilo,
+                volumen_unidades: data.volumen_unidades,
                 ventas_por_canal: data.ventas_por_canal,
                 tendencia_ventas: data.tendencia_ventas,
                 mejores_productos: data.mejores_productos

@@ -7,7 +7,6 @@ import StatusManagement from './StatusManagement';
 import VentasManagement from './VentasManagement';
 import VentasWebManagement from './VentasWebManagement';
 import VentasTiendaManagement from './VentasTiendaManagement';
-import PuntosManagement from './PuntosManagement';
 
 import ReposicionManagement from './ReposicionManagement';
 import ReportesManagement from './ReportesManagement';
@@ -18,6 +17,8 @@ import TiposEventoManagement from './TiposEventoManagement';
 import DashboardAvanzado from './DashboardAvanzado';
 import OfertasManagement from './OfertasManagement';
 import ComprasManagement from './ComprasManagement';
+import EntradasManagement from './EntradasManagement';
+import AsistenciaManagement from './AsistenciaManagement';
 
 import type { Usuario } from '../../types/auth';
 
@@ -87,14 +88,6 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             case 'estados-venta-online':
                 return <StatusManagement user={user} moduleType={activeModule} />;
             
-            // Módulos de productos
-            case 'cervezas':
-                return <ModulePlaceholder title="Gestión de Cervezas" user={user} />;
-            case 'recetas':
-                return <ModulePlaceholder title="Gestión de Recetas" user={user} />;
-            case 'presentaciones':
-                return <ModulePlaceholder title="Gestión de Presentaciones" user={user} />;
-            
             // Módulos de inventario
             case 'almacen':
                 return <ModulePlaceholder title="Gestión de Almacén" user={user} />;
@@ -107,8 +100,6 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             
             // Módulos de ventas (nuevos)
             case 'ventas':
-                return <VentasManagement user={user} />;
-            case 'indicadores-ventas':
                 return <VentasManagement user={user} />;
             case 'ventas-web':
                 return <VentasWebManagement 
@@ -125,12 +116,6 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
                     canCreate={true}
                     canUpdate={true}
                     canDelete={true}
-                />;
-            case 'puntos':
-                return <PuntosManagement 
-                    user={user}
-                    canView={true}
-                    canManage={true}
                 />;
             
             // Módulos de ventas (legacy)
@@ -149,9 +134,9 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             case 'tipos-evento':
                 return <TiposEventoManagement />;
             case 'entradas':
-                return <ModulePlaceholder title="Gestión de Entradas" user={user} />;
+                return <EntradasManagement />;
             case 'asistencia':
-                return <ModulePlaceholder title="Control de Asistencia" user={user} />;
+                return <AsistenciaManagement />;
             case 'inventario-eventos':
                 return <ModulePlaceholder title="Inventario de Eventos" user={user} />;
             case 'ofertas':
@@ -162,16 +147,6 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             // Módulos de reportes
             case 'reportes':
                 return <ReportesManagement user={user} />;
-            case 'reportes-ventas':
-                return <ReportesManagement user={user} />;
-            case 'reportes-inventario':
-                return <ModulePlaceholder title="Reportes de Inventario" user={user} />;
-            case 'reportes-financieros':
-                return <ModulePlaceholder title="Reportes Financieros" user={user} />;
-            
-            // Módulos de pagos
-            case 'pagos':
-                return <ModulePlaceholder title="Gestión de Pagos" user={user} />;
             
             default:
                 return <div className="p-6 text-center text-gray-500">Módulo no encontrado</div>;
@@ -191,18 +166,13 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             'estados-reposicion': 'Estados de Reposición',
             'estados-compra': 'Estados de Compra',
             'estados-venta-online': 'Estados de Venta Online',
-            'cervezas': 'Gestión de Cervezas',
-            'recetas': 'Gestión de Recetas',
-            'presentaciones': 'Gestión de Presentaciones',
             'almacen': 'Gestión de Almacén',
             'inventario-tienda': 'Inventario de Tienda',
             'reposicion': 'Gestión de Reposición',
             'reposiciones': 'Gestión de Reposiciones',
             'ventas': 'Gestión de Ventas',
-            'indicadores-ventas': 'Indicadores de Ventas',
             'ventas-web': 'Ventas Online',
             'ventas-tienda': 'Ventas en Tienda',
-            'puntos': 'Gestión de Puntos',
             'ventas-fisicas': 'Ventas Físicas',
             'ventas-online': 'Ventas Online',
             'ventas-eventos': 'Ventas en Eventos',
@@ -214,11 +184,7 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             'inventario-eventos': 'Inventario de Eventos',
             'ofertas': 'Gestión de Ofertas',
             'compras': 'Gestión de Compras',
-            'reportes': 'Gestión de Reportes',
-            'reportes-ventas': 'Reportes de Ventas',
-            'reportes-inventario': 'Reportes de Inventario',
-            'reportes-financieros': 'Reportes Financieros',
-            'pagos': 'Gestión de Pagos'
+            'reportes': 'Gestión de Reportes'
         };
         return moduleNames[activeModule] || 'Módulo Desconocido';
     };

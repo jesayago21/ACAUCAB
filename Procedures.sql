@@ -2686,10 +2686,10 @@ BEGIN
     SELECT 
         a.clave as asistencia_id,
         c.clave as cliente_id,
-        CASE 
+        (CASE 
             WHEN c.tipo = 'natural' THEN c.primer_nombre || ' ' || c.primer_apellido
             ELSE c.razon_social
-        END as cliente_nombre,
+        END)::TEXT as cliente_nombre,
         CASE 
             WHEN c.tipo = 'natural' THEN c.ci
             ELSE c.rif
@@ -4156,3 +4156,51 @@ $$;
 
 -- Reporte de mejores productos (Top 10) - Ya existe en el archivo original
 -- Función reporte_tendencia_ventas ya existe al final del archivo original
+
+-- =================================================================================================
+-- VISTAS COMPLEJAS PARA REPORTES Y DASHBOARDS
+-- =================================================================================================
+
+-- ... existing code ...
+-- =================================================================================================
+-- FUNCIONES PARA EL DASHBOARD DE EVENTOS
+-- =================================================================================================
+
+CREATE OR REPLACE FUNCTION obtener_estadisticas_entradas_por_evento(
+    p_fecha_inicio DATE,
+    p_fecha_fin DATE
+)
+RETURNS TABLE (
+    evento_id INT,
+    evento_nombre VARCHAR,
+    fecha_evento DATE,
+    tipo_evento VARCHAR,
+    entradas_vendidas BIGINT,
+    ingresos_totales NUMERIC
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        e.clave AS evento_id,
+        e.nombre AS evento_nombre,
+        e.fecha_inicio::DATE AS fecha_evento,
+        te.nombre AS tipo_evento,
+        COUNT(ve.clave) AS entradas_vendidas,
+        -- Corregido: Multiplicar entradas vendidas por el precio y convertir a NUMERIC
+        (COUNT(ve.clave) * e.precio_entrada)::NUMERIC AS ingresos_totales
+    FROM
+        evento e
+    LEFT JOIN
+        venta_entrada ve ON e.clave = ve.fk_evento
+    JOIN
+        tipo_evento te ON e.fk_tipo_evento = te.clave
+    WHERE
+        -- Filtrar por rango de fechas si se proveen
+        (p_fecha_inicio IS NULL OR e.fecha_inicio >= p_fecha_inicio) AND
+        (p_fecha_fin IS NULL OR e.fecha_inicio <= p_fecha_fin)
+    GROUP BY
+        e.clave, e.nombre, e.fecha_inicio, te.nombre, e.precio_entrada
+    ORDER BY
+        e.fecha_inicio DESC;
+END;
+$$ LANGUAGE plpgsql;
