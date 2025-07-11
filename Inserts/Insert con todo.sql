@@ -5338,14 +5338,14 @@ INSERT INTO privilegio (clave, nombre, descripcion) VALUES
 (240, 'Eliminar correo_electronico', 'Permite eliminar un correo electrónico.');
 
 -- Insertar roles (10 ejemplos)
-INSERT INTO rol (clave, nombre) VALUES
-(1, 'Administrador'),      -- Control total del sistema
-(2, 'Gerencia'),           -- Acceso a nivel directivo y de negocio
-(3, 'Supervisión'),        -- Acceso para supervisar operaciones y personal
-(4, 'Personal Operativo'), -- Acceso para Vendedores, Repartidores, etc.
-(5, 'Acceso Básico Empleado'), -- Permisos mínimos (ver su propio perfil, etc.)
-(6, 'Miembro'),            -- Acceso para productores afiliados
-(7, 'Cliente');  
+INSERT INTO rol ( nombre) VALUES
+( 'Administrador'),      -- Control total del sistema
+( 'Gerencia'),           -- Acceso a nivel directivo y de negocio
+( 'Supervisión'),        -- Acceso para supervisar operaciones y personal
+( 'Personal Operativo'), -- Acceso para Vendedores, Repartidores, etc.
+( 'Acceso Básico Empleado'), -- Permisos mínimos (ver su propio perfil, etc.)
+( 'Miembro'),            -- Acceso para productores afiliados
+( 'Cliente');  
 
 
 --Insertar privilegios por roles 
