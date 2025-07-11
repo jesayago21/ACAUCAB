@@ -664,13 +664,13 @@ const registrarAsistencia = async (req, res) => {
   }
 };
 
-// Obtener asistentes
+// Obtener lista de asistentes para un evento
 const getAsistentes = async (req, res) => {
   try {
     const { eventoId } = req.params;
 
     const result = await pool.query(
-      'SELECT * FROM obtener_asistentes_evento($1)',
+      'SELECT * FROM obtener_asistentes_evento($1::INT)',
       [eventoId]
     );
 
@@ -793,7 +793,7 @@ const getEstadisticasEntradas = async (req, res) => {
     const { fecha_inicio, fecha_fin } = req.query;
 
     const result = await pool.query(
-      'SELECT * FROM obtener_estadisticas_entradas_por_evento($1, $2)',
+      'SELECT * FROM obtener_estadisticas_venta_evento($1::DATE, $2::DATE)',
       [fecha_inicio || null, fecha_fin || null]
     );
 
@@ -806,6 +806,27 @@ const getEstadisticasEntradas = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error al obtener estadísticas de entradas',
+      error: error.message
+    });
+  }
+};
+
+const getVentasByEvento = async (req, res) => {
+  const { eventoId } = req.params;
+
+  try {
+    const query = 'SELECT * FROM obtener_ventas_por_evento($1)';
+    const { rows } = await pool.query(query, [eventoId]);
+
+    res.json({
+      success: true,
+      data: rows
+    });
+  } catch (error) {
+    console.error(`Error al obtener ventas del evento ${eventoId}:`, error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener las ventas del evento.',
       error: error.message
     });
   }
@@ -847,5 +868,6 @@ module.exports = {
   agregarInvitado,
 
   // Estadísticas
-  getEstadisticasEntradas
+  getEstadisticasEntradas,
+  getVentasByEvento
 }; 

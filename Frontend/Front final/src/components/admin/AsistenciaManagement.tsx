@@ -47,30 +47,8 @@ const AsistenciaManagement: React.FC = () => {
         }
     }, [selectedEvento]);
 
-    const handleCheckIn = async (asistente: Asistente) => {
-        if (!selectedEvento) return;
-        
-        // Optimistic UI update
-        const originalAsistentes = [...asistentes];
-        const updatedAsistentes = asistentes.map(a => 
-            a.asistencia_id === asistente.asistencia_id 
-                ? { ...a, fecha_entrada: new Date().toISOString() } 
-                : a
-        );
-        setAsistentes(updatedAsistentes);
-
-        try {
-            await eventService.registrarAsistencia(selectedEvento, asistente.cliente_id);
-            // La UI ya está actualizada, podríamos mostrar un toast de éxito
-        } catch (err) {
-            setError(`Error al registrar asistencia para ${asistente.cliente_nombre}.`);
-            // Revertir en caso de error
-            setAsistentes(originalAsistentes);
-        }
-    };
-    
     const formatDate = (dateString: string | null) => {
-        if (!dateString) return 'Pendiente';
+        if (!dateString) return '—'; // Se muestra un guión si no hay fecha de entrada.
         return new Date(dateString).toLocaleString('es-ES', {
             hour: '2-digit', minute: '2-digit', second: '2-digit'
         });
@@ -79,8 +57,8 @@ const AsistenciaManagement: React.FC = () => {
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-2xl font-bold text-gray-900">Control de Asistencia a Eventos</h2>
-                <p className="text-gray-600">Selecciona un evento para ver y registrar la asistencia.</p>
+                <h2 className="text-2xl font-bold text-gray-900">Consulta de Asistencia a Eventos</h2>
+                <p className="text-gray-600">Selecciona un evento para ver la lista de asistentes.</p>
             </div>
 
             {/* Event Selector */}
@@ -125,36 +103,23 @@ const AsistenciaManagement: React.FC = () => {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Documento</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo Cliente</th>
                                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Hora de Entrada</th>
-                                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {asistentes.length > 0 ? (
                                         asistentes.map((asistente) => (
-                                            <tr key={asistente.asistencia_id}>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{asistente.cliente_nombre}</td>
+                                            <tr key={asistente.ticket_id}>
+                                                <td className="px-6 py-4 whitespace-nownowrap text-sm font-medium text-gray-900">{asistente.cliente_nombre}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{asistente.cliente_documento}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{asistente.tipo_cliente}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${asistente.fecha_entrada ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                                                        {formatDate(asistente.fecha_entrada)}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                                                    {!asistente.fecha_entrada && (
-                                                        <button
-                                                            onClick={() => handleCheckIn(asistente)}
-                                                            className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition"
-                                                        >
-                                                            Registrar Entrada
-                                                        </button>
-                                                    )}
+                                                    {formatDate(asistente.fecha_entrada)}
                                                 </td>
                                             </tr>
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={5} className="text-center py-8 text-gray-500">
+                                            <td colSpan={4} className="text-center py-8 text-gray-500">
                                                 No se encontraron asistentes para este evento.
                                             </td>
                                         </tr>

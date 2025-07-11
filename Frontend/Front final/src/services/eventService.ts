@@ -25,18 +25,9 @@ export interface Evento {
   evento_padre_nombre?: string;
 }
 
-export interface InventarioEvento {
-  clave: number;
-  presentacion_id: number;
-  presentacion_nombre: string;
-  cerveza_nombre: string;
-  precio: number;
-  cantidad_disponible: number;
-  cantidad_vendida: number;
-}
-
 export interface Asistente {
-  asistencia_id: number;
+  ticket_id: number;
+  asistencia_id: number | null;
   cliente_id: number;
   cliente_nombre: string;
   cliente_documento: number;
@@ -217,7 +208,7 @@ export const eventService = {
   // INVENTARIO DE EVENTOS
   // =============================================
 
-  async getInventarioEvento(eventoId: number): Promise<InventarioEvento[]> {
+  async getInventarioEvento(eventoId: number): Promise<any[]> { // Changed from InventarioEvento[] to any[]
     const data = await fetchAPI(`/eventos/${eventoId}/inventario`);
     return data.data || [];
   },
@@ -245,16 +236,6 @@ export const eventService = {
   // =============================================
   // ASISTENCIA Y PARTICIPANTES
   // =============================================
-
-  async registrarAsistencia(eventoId: number, clienteId: number): Promise<{ asistencia_id: number }> {
-    const data = await fetchAPI(`/eventos/${eventoId}/asistencia`, {
-      method: 'POST',
-      body: JSON.stringify({
-        cliente_id: clienteId,
-      }),
-    });
-    return data.data;
-  },
 
   async getAsistentes(eventoId: number): Promise<Asistente[]> {
     const data = await fetchAPI(`/eventos/${eventoId}/asistentes`);
@@ -306,5 +287,15 @@ export const eventService = {
     
     const data = await fetchAPI(`/eventos/estadisticas/entradas?${params.toString()}`);
     return data.data || [];
+  },
+
+  async getVentasByEventoId(eventoId: number): Promise<{ success: boolean, data: any[] }> {
+    try {
+      const response = await fetchAPI(`/eventos/${eventoId}/ventas`);
+      return response; // La respuesta ya tiene el formato { success, data }
+    } catch (error) {
+      console.error('Error al obtener las ventas del evento:', error);
+      throw error;
+    }
   },
 }; 

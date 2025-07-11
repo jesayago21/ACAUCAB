@@ -51,4 +51,10 @@ router.post('/:eventoId/invitados', eventController.agregarInvitado);
 router.get('/estadisticas/entradas', eventController.getEstadisticasEntradas);
 
 
+// =============================================
+// RUTAS PARA VENTAS EN EVENTOS
+// =============================================
+router.get('/:eventoId/ventas', eventController.getVentasByEvento);
+
+
 module.exports = router; 
