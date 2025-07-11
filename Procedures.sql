@@ -3653,14 +3653,9 @@ BEGIN
         )
         WHERE presentacion_id = item.presentacion_id;
         
-        -- Insertar detalle
+        -- Insertar detalle (el trigger se encargará del descuento de stock)
         INSERT INTO detalle_venta_online (fk_venta_online, fk_almacen, cantidad, precio_unitario)
         VALUES (v_venta_id, v_almacen_id, item.cantidad, v_precio_final);
-        
-        -- Actualizar stock
-        UPDATE almacen 
-        SET cantidad_unidades = cantidad_unidades - item.cantidad
-        WHERE clave = v_almacen_id;
     END LOOP;
     
     -- Procesar pagos
