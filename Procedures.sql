@@ -4968,7 +4968,7 @@ BEGIN
         rp.total_ingresos::NUMERIC as ingresos_generados,
         COALESCE(ROUND((rp.total_ingresos / NULLIF(v_total_ingresos, 0) * 100)::NUMERIC, 2), 0) as porcentaje_del_total
     FROM resumen_productos rp
-    ORDER BY rp.total_ingresos DESC;
+    ORDER BY rp.total_unidades DESC;
 END;
 $$; 
 
