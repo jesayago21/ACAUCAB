@@ -2686,10 +2686,10 @@ BEGIN
     SELECT 
         a.clave as asistencia_id,
         c.clave as cliente_id,
-        CASE 
+        (CASE 
             WHEN c.tipo = 'natural' THEN c.primer_nombre || ' ' || c.primer_apellido
             ELSE c.razon_social
-        END as cliente_nombre,
+        END)::TEXT as cliente_nombre,
         CASE 
             WHEN c.tipo = 'natural' THEN c.ci
             ELSE c.rif
@@ -4149,5 +4149,171 @@ BEGIN
 END;
 $$;
 
--- Reporte de mejores productos (Top 10) - Ya existe en el archivo original
--- Función reporte_tendencia_ventas ya existe al final del archivo original
+-- =============================================
+-- Función para Obtener Estadísticas de Venta de Entradas por Evento
+-- Descripción: Devuelve un resumen de las entradas vendidas y los ingresos
+--              totales para cada evento, con filtros opcionales por fecha.
+-- =============================================
+
+-- =============================================
+-- Función para Obtener Estadísticas de Venta de Entradas por Evento
+-- Descripción: Devuelve un resumen de las entradas vendidas y los ingresos
+--              totales para cada evento, con filtros opcionales por fecha.
+-- =============================================
+-- =============================================
+-- Función para Obtener Estadísticas de Venta de Entradas por Evento
+-- Descripción: Devuelve un resumen de las entradas vendidas y los ingresos
+--              totales para cada evento, consultando la tabla correcta 'venta_evento'.
+-- =============================================
+-- =============================================
+-- Función para Obtener Estadísticas de Venta de Entradas por Evento
+-- Descripción: Devuelve un resumen de las entradas vendidas y los ingresos
+--              totales para cada evento, consultando la tabla correcta 'venta_evento'.
+-- =============================================
+-- =============================================
+-- Función para Obtener Estadísticas de Venta de Entradas por Evento (Versión Corregida)
+-- Descripción: Devuelve un resumen de las entradas vendidas y los ingresos
+--              totales para cada evento, consultando la tabla correcta 'venta_entrada'.
+-- =============================================
+-- =============================================
+-- Función para Obtener Estadísticas de Venta de Entradas por Evento (Versión Definitiva)
+-- Descripción: Devuelve un resumen de entradas e ingresos usando subconsultas
+--              para garantizar un conteo exacto y consistente.
+-- =============================================
+
+-- Se elimina la función si ya existe para permitir recrearla de forma segura.
+DROP FUNCTION IF EXISTS obtener_estadisticas_venta_evento(DATE, DATE);
+
+CREATE OR REPLACE FUNCTION obtener_estadisticas_venta_evento(
+    p_fecha_inicio DATE DEFAULT NULL,
+    p_fecha_fin DATE DEFAULT NULL
+)
+RETURNS TABLE (
+    evento_id INT,
+    evento_nombre VARCHAR,
+    fecha_evento DATE,
+    tipo_evento VARCHAR,
+    entradas_vendidas BIGINT,
+    ingresos_totales NUMERIC
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        e.clave AS evento_id,
+        e.nombre AS evento_nombre,
+        e.fecha_inicio::DATE AS fecha_evento,
+        te.nombre AS tipo_evento,
+        -- Se usa una subconsulta para garantizar un conteo exacto
+        (SELECT COUNT(*) FROM venta_entrada ve WHERE ve.fk_evento = e.clave) AS entradas_vendidas,
+        (SELECT COALESCE(SUM(ve.monto_total), 0) FROM venta_entrada ve WHERE ve.fk_evento = e.clave) AS ingresos_totales
+    FROM
+        evento e
+    JOIN
+        tipo_evento te ON e.fk_tipo_evento = te.clave
+    WHERE
+        -- Si las fechas no son nulas, se aplica el filtro
+        (p_fecha_inicio IS NULL OR e.fecha_inicio >= p_fecha_inicio) AND
+        (p_fecha_fin IS NULL OR e.fecha_inicio <= p_fecha_fin)
+    ORDER BY
+        e.fecha_inicio DESC;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Ejemplo de uso:
+-- SELECT * FROM obtener_estadisticas_venta_evento('2024-01-01', '2024-12-31');
+-- SELECT * FROM obtener_estadisticas_venta_evento(); 
+-- =============================================
+-- Función para Obtener la Lista de Asistentes a un Evento (Versión Corregida)
+-- Descripción: Devuelve una lista única por cada entrada vendida, incluso si
+--              varias entradas pertenecen al mismo cliente.
+-- =============================================
+
+-- Se elimina la función si ya existe para permitir recrearla de forma segura.
+DROP FUNCTION IF EXISTS obtener_asistentes_evento(INT);
+
+CREATE OR REPLACE FUNCTION obtener_asistentes_evento(
+    p_evento_id INT
+)
+RETURNS TABLE (
+    ticket_id INT,
+    asistencia_id INT,
+    cliente_id INT,
+    cliente_nombre TEXT,
+    cliente_documento INT,
+    fecha_entrada TIMESTAMP,
+    tipo_cliente tipo_cliente
+) AS $$
+BEGIN
+    RETURN QUERY
+    WITH VentaConNumero AS (
+        -- Asigna un número de fila a cada entrada comprada por un cliente para un evento
+        SELECT
+            ve.clave as ticket_id,
+            ve.fk_cliente,
+            ve.fk_evento,
+            ROW_NUMBER() OVER(PARTITION BY ve.fk_cliente, ve.fk_evento ORDER BY ve.clave) as rn_v
+        FROM venta_entrada ve
+        WHERE ve.fk_evento = p_evento_id
+    ),
+    AsistenciaConNumero AS (
+        -- Asigna un número de fila a cada check-in de un cliente para un evento
+        SELECT
+            a.clave as asistencia_id,
+            a.fk_cliente,
+            a.fk_evento,
+            a.fecha_entrada,
+            ROW_NUMBER() OVER(PARTITION BY a.fk_cliente, a.fk_evento ORDER BY a.clave) as rn_a
+        FROM asistencia a
+        WHERE a.fk_evento = p_evento_id
+    )
+    -- Une las entradas con los check-ins basándose en el número de fila
+    SELECT
+        v.ticket_id,
+        a.asistencia_id,
+        c.clave as cliente_id,
+        (c.primer_nombre || ' ' || c.primer_apellido)::TEXT AS cliente_nombre,
+        c.ci AS cliente_documento,
+        a.fecha_entrada,
+        c.tipo AS tipo_cliente
+    FROM VentaConNumero v
+    JOIN cliente c ON v.fk_cliente = c.clave
+    LEFT JOIN AsistenciaConNumero a ON v.fk_cliente = a.fk_cliente AND v.rn_v = a.rn_a
+    ORDER BY cliente_nombre, v.ticket_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- =============================================
+-- Función para Obtener el Inventario Detallado de un Evento
+-- Descripción: Devuelve el inventario de productos para un evento, incluyendo
+--              el stock inicial, las unidades vendidas y el stock restante.
+-- =============================================
+DROP FUNCTION obtener_ventas_por_evento(INT);
+CREATE OR REPLACE FUNCTION obtener_ventas_por_evento(p_evento_id INT)
+RETURNS TABLE (
+    venta_id INT,
+    fecha DATE, -- <-- Corregido de TIMESTAMP a DATE
+    presentacion VARCHAR,
+    cerveza VARCHAR,
+    cantidad INT,
+    precio_unitario NUMERIC,
+    total_linea NUMERIC
+) AS $$
+BEGIN
+    RETURN QUERY
+      SELECT 
+        ve.clave AS venta_id,
+        ve.fecha,
+        p.nombre AS presentacion,
+        c.nombre AS cerveza,
+        dve.cantidad,
+        dve.precio_unitario,
+        (dve.cantidad * dve.precio_unitario) AS total_linea
+      FROM venta_evento ve
+      JOIN detalle_venta_evento dve ON ve.clave = dve.fk_venta_evento
+      JOIN inventario_evento ie ON dve.fk_inventario_evento = ie.clave
+      JOIN presentacion p ON ie.fk_presentacion = p.clave
+      JOIN cerveza c ON p.fk_cerveza = c.clave
+      WHERE ve.fk_evento = p_evento_id
+      ORDER BY ve.fecha DESC, ve.clave, p.nombre;
+END;
+$$ LANGUAGE plpgsql;

@@ -45,4 +45,16 @@ router.post('/:eventoId/entradas', eventController.venderEntrada);
 router.get('/:eventoId/invitados', eventController.getInvitados);
 router.post('/:eventoId/invitados', eventController.agregarInvitado);
 
+// =============================================
+// RUTAS PARA ESTADÍSTICAS Y REPORTES
+// =============================================
+router.get('/estadisticas/entradas', eventController.getEstadisticasEntradas);
+
+
+// =============================================
+// RUTAS PARA VENTAS EN EVENTOS
+// =============================================
+router.get('/:eventoId/ventas', eventController.getVentasByEvento);
+
+
 module.exports = router; 

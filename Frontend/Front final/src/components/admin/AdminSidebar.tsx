@@ -50,21 +50,6 @@ const canAccessModule = (user: User, module: string): boolean => {
         case 'privilegios':
             return hasPermission(user, 'Consultar privilegio');
 
-        // Gestión de productos - usar permisos básicos
-        case 'productos':
-        case 'cervezas':
-            return hasPermission(user, 'Consultar cerveza');
-        case 'recetas':
-            return hasPermission(user, 'Consultar receta');
-        case 'presentaciones':
-            return hasPermission(user, 'Consultar presentacion');
-        case 'tipos-cerveza':
-            return hasPermission(user, 'Consultar tipo_cerveza');
-        case 'caracteristicas':
-            return hasPermission(user, 'Consultar caracteristica');
-        case 'ingredientes':
-            return hasPermission(user, 'Consultar ingrediente');
-
         // Gestión de inventario - usar permisos básicos
         case 'inventario':
         case 'almacen':
@@ -81,10 +66,6 @@ const canAccessModule = (user: User, module: string): boolean => {
             return hasPermission(user, 'Consultar venta_tienda_fisica') ||
                    hasPermission(user, 'Consultar venta_online') ||
                    hasPermission(user, 'Consultar venta_evento');
-        case 'indicadores-ventas':
-            return hasPermission(user, 'Consultar venta_tienda_fisica') ||
-                   hasPermission(user, 'Consultar venta_online') ||
-                   hasPermission(user, 'Consultar venta_evento');
         case 'ventas-web':
         case 'ventas-online':
             return hasPermission(user, 'Consultar venta_online');
@@ -93,8 +74,6 @@ const canAccessModule = (user: User, module: string): boolean => {
             return hasPermission(user, 'Consultar venta_tienda_fisica');
         case 'ventas-eventos':
             return hasPermission(user, 'Consultar venta_evento');
-        case 'puntos':
-            return hasPermission(user, 'Consultar cliente'); // Los puntos están relacionados con clientes
 
         // Gestión de compras - usar permisos básicos
         case 'compras':
@@ -160,19 +139,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
             ]
         },
         {
-            id: 'productos',
-            name: 'Productos',
-            icon: '🍺',
-            children: [
-                { id: 'cervezas', name: 'Cervezas', icon: '🍻' },
-                { id: 'recetas', name: 'Recetas', icon: '📝' },
-                { id: 'presentaciones', name: 'Presentaciones', icon: '📦' },
-                { id: 'tipos-cerveza', name: 'Tipos de Cerveza', icon: '🏷️' },
-                { id: 'caracteristicas', name: 'Características', icon: '⭐' },
-                { id: 'ingredientes', name: 'Ingredientes', icon: '🌾' }
-            ]
-        },
-        {
             id: 'inventario',
             name: 'Inventario y Operaciones',
             icon: '📦',
@@ -189,10 +155,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
             name: 'Gestión de Ventas',
             icon: '💰',
             children: [
-                { id: 'indicadores-ventas', name: 'Indicadores de Ventas', icon: '📈' },
                 { id: 'ventas-web', name: 'Ventas Online', icon: '🌐' },
                 { id: 'ventas-tienda', name: 'Ventas Tienda', icon: '🏪' },
-                { id: 'puntos', name: 'Gestión de Puntos', icon: '⭐' },
                 { id: 'ofertas', name: 'Ofertas', icon: '🏷️' }
             ]
         },
@@ -213,19 +177,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
             id: 'reportes',
             name: 'Reportes',
             icon: '📈',
-            children: [
-                { id: 'reportes-ventas', name: 'Reportes de Ventas', icon: '💹' },
-                { id: 'reportes-inventario', name: 'Reportes de Inventario', icon: '📊' },
-                { id: 'reportes-financieros', name: 'Reportes Financieros', icon: '💰' }
-            ]
-        },
-        {
-            id: 'pagos',
-            name: 'Pagos',
-            icon: '💳',
-            children: [
-                { id: 'pagos', name: 'Gestión de Pagos', icon: '💸' }
-            ]
+            children: []
         }
     ];
 
@@ -288,7 +240,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                     {visibleModules.map(module => (
                         <div key={module.id} className="mb-2">
                             {/* Módulo principal */}
-                            {module.children.length > 0 && (module.id === 'productos' || module.id === 'inventario' || module.id === 'eventos') ? (
+                            {module.children.length > 0 && (module.id === 'inventario' || module.id === 'eventos') ? (
                                 // Módulos padre que no son clickeables
                                 <div className={`w-full flex items-center p-3 rounded-lg text-gray-400 cursor-default ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
                                     <span className="text-lg">{module.icon}</span>
