@@ -35,8 +35,14 @@ interface DetalleVentaOnline {
 }
 
 interface VentaOnlineCompleta {
-    venta: VentaOnline;
-    cliente: any;
+    venta: VentaOnline & {
+        nombre_cliente: string;
+        cliente_tipo: 'natural' | 'juridico' | null;
+        rif: string | null;
+        ci: string | null;
+        email: string | null;
+        puntos_acumulados: number | null;
+    };
     detalle: DetalleVentaOnline[];
     pagos: any[];
     resumen: {
@@ -72,6 +78,11 @@ const VentasWebManagement: React.FC<VentasWebManagementProps> = ({
         fk_usuario: ''
     });
 
+    // --- CÁLCULOS PARA EL RESUMEN ---
+    const totalVentas = ventas.reduce((acc, venta) => acc + venta.monto_total, 0);
+    const promedioVenta = ventas.length > 0 ? totalVentas / ventas.length : 0;
+    // --- FIN DE CÁLCULOS ---
+
     /** Cargar datos iniciales */
     useEffect(() => {
         loadData();
@@ -96,28 +107,27 @@ const VentasWebManagement: React.FC<VentasWebManagementProps> = ({
     const loadVentas = async () => {
         try {
             setLoading(true);
-            // Por ahora datos mock hasta crear el endpoint
-            const mockVentas: VentaOnline[] = [
-                {
-                    clave: 1,
-                    fecha: '2024-01-15',
-                    monto_total: 125.50,
-                    direccion_envio: 'Av. Principal, Casa #123',
-                    lugar_nombre: 'Caracas',
-                    tienda_online_nombre: 'ACAUCAB Online',
-                    usuario_nombre: 'Juan Pérez'
-                },
-                {
-                    clave: 2,
-                    fecha: '2024-01-14',
-                    monto_total: 89.25,
-                    direccion_envio: 'Calle Los Mangos, Edificio Torre Sur',
-                    lugar_nombre: 'Valencia',
-                    tienda_online_nombre: 'ACAUCAB Online',
-                    usuario_nombre: 'María García'
-                }
-            ];
-            setVentas(mockVentas);
+            const response = await fetch('http://localhost:5000/api/ecommerce/ventas');
+            if (!response.ok) {
+                throw new Error('Error al cargar las ventas desde la API');
+            }
+            const result = await response.json();
+            if (result.success) {
+                // Mapeo de los datos del backend a la interfaz del frontend
+                const mappedVentas = result.data.map((v: any) => ({
+                    clave: v.clave_venta,
+                    fecha: v.fecha_venta,
+                    monto_total: Number(v.monto_total_venta), // Aseguramos que sea un número
+                    usuario_nombre: v.nombre_cliente,
+                    estado: v.estado_actual,
+                    direccion_envio: '',
+                    lugar_nombre: '',
+                    tienda_online_nombre: ''
+                }));
+                setVentas(mappedVentas);
+            } else {
+                throw new Error(result.message || 'Error en la respuesta de la API');
+            }
         } catch (error) {
             console.error('Error cargando ventas:', error);
             setError('Error al cargar las ventas online');
@@ -146,63 +156,43 @@ const VentasWebManagement: React.FC<VentasWebManagementProps> = ({
             setLoadingDetalle(true);
             setSelectedVenta(ventaId);
             
-            // Por ahora datos mock hasta crear el endpoint
-            const mockDetalle: VentaOnlineCompleta = {
-                venta: ventas.find(v => v.clave === ventaId)!,
-                cliente: {
-                    primer_nombre: 'Juan',
-                    primer_apellido: 'Pérez',
-                    rif: 'V-12345678',
-                    tipo: 'natural',
-                    puntos_acumulados: 150,
-                    email: 'juan.perez@email.com',
-                    telefono: '0414-1234567'
-                },
-                detalle: [
-                    {
-                        clave: 1,
-                        cantidad: 2,
-                        precio_unitario: 25.00,
-                        producto_nombre: 'Cerveza Artesanal IPA - 500ml',
-                        subtotal: 50.00
-                    },
-                    {
-                        clave: 2,
-                        cantidad: 1,
-                        precio_unitario: 35.50,
-                        producto_nombre: 'Cerveza Artesanal Stout - 500ml',
-                        subtotal: 35.50
-                    },
-                    {
-                        clave: 3,
-                        cantidad: 3,
-                        precio_unitario: 20.00,
-                        producto_nombre: 'Cerveza Artesanal Lager - 350ml',
-                        subtotal: 60.00
-                    }
-                ],
-                pagos: [
-                    {
-                        clave: 1,
-                        metodo_pago: {
-                            tipo: 'Tarjeta de credito',
-                            moneda: 'USD',
-                            banco: 'Banco de Venezuela',
-                            numero_tarjeta: '**** **** **** 1234'
-                        },
-                        monto: 145.50
-                    }
-                ],
-                resumen: {
-                    total_productos: 3,
-                    total_items: 6,
-                    total_venta: 145.50,
-                    total_pagado: 145.50,
-                    puntos_otorgados: 14
-                }
-            };
+            const response = await fetch(`http://localhost:5000/api/ecommerce/ventas/${ventaId}`);
+            if (!response.ok) {
+                throw new Error('Error al cargar el detalle de la venta desde la API');
+            }
             
-            setVentaDetalle(mockDetalle);
+            const result = await response.json();
+
+            if (result.success && result.venta) {
+                const ventaCompleta = result.venta;
+
+                // Manejo seguro de arrays que pueden ser nulos
+                const detalleItems = ventaCompleta.detalle || [];
+                const pagoItems = ventaCompleta.pagos || [];
+
+                // Se calcula el resumen en el frontend para evitar errores
+                const resumenCalculado = {
+                    total_productos: detalleItems.length,
+                    total_items: detalleItems.reduce((acc, item) => acc + (item.cantidad || 0), 0),
+                    total_venta: Number(ventaCompleta.venta.monto_total || 0),
+                    total_pagado: pagoItems.reduce((acc, pago) => acc + Number(pago.monto || 0), 0),
+                    puntos_otorgados: Math.floor(Number(ventaCompleta.venta.monto_total || 0) / 10)
+                };
+
+                const mappedDetalle: VentaOnlineCompleta = {
+                    venta: {
+                        ...ventaCompleta.venta,
+                        monto_total: Number(ventaCompleta.venta.monto_total),
+                    },
+                    detalle: detalleItems.map((d: any) => ({ ...d, subtotal: (d.cantidad || 0) * (d.precio_unitario || 0) })),
+                    pagos: pagoItems,
+                    resumen: resumenCalculado,
+                };
+
+                setVentaDetalle(mappedDetalle);
+            } else {
+                throw new Error(result.message || 'La API no devolvió una respuesta exitosa o no contenía datos de la venta');
+            }
         } catch (error) {
             console.error('Error cargando detalle de venta:', error);
             setError('Error al cargar el detalle de la venta');
@@ -310,7 +300,7 @@ const VentasWebManagement: React.FC<VentasWebManagementProps> = ({
 
     /** Formatear monto */
     const formatAmount = (amount: number) => {
-        return new Intl.NumberFormat('es-VE', {
+        return new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD'
         }).format(amount);
@@ -335,103 +325,36 @@ const VentasWebManagement: React.FC<VentasWebManagementProps> = ({
 
     return (
         <div className="space-y-6">
-            {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900">Ventas Online</h2>
                     <p className="text-gray-600">Gestión de ventas a través de tienda online</p>
                 </div>
-                {canCreate && (
-                    <button
-                        onClick={() => setShowCreateForm(true)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
-                    >
-                        <span className="mr-2">+</span>
-                        Nueva Venta Online
-                    </button>
-                )}
             </div>
 
             {/* Mensaje de error */}
             {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                     <p className="text-red-700">{error}</p>
-                    <button
-                        onClick={() => setError('')}
-                        className="mt-2 text-red-600 hover:text-red-800 underline"
-                    >
+                    <button onClick={() => setError('')} className="mt-2 text-red-600 hover:text-red-800 underline">
                         Cerrar
                     </button>
                 </div>
             )}
 
-            {/* Estadísticas rápidas */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* --- RESUMEN DE VENTAS --- */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white p-4 rounded-lg shadow-md">
-                    <div className="flex items-center">
-                        <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-500">Total Ventas</p>
-                            <p className="text-2xl font-bold text-gray-900">{ventas.length}</p>
-                        </div>
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                            </svg>
-                        </div>
-                    </div>
+                    <h3 className="text-sm font-medium text-gray-500">Total de Ventas</h3>
+                    <p className="text-2xl font-bold text-gray-900">{ventas.length}</p>
                 </div>
-
                 <div className="bg-white p-4 rounded-lg shadow-md">
-                    <div className="flex items-center">
-                        <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-500">Monto Total</p>
-                            <p className="text-2xl font-bold text-green-600">
-                                {formatAmount(ventas.reduce((sum, venta) => sum + venta.monto_total, 0))}
-                            </p>
-                        </div>
-                        <div className="p-2 bg-green-100 rounded-lg">
-                            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                            </svg>
-                        </div>
-                    </div>
+                    <h3 className="text-sm font-medium text-gray-500">Monto Total</h3>
+                    <p className="text-2xl font-bold text-green-600">{formatAmount(totalVentas)}</p>
                 </div>
-
                 <div className="bg-white p-4 rounded-lg shadow-md">
-                    <div className="flex items-center">
-                        <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-500">Hoy</p>
-                            <p className="text-2xl font-bold text-blue-600">
-                                {ventas.filter(v => 
-                                    new Date(v.fecha).toDateString() === new Date().toDateString()
-                                ).length}
-                            </p>
-                        </div>
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white p-4 rounded-lg shadow-md">
-                    <div className="flex items-center">
-                        <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-500">Promedio</p>
-                            <p className="text-2xl font-bold text-purple-600">
-                                {ventas.length > 0 
-                                    ? formatAmount(ventas.reduce((sum, venta) => sum + venta.monto_total, 0) / ventas.length)
-                                    : '$0.00'
-                                }
-                            </p>
-                        </div>
-                        <div className="p-2 bg-purple-100 rounded-lg">
-                            <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                            </svg>
-                        </div>
-                    </div>
+                    <h3 className="text-sm font-medium text-gray-500">Promedio por Venta</h3>
+                    <p className="text-2xl font-bold text-purple-600">{formatAmount(promedioVenta)}</p>
                 </div>
             </div>
 
@@ -497,45 +420,34 @@ const VentasWebManagement: React.FC<VentasWebManagementProps> = ({
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    ID
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Fecha
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Monto
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Dirección
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Usuario
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Acciones
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto Total</th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th scope="col" className="relative px-6 py-3">
+                                    <span className="sr-only">Acciones</span>
                                 </th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                             {ventas.map((venta) => (
                                 <tr key={venta.clave} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {venta.clave}
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{venta.clave}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(venta.fecha)}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatAmount(venta.monto_total)}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{venta.usuario_nombre}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                            venta.estado === 'Entregado' ? 'bg-green-100 text-green-800' :
+                                            venta.estado === 'Enviado' ? 'bg-blue-100 text-blue-800' :
+                                            venta.estado === 'Cancelado' ? 'bg-red-100 text-red-800' :
+                                            'bg-yellow-100 text-yellow-800'
+                                        }`}>
+                                            {venta.estado || 'Pendiente'}
+                                        </span>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {formatDate(venta.fecha)}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
-                                        {formatAmount(venta.monto_total)}
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
-                                        {venta.direccion_envio}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {venta.usuario_nombre || 'N/A'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <button 
                                             onClick={() => loadVentaDetalle(venta.clave)}
                                             className="text-green-600 hover:text-green-900"
@@ -610,19 +522,23 @@ const VentasWebManagement: React.FC<VentasWebManagementProps> = ({
                                         <div className="grid grid-cols-2 gap-4 text-sm">
                                             <div>
                                                 <span className="text-gray-600">Nombre:</span>
-                                                <span className="ml-2 font-medium">{ventaDetalle.cliente.primer_nombre} {ventaDetalle.cliente.primer_apellido}</span>
+                                                <span className="ml-2 font-medium">{ventaDetalle.venta.nombre_cliente || 'N/A'}</span>
                                             </div>
                                             <div>
                                                 <span className="text-gray-600">Documento:</span>
-                                                <span className="ml-2 font-medium">{ventaDetalle.cliente.rif}</span>
+                                                <span className="ml-2 font-medium">
+                                                    {ventaDetalle.venta.cliente_tipo === 'natural' 
+                                                        ? `CI: ${ventaDetalle.venta.ci || 'N/A'}` 
+                                                        : `RIF: ${ventaDetalle.venta.rif || 'N/A'}`}
+                                                </span>
                                             </div>
                                             <div>
                                                 <span className="text-gray-600">Email:</span>
-                                                <span className="ml-2 font-medium">{ventaDetalle.cliente.email}</span>
+                                                <span className="ml-2 font-medium">{ventaDetalle.venta.email || 'No registrado'}</span>
                                             </div>
                                             <div>
                                                 <span className="text-gray-600">Puntos Acumulados:</span>
-                                                <span className="ml-2 font-medium text-yellow-600">{ventaDetalle.cliente.puntos_acumulados} ⭐</span>
+                                                <span className="ml-2 font-medium text-yellow-600">{ventaDetalle.venta.puntos_acumulados || 0} ⭐</span>
                                             </div>
                                         </div>
                                     </div>
@@ -674,27 +590,27 @@ const VentasWebManagement: React.FC<VentasWebManagementProps> = ({
                                             <div key={pago.clave} className="text-sm">
                                                 <p>
                                                     <span className="text-gray-600">Método:</span>
-                                                    <span className="ml-2 font-medium">{pago.metodo_pago.tipo}</span>
+                                                    <span className="ml-2 font-medium">{pago.metodo_tipo}</span>
                                                 </p>
                                                 <p>
                                                     <span className="text-gray-600">Moneda:</span>
-                                                    <span className="ml-2 font-medium">{pago.metodo_pago.moneda}</span>
+                                                    <span className="ml-2 font-medium">{pago.moneda}</span>
                                                 </p>
-                                                {pago.metodo_pago.banco && (
+                                                {pago.banco && (
                                                     <p>
                                                         <span className="text-gray-600">Banco:</span>
-                                                        <span className="ml-2 font-medium">{pago.metodo_pago.banco}</span>
+                                                        <span className="ml-2 font-medium">{pago.banco}</span>
                                                     </p>
                                                 )}
-                                                {pago.metodo_pago.numero_tarjeta && (
+                                                {pago.numero_tarjeta && (
                                                     <p>
                                                         <span className="text-gray-600">Tarjeta:</span>
-                                                        <span className="ml-2 font-medium">{pago.metodo_pago.numero_tarjeta}</span>
+                                                        <span className="ml-2 font-medium">{pago.numero_tarjeta}</span>
                                                     </p>
                                                 )}
                                                 <p>
                                                     <span className="text-gray-600">Monto:</span>
-                                                    <span className="ml-2 font-medium">{formatAmount(pago.monto)}</span>
+                                                    <span className="ml-2 font-medium">{formatAmount(pago.monto_total)}</span>
                                                 </p>
                                             </div>
                                         ))}

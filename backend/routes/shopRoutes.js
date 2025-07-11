@@ -299,7 +299,6 @@ router.post('/order', shopController.createOnlineOrder);
  *                       enum: [PUNTOS]
  *                     monto_equivalencia:
  *                       type: number
- *                       description: Bolívares por cada punto
  *                     fecha_inicio:
  *                       type: string
  *                       format: date
@@ -470,6 +469,36 @@ router.get('/tasa-cambio-actual', shopController.getTasaCambioActual);
  *         description: Error al procesar la venta
  */
 router.post('/venta-fisica', shopController.createVentaFisica);
+
+/**
+ * @swagger
+ * /api/shop/ventas-tienda:
+ *   get:
+ *     summary: Obtener el listado de ventas de una tienda física
+ *     description: Retorna todas las ventas realizadas en una tienda física específica.
+ *     tags: [Ventas]
+ *     parameters:
+ *       - in: query
+ *         name: tienda_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la tienda física para filtrar las ventas.
+ *     responses:
+ *       200:
+ *         description: Lista de ventas de la tienda
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/VentaTiendaFisica'
+ *       404:
+ *         description: No se encontraron ventas para la tienda especificada
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get('/ventas-tienda', shopController.getVentasTienda);
 
 /**
  * @swagger

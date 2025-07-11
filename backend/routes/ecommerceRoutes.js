@@ -20,6 +20,7 @@ router.post('/calcular-envio', ecommerceController.calcularCostoEnvio);
 // Ventas online
 router.post('/crear-venta', ecommerceController.crearVentaOnline);
 router.get('/ventas/:venta_id', ecommerceController.obtenerVentaOnlineCompleta);
+router.get('/ventas', ecommerceController.obtenerTodasLasVentasOnline);
 
 // Seguimiento de pedidos
 router.get('/tracking/:venta_id', ecommerceController.obtenerTrackingPedido);

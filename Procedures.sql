@@ -1321,8 +1321,7 @@ BEGIN
     RETURN venta_completa;
 END;
 $$;
-
--- 9. Obtener datos completos de una venta ONLINE
+-- 9. Obtener datos completos de una venta ONLINE (CORREGIDO)
 CREATE OR REPLACE FUNCTION obtener_venta_online_completa(p_venta_id INT)
 RETURNS JSON
 LANGUAGE plpgsql
@@ -1334,10 +1333,26 @@ BEGIN
         'venta', (
             SELECT row_to_json(v)
             FROM (
-                SELECT vo.*, u.username, c.primer_nombre, c.primer_apellido, c.rif, c.ci
+                SELECT
+                    vo.*,
+                    u.username,
+                    c.tipo as cliente_tipo,
+                    c.rif,
+                    c.ci,
+                    c.puntos_acumulados,
+                    (SELECT ce.direccion_email FROM correo_electronico ce WHERE ce.fk_cliente = c.clave LIMIT 1) as email,
+                    l.nombre as lugar_nombre,
+                    t.nombre as tienda_online_nombre,
+                    CASE
+                        WHEN c.tipo = 'natural' THEN c.primer_nombre || ' ' || c.primer_apellido
+                        WHEN c.tipo = 'juridico' THEN c.razon_social
+                        ELSE 'N/A'
+                    END AS nombre_cliente
                 FROM venta_online vo
                 JOIN usuario u ON vo.fk_usuario = u.clave
                 LEFT JOIN cliente c ON u.fk_cliente = c.clave
+                LEFT JOIN lugar l ON vo.fk_lugar = l.clave
+                LEFT JOIN tienda_online t ON vo.fk_tienda_online = t.clave
                 WHERE vo.clave = p_venta_id
             ) v
         ),
@@ -1374,6 +1389,44 @@ BEGIN
     ) INTO venta_completa;
 
     RETURN venta_completa;
+END;
+$$;
+
+-- 10. Obtener listado de ventas en tienda física
+CREATE OR REPLACE FUNCTION obtener_listado_ventas_tienda()
+RETURNS TABLE (
+    clave_venta INT,
+    fecha_venta DATE,
+    monto_total_venta DECIMAL,
+    nombre_tienda VARCHAR,
+    nombre_cliente TEXT,
+    cantidad_productos BIGINT,
+    metodo_pago_principal VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        vtf.clave AS clave_venta,
+        vtf.fecha AS fecha_venta,
+        vtf.total_venta AS monto_total_venta,
+        tf.nombre AS nombre_tienda,
+        CASE
+            WHEN c.tipo = 'natural' THEN c.primer_nombre || ' ' || c.primer_apellido
+            WHEN c.tipo = 'juridico' THEN c.razon_social
+            ELSE 'Consumidor Final'
+        END::TEXT AS nombre_cliente,
+        (SELECT COUNT(*) FROM detalle_venta_fisica dvf WHERE dvf.fk_venta_tienda_fisica = vtf.clave) AS cantidad_productos,
+        (SELECT mp.tipo::VARCHAR FROM pago p JOIN metodo_de_pago mp ON p.fk_metodo_de_pago = mp.clave WHERE p.fk_venta_tienda_fisica = vtf.clave ORDER BY p.monto_total DESC LIMIT 1) AS metodo_pago_principal
+    FROM
+        venta_tienda_fisica vtf
+    JOIN
+        tienda_fisica tf ON vtf.fk_tienda_fisica = tf.clave
+    LEFT JOIN
+        cliente c ON vtf.fk_cliente = c.clave
+    ORDER BY
+        vtf.fecha DESC, vtf.clave DESC;
 END;
 $$;
 
@@ -4918,3 +4971,92 @@ BEGIN
     ORDER BY rp.total_ingresos DESC;
 END;
 $$; 
+
+-- =============================================
+-- FUNCIÓN: obtener_listado_ventas_online
+-- =============================================
+-- Obtiene un listado de todas las ventas online con información clave
+-- para ser mostrada en el dashboard de administración.
+
+DROP FUNCTION IF EXISTS obtener_listado_ventas_online();
+
+CREATE OR REPLACE FUNCTION obtener_listado_ventas_online()
+RETURNS TABLE (
+    clave_venta INT,
+    fecha_venta DATE,
+    monto_total_venta NUMERIC,
+    nombre_cliente TEXT,
+    email_cliente VARCHAR,
+    estado_actual VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        vo.clave AS clave_venta,
+        vo.fecha AS fecha_venta,
+        vo.monto_total AS monto_total_venta,
+        -- Combina nombre y apellido para clientes naturales, o usa la razón social para jurídicos
+        CASE
+            WHEN c.tipo = 'natural' THEN c.primer_nombre || ' ' || c.primer_apellido
+            ELSE c.razon_social
+        END::TEXT AS nombre_cliente,
+        -- Se corrige el nombre de la columna a 'direccion_email'
+        (SELECT ce.direccion_email FROM correo_electronico ce WHERE ce.fk_cliente = c.clave LIMIT 1) AS email_cliente,
+        -- Obtiene el estado más reciente de la venta desde el histórico
+        (SELECT e.estado 
+         FROM historico h
+         JOIN estatus e ON h.fk_estatus = e.clave
+         WHERE h.fk_venta_online = vo.clave
+         ORDER BY h.fecha DESC
+         LIMIT 1)::VARCHAR AS estado_actual
+    FROM venta_online vo
+    JOIN usuario u ON vo.fk_usuario = u.clave
+    JOIN cliente c ON u.fk_cliente = c.clave
+    ORDER BY vo.clave DESC;
+END;
+$$;
+
+-- =============================================
+-- FUNCIÓN: obtener_venta_online_completa
+-- =============================================
+-- =============================================
+-- FUNCIÓN: obtener_listado_ventas_online (VERSIÓN FINAL)
+-- =============================================
+DROP FUNCTION IF EXISTS obtener_listado_ventas_online();
+
+CREATE OR REPLACE FUNCTION obtener_listado_ventas_online()
+RETURNS TABLE (
+    clave_venta INT,
+    fecha_venta DATE,
+    monto_total_venta NUMERIC,
+    nombre_cliente TEXT,
+    email_cliente VARCHAR,
+    estado_actual VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        vo.clave AS clave_venta,
+        vo.fecha AS fecha_venta,
+        vo.monto_total AS monto_total_venta,
+        CASE
+            WHEN c.tipo = 'natural' THEN c.primer_nombre || ' ' || c.primer_apellido
+            ELSE c.razon_social
+        END::TEXT AS nombre_cliente,
+        (SELECT ce.direccion_email FROM correo_electronico ce WHERE ce.fk_cliente = c.clave LIMIT 1) AS email_cliente,
+        (SELECT e.estado
+         FROM historico h
+         JOIN estatus e ON h.fk_estatus = e.clave
+         WHERE h.fk_venta_online = vo.clave
+         ORDER BY h.fecha DESC
+         LIMIT 1)::VARCHAR AS estado_actual
+    FROM venta_online vo
+    JOIN usuario u ON vo.fk_usuario = u.clave
+    JOIN cliente c ON u.fk_cliente = c.clave
+    ORDER BY vo.clave DESC;
+END;
+$$;
