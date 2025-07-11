@@ -374,7 +374,7 @@ BEGIN
     -- Actualizar la fecha_fin de la tasa anterior activa para la misma moneda
     UPDATE tasa_cambio
     SET fecha_fin = NEW.fecha_inicio - INTERVAL '1 day'
-    WHERE fk_moneda = NEW.fk_moneda
+    WHERE moneda = NEW.moneda
       AND fecha_fin IS NULL
       AND clave <> NEW.clave;
     RETURN NEW;

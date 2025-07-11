@@ -97,6 +97,15 @@ export interface TendenciaVentas {
   total_ventas: number;
 }
 
+export interface MejoresProductos {
+  producto_nombre: string;
+  productor_nombre: string;
+  categoria: string;
+  unidades_vendidas: number;
+  ingresos_generados: number;
+  porcentaje_del_total: number;
+}
+
 export interface DashboardCompleto {
   periodo: {
     fecha_inicio: string;
@@ -111,6 +120,7 @@ export interface DashboardCompleto {
     ventas_por_estilo: VentasPorEstilo[];
     ventas_por_canal: VentasPorCanal[];
     tendencia_ventas: TendenciaVentas[];
+    mejores_productos: MejoresProductos[];
   };
   indicadores_clientes: {
     clientes_nuevos_vs_recurrentes: ClientesNuevosVsRecurrentes[];
@@ -119,6 +129,7 @@ export interface DashboardCompleto {
   indicadores_inventario: {
     rotacion_inventario: RotacionInventario[];
     tasa_ruptura_stock: TasaRuptura[];
+    inventario_actual: InventarioActual[];
   };
   indicadores_operaciones: {
     ventas_por_empleado: VentasPorEmpleado[];
