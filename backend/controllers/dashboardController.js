@@ -454,19 +454,19 @@ const getDashboardCompleto = async (req, res) => {
     };
 
     try {
-        await executeQuery('ventas_totales', 'SELECT * FROM obtener_ventas_totales($1, $2)', [fecha_inicio, fecha_fin]);
-        await executeQuery('crecimiento_ventas', 'SELECT * FROM obtener_crecimiento_ventas($1, $2, $3, $4)', [fecha_inicio_actual, fecha_fin_actual, fecha_inicio_anterior, fecha_fin_anterior], true);
-        await executeQuery('ticket_promedio', 'SELECT * FROM calcular_ticket_promedio($1, $2)', [fecha_inicio, fecha_fin]);
-        await executeQuery('ventas_por_estilo', 'SELECT * FROM obtener_ventas_por_estilo_cerveza($1, $2)', [fecha_inicio, fecha_fin]);
-        await executeQuery('volumen_unidades', 'SELECT * FROM obtener_volumen_unidades_vendidas($1, $2)', [fecha_inicio, fecha_fin]);
-        await executeQuery('clientes_nuevos_vs_recurrentes', 'SELECT * FROM obtener_clientes_nuevos_vs_recurrentes($1, $2)', [fecha_inicio, fecha_fin]);
-        await executeQuery('tasa_retencion', 'SELECT * FROM calcular_tasa_retencion_clientes($1, $2)', [fecha_inicio, fecha_fin], true);
-        await executeQuery('rotacion_inventario', 'SELECT * FROM calcular_rotacion_inventario($1, $2)', [fecha_inicio, fecha_fin]);
+        await executeQuery('ventas_totales', 'SELECT * FROM obtener_ventas_totales($1::DATE, $2::DATE)', [fecha_inicio, fecha_fin]);
+        await executeQuery('crecimiento_ventas', 'SELECT * FROM obtener_crecimiento_ventas($1::DATE, $2::DATE, $3::DATE, $4::DATE)', [fecha_inicio_actual, fecha_fin_actual, fecha_inicio_anterior, fecha_fin_anterior], true);
+        await executeQuery('ticket_promedio', 'SELECT * FROM calcular_ticket_promedio($1::DATE, $2::DATE)', [fecha_inicio, fecha_fin]);
+        await executeQuery('ventas_por_estilo', 'SELECT * FROM obtener_ventas_por_estilo_cerveza($1::DATE, $2::DATE)', [fecha_inicio, fecha_fin]);
+        await executeQuery('volumen_unidades', 'SELECT * FROM obtener_volumen_unidades_vendidas($1::DATE, $2::DATE)', [fecha_inicio, fecha_fin]);
+        await executeQuery('clientes_nuevos_vs_recurrentes', 'SELECT * FROM obtener_clientes_nuevos_vs_recurrentes($1::DATE, $2::DATE)', [fecha_inicio, fecha_fin]);
+        await executeQuery('tasa_retencion', 'SELECT * FROM calcular_tasa_retencion_clientes($1::DATE, $2::DATE)', [fecha_inicio, fecha_fin], true);
+        await executeQuery('rotacion_inventario', 'SELECT * FROM calcular_rotacion_inventario($1::DATE, $2::DATE)', [fecha_inicio, fecha_fin]);
         await executeQuery('tasa_ruptura_stock', 'SELECT * FROM obtener_tasa_ruptura_stock()', []);
-        await executeQuery('ventas_por_empleado', 'SELECT * FROM obtener_ventas_por_empleado($1, $2)', [fecha_inicio, fecha_fin]);
-        await executeQuery('ventas_por_canal', 'SELECT * FROM reporte_ventas_por_canal($1, $2)', [fecha_inicio, fecha_fin]);
-        await executeQuery('tendencia_ventas', 'SELECT * FROM reporte_tendencia_ventas($1, $2)', [fecha_inicio, fecha_fin]);
-        await executeQuery('mejores_productos', 'SELECT * FROM obtener_mejores_productos($1, $2)', [fecha_inicio, fecha_fin]);
+        await executeQuery('ventas_por_empleado', 'SELECT * FROM obtener_ventas_por_empleado($1::DATE, $2::DATE)', [fecha_inicio, fecha_fin]);
+        await executeQuery('ventas_por_canal', 'SELECT * FROM reporte_ventas_por_canal($1::DATE, $2::DATE)', [fecha_inicio, fecha_fin]);
+        await executeQuery('tendencia_ventas', 'SELECT * FROM reporte_tendencia_ventas($1::DATE, $2::DATE)', [fecha_inicio, fecha_fin]);
+        await executeQuery('mejores_productos', 'SELECT * FROM obtener_mejores_productos($1::DATE, $2::DATE)', [fecha_inicio, fecha_fin]);
         await executeQuery('inventario_actual', 'SELECT * FROM reporte_inventario_actual()', []);
 
         if (errors.length > 0) {
