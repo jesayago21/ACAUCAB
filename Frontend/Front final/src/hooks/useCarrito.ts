@@ -133,8 +133,8 @@ export function useCarrito(): UseCarritoReturn {
         }
         
         const precioUnitario = producto.tiene_oferta && producto.porcentaje_descuento 
-          ? parseFloat((producto.precio * (1 - producto.porcentaje_descuento / 100)).toFixed(2))
-          : parseFloat(producto.precio.toFixed(2));
+          ? parseFloat((Number(producto.precio) * (1 - producto.porcentaje_descuento / 100)).toFixed(2))
+          : parseFloat(Number(producto.precio).toFixed(2));
           
         const nuevoItem: ItemCarrito = {
           producto,

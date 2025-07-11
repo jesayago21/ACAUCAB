@@ -537,8 +537,8 @@ const VentasWebManagement: React.FC<VentasWebManagementProps> = ({
                                                 <span className="ml-2 font-medium">{ventaDetalle.venta.email || 'No registrado'}</span>
                                             </div>
                                             <div>
-                                                <span className="text-gray-600">Puntos Acumulados:</span>
-                                                <span className="ml-2 font-medium text-yellow-600">{ventaDetalle.venta.puntos_acumulados || 0} ⭐</span>
+                                                <span className="text-gray-600 hidden">Puntos Acumulados:</span>
+                                                <span className="ml-2 font-medium text-yellow-600 hidden">{ventaDetalle.venta.puntos_acumulados || 0} ⭐</span>
                                             </div>
                                         </div>
                                     </div>
@@ -632,8 +632,8 @@ const VentasWebManagement: React.FC<VentasWebManagementProps> = ({
                                                 <span className="text-green-600">{formatAmount(ventaDetalle.resumen.total_venta)}</span>
                                             </div>
                                             <div className="flex justify-between">
-                                                <span className="text-gray-600">Puntos Otorgados:</span>
-                                                <span className="font-medium text-yellow-600">+{ventaDetalle.resumen.puntos_otorgados} ⭐</span>
+                                                <span className="text-gray-600 hidden">Puntos Otorgados:</span>
+                                                <span className="font-medium text-yellow-600 hidden">+{ventaDetalle.resumen.puntos_otorgados} ⭐</span>
                                             </div>
                                         </div>
                                     </div>
