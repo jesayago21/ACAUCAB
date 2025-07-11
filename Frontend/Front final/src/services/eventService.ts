@@ -298,4 +298,66 @@ export const eventService = {
       throw error;
     }
   },
+
+  // =============================================
+  // NUEVOS SERVICIOS PARA INVITADOS
+  // =============================================
+
+  async getTiposInvitado(): Promise<{ clave: number; nombre: string }[]> {
+    const data = await fetchAPI('/eventos/tipos-invitado');
+    return data.data || [];
+  },
+
+  async registrarEntradaInvitado(eventoId: number, invitadoId: number): Promise<void> {
+    await fetchAPI(`/eventos/${eventoId}/invitados/${invitadoId}/entrada`, {
+      method: 'PUT',
+    });
+  },
+
+  async registrarSalidaInvitado(eventoId: number, invitadoId: number): Promise<void> {
+    await fetchAPI(`/eventos/${eventoId}/invitados/${invitadoId}/salida`, {
+      method: 'PUT',
+    });
+  },
+
+  async getEstadisticasInvitados(eventoId: number): Promise<{
+    total_invitados: number;
+    presentes: number;
+    pendientes: number;
+    salieron: number;
+    por_tipo: Array<{ tipo: string; cantidad: number }>;
+  }> {
+    const data = await fetchAPI(`/eventos/${eventoId}/invitados/estadisticas`);
+    return data.data;
+  },
+
+  // =============================================
+  // NUEVOS SERVICIOS PARA INVENTARIO DE EVENTOS
+  // =============================================
+
+  async getEstadisticasInventarioEvento(eventoId: number): Promise<{
+    total_productos: number;
+    stock_critico: number;
+    stock_bajo: number;
+    stock_normal: number;
+    stock_alto: number;
+    valor_total_inventario: number;
+  }> {
+    const data = await fetchAPI(`/eventos/${eventoId}/inventario/estadisticas`);
+    return data.data;
+  },
+
+  async getAlmacenDisponible(): Promise<Array<{
+    almacen_id: number;
+    presentacion_id: number;
+    presentacion_nombre: string;
+    cerveza_nombre: string;
+    tipo_cerveza: string;
+    miembro: string;
+    cantidad_disponible: number;
+    precio: number;
+  }>> {
+    const data = await fetchAPI('/eventos/almacen-disponible');
+    return data.data || [];
+  }
 }; 

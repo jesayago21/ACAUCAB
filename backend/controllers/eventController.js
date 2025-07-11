@@ -833,6 +833,162 @@ const getVentasByEvento = async (req, res) => {
 };
 
 
+// =============================================
+// 8. NUEVOS ENDPOINTS PARA INVITADOS
+// =============================================
+
+// Obtener tipos de invitado
+const getTiposInvitado = async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM obtener_tipos_invitado()');
+    res.json({
+      success: true,
+      data: result.rows
+    });
+  } catch (error) {
+    console.error('Error al obtener tipos de invitado:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener tipos de invitado',
+      error: error.message
+    });
+  }
+};
+
+// Registrar entrada de invitado
+const registrarEntradaInvitado = async (req, res) => {
+  try {
+    const { eventoId, invitadoId } = req.params;
+
+    const result = await pool.query(
+      'SELECT registrar_entrada_invitado($1, $2)',
+      [eventoId, invitadoId]
+    );
+
+    res.json({
+      success: true,
+      message: 'Entrada de invitado registrada exitosamente'
+    });
+  } catch (error) {
+    console.error('Error al registrar entrada de invitado:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al registrar entrada de invitado',
+      error: error.message
+    });
+  }
+};
+
+// Registrar salida de invitado
+const registrarSalidaInvitado = async (req, res) => {
+  try {
+    const { eventoId, invitadoId } = req.params;
+
+    const result = await pool.query(
+      'SELECT registrar_salida_invitado($1, $2)',
+      [eventoId, invitadoId]
+    );
+
+    res.json({
+      success: true,
+      message: 'Salida de invitado registrada exitosamente'
+    });
+  } catch (error) {
+    console.error('Error al registrar salida de invitado:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al registrar salida de invitado',
+      error: error.message
+    });
+  }
+};
+
+// Obtener estadísticas de invitados por evento
+const getEstadisticasInvitados = async (req, res) => {
+  try {
+    const { eventoId } = req.params;
+
+    const result = await pool.query(
+      'SELECT * FROM obtener_estadisticas_invitados_evento($1)',
+      [eventoId]
+    );
+
+    res.json({
+      success: true,
+      data: result.rows[0] || {
+        total_invitados: 0,
+        presentes: 0,
+        pendientes: 0,
+        salieron: 0,
+        por_tipo: []
+      }
+    });
+  } catch (error) {
+    console.error('Error al obtener estadísticas de invitados:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener estadísticas de invitados',
+      error: error.message
+    });
+  }
+};
+
+// =============================================
+// 9. NUEVOS ENDPOINTS PARA INVENTARIO DE EVENTOS
+// =============================================
+
+// Obtener estadísticas de inventario de evento
+const getEstadisticasInventarioEvento = async (req, res) => {
+  try {
+    const { eventoId } = req.params;
+
+    const result = await pool.query(
+      'SELECT * FROM obtener_estadisticas_inventario_evento($1)',
+      [eventoId]
+    );
+
+    res.json({
+      success: true,
+      data: result.rows[0] || {
+        total_productos: 0,
+        stock_critico: 0,
+        stock_bajo: 0,
+        stock_normal: 0,
+        stock_alto: 0,
+        valor_total_inventario: 0
+      }
+    });
+  } catch (error) {
+    console.error('Error al obtener estadísticas de inventario:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener estadísticas de inventario',
+      error: error.message
+    });
+  }
+};
+
+// Obtener productos disponibles en almacén para transferencia
+const getAlmacenDisponible = async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM obtener_almacen_disponible_para_transferencia()'
+    );
+
+    res.json({
+      success: true,
+      data: result.rows
+    });
+  } catch (error) {
+    console.error('Error al obtener almacén disponible:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener almacén disponible',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   // Tipos de evento
   getTiposEvento,
@@ -859,6 +1015,8 @@ module.exports = {
   getInventarioEvento,
   updateInventarioEvento,
   transferirInventarioEvento,
+  getEstadisticasInventarioEvento,
+  getAlmacenDisponible,
   
   // Asistencia y participantes
   registrarAsistencia,
@@ -866,6 +1024,10 @@ module.exports = {
   venderEntrada,
   getInvitados,
   agregarInvitado,
+  getTiposInvitado,
+  registrarEntradaInvitado,
+  registrarSalidaInvitado,
+  getEstadisticasInvitados,
 
   // Estadísticas
   getEstadisticasEntradas,

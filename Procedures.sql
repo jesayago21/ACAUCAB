@@ -1779,6 +1779,7 @@ $$;
 -- Archivo: procedures_compras.sql
 
 -- 1. Obtener todas las órdenes de compra con información completa
+DROP FUNCTION IF EXISTS obtener_ordenes_compra(VARCHAR, INT, INT, INT);
 CREATE OR REPLACE FUNCTION obtener_ordenes_compra(
     p_estado_filtro VARCHAR(50) DEFAULT NULL,
     p_miembro_id INT DEFAULT NULL,
@@ -1788,11 +1789,11 @@ CREATE OR REPLACE FUNCTION obtener_ordenes_compra(
 RETURNS TABLE (
     clave INT,
     fecha DATE,
-    monto_total INT,
+    monto_total DECIMAL(10,2),
     miembro_rif INT,
     miembro_nombre VARCHAR(100),
     estado_actual VARCHAR(50),
-    fecha_estado DATE,
+    fecha_estado TIMESTAMP,
     productos_cantidad INT,
     observaciones TEXT
 )
@@ -1994,33 +1995,32 @@ BEGIN
 END;
 $$;
 
+DROP FUNCTION IF EXISTS obtener_miembros_proveedores();
 -- 6. Obtener miembros disponibles para compras
 CREATE OR REPLACE FUNCTION obtener_miembros_proveedores()
-RETURNS TABLE (
+RETURNS TABLE(
     rif INT,
-    razon_social VARCHAR(100),
-    denominacion_comercial VARCHAR(100),
-    url_pagina_web VARCHAR(255),
-    total_compras INT,
-    ultimo_pedido DATE
-)
-LANGUAGE plpgsql
-AS $$
+    razon_social VARCHAR,
+    denominacion_comercial VARCHAR,
+    total_ordenes BIGINT,
+    total_monto DECIMAL,
+    ultima_orden DATE
+) AS $$
 BEGIN
     RETURN QUERY
     SELECT 
         m.rif,
         m.razon_social,
         m.denominacion_comercial,
-        m.url_pagina_web,
-        COUNT(c.clave)::INT as total_compras,
-        MAX(c.fecha) as ultimo_pedido
+        COUNT(c.clave) as total_ordenes,
+        SUM(c.monto_total) as total_monto,
+        MAX(c.fecha) as ultima_orden
     FROM miembro m
     LEFT JOIN compra c ON m.rif = c.fk_miembro
-    GROUP BY m.rif, m.razon_social, m.denominacion_comercial, m.url_pagina_web
+    GROUP BY m.rif, m.razon_social, m.denominacion_comercial
     ORDER BY m.razon_social;
 END;
-$$;
+$$ LANGUAGE plpgsql;
 
 -- 7. Obtener estados disponibles para compras
 CREATE OR REPLACE FUNCTION obtener_estados_compra()
@@ -4287,7 +4287,7 @@ $$ LANGUAGE plpgsql;
 -- Descripción: Devuelve el inventario de productos para un evento, incluyendo
 --              el stock inicial, las unidades vendidas y el stock restante.
 -- =============================================
-DROP FUNCTION obtener_ventas_por_evento(INT);
+DROP FUNCTION IF EXISTS obtener_ventas_por_evento(INT);
 CREATE OR REPLACE FUNCTION obtener_ventas_por_evento(p_evento_id INT)
 RETURNS TABLE (
     venta_id INT,
@@ -4317,3 +4317,221 @@ BEGIN
       ORDER BY ve.fecha DESC, ve.clave, p.nombre;
 END;
 $$ LANGUAGE plpgsql;
+
+-- =============================================
+-- NUEVOS PROCEDIMIENTOS PARA INVITADOS
+-- =============================================
+
+-- Obtener tipos de invitado
+CREATE OR REPLACE FUNCTION obtener_tipos_invitado()
+RETURNS TABLE (
+    clave INT,
+    nombre VARCHAR(50)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT ti.clave, ti.nombre
+    FROM tipo_invitado ti
+    ORDER BY ti.nombre;
+END;
+$$;
+
+-- Registrar entrada de invitado
+CREATE OR REPLACE FUNCTION registrar_entrada_invitado(
+    p_evento_id INT,
+    p_invitado_id INT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_existe INT;
+BEGIN
+    -- Verificar que el invitado está registrado para el evento
+    SELECT COUNT(*) INTO v_existe
+    FROM inv_eve 
+    WHERE fk_evento = p_evento_id AND fk_invitado = p_invitado_id;
+    
+    IF v_existe = 0 THEN
+        RAISE EXCEPTION 'El invitado no está registrado para este evento';
+    END IF;
+    
+    -- Actualizar hora de entrada
+    UPDATE inv_eve
+    SET fecha_hora_entrada = NOW()
+    WHERE fk_evento = p_evento_id AND fk_invitado = p_invitado_id
+      AND fecha_hora_entrada IS NULL;
+    
+    RETURN TRUE;
+END;
+$$;
+
+-- Registrar salida de invitado
+CREATE OR REPLACE FUNCTION registrar_salida_invitado(
+    p_evento_id INT,
+    p_invitado_id INT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- Actualizar hora de salida
+    UPDATE inv_eve
+    SET fecha_hora_salida = NOW()
+    WHERE fk_evento = p_evento_id AND fk_invitado = p_invitado_id
+      AND fecha_hora_entrada IS NOT NULL
+      AND fecha_hora_salida IS NULL;
+    
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'No se puede registrar salida: el invitado no tiene entrada registrada o ya tiene salida';
+    END IF;
+    
+    RETURN TRUE;
+END;
+$$;
+
+-- Obtener estadísticas de invitados por evento
+CREATE OR REPLACE FUNCTION obtener_estadisticas_invitados_evento(p_evento_id INT)
+RETURNS TABLE (
+    total_invitados INT,
+    presentes INT,
+    pendientes INT,
+    salieron INT,
+    por_tipo JSON
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    WITH estadisticas AS (
+        SELECT 
+            COUNT(*) as total,
+            COUNT(CASE WHEN ie.fecha_hora_entrada IS NOT NULL AND ie.fecha_hora_salida IS NULL THEN 1 END) as presentes,
+            COUNT(CASE WHEN ie.fecha_hora_entrada IS NULL THEN 1 END) as pendientes,
+            COUNT(CASE WHEN ie.fecha_hora_salida IS NOT NULL THEN 1 END) as salieron
+        FROM inv_eve ie
+        WHERE ie.fk_evento = p_evento_id
+    ),
+    por_tipo AS (
+        SELECT json_agg(
+            json_build_object(
+                'tipo', ti.nombre,
+                'cantidad', COUNT(*)
+            )
+        ) as tipos
+        FROM inv_eve ie
+        JOIN invitado i ON ie.fk_invitado = i.ci
+        JOIN tipo_invitado ti ON i.fk_tipo_invitado = ti.clave
+        WHERE ie.fk_evento = p_evento_id
+        GROUP BY ti.clave, ti.nombre
+    )
+    SELECT 
+        e.total::INT,
+        e.presentes::INT,
+        e.pendientes::INT,
+        e.salieron::INT,
+        COALESCE(pt.tipos, '[]'::JSON)
+    FROM estadisticas e
+    CROSS JOIN por_tipo pt;
+END;
+$$;
+
+-- =============================================
+-- NUEVOS PROCEDIMIENTOS PARA INVENTARIO DE EVENTOS
+-- =============================================
+
+-- Obtener estadísticas de inventario de evento
+CREATE OR REPLACE FUNCTION obtener_estadisticas_inventario_evento(p_evento_id INT)
+RETURNS TABLE (
+    total_productos INT,
+    stock_critico INT,
+    stock_bajo INT,
+    stock_normal INT,
+    stock_alto INT,
+    valor_total_inventario DECIMAL(15,2)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        COUNT(*)::INT as total_productos,
+        COUNT(CASE WHEN ie.cantidad_unidades = 0 THEN 1 END)::INT as stock_critico,
+        COUNT(CASE WHEN ie.cantidad_unidades > 0 AND ie.cantidad_unidades <= 10 THEN 1 END)::INT as stock_bajo,
+        COUNT(CASE WHEN ie.cantidad_unidades > 10 AND ie.cantidad_unidades <= 50 THEN 1 END)::INT as stock_normal,
+        COUNT(CASE WHEN ie.cantidad_unidades > 50 THEN 1 END)::INT as stock_alto,
+        SUM(ie.cantidad_unidades * p.precio) as valor_total_inventario
+    FROM inventario_evento ie
+    JOIN presentacion p ON ie.fk_presentacion = p.clave
+    WHERE ie.fk_evento = p_evento_id;
+END;
+$$;
+
+-- Obtener productos disponibles en almacén para transferencia
+CREATE OR REPLACE FUNCTION obtener_almacen_disponible_para_transferencia()
+RETURNS TABLE (
+    almacen_id INT,
+    presentacion_id INT,
+    presentacion_nombre VARCHAR(50),
+    cerveza_nombre VARCHAR(50),
+    tipo_cerveza VARCHAR(50),
+    miembro VARCHAR(50),
+    cantidad_disponible INT,
+    precio DECIMAL(10,2)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        a.clave as almacen_id,
+        p.clave as presentacion_id,
+        p.nombre as presentacion_nombre,
+        c.nombre as cerveza_nombre,
+        tc.nombre as tipo_cerveza,
+        m.razon_social as miembro,
+        a.cantidad_unidades as cantidad_disponible,
+        p.precio
+    FROM almacen a
+    JOIN presentacion p ON a.fk_presentacion = p.clave
+    JOIN cerveza c ON p.fk_cerveza = c.clave
+    JOIN tipo_cerveza tc ON c.fk_tipo_cerveza = tc.clave
+    JOIN miembro m ON c.fk_miembro = m.rif
+    WHERE a.cantidad_unidades > 0
+    ORDER BY c.nombre, p.nombre;
+END;
+$$;
+
+-- =============================================
+-- NUEVOS PROCEDIMIENTOS PARA ALMACÉN
+-- =============================================
+
+-- Obtener estadísticas generales del almacén
+CREATE OR REPLACE FUNCTION obtener_estadisticas_almacen()
+RETURNS TABLE (
+    total_productos INT,
+    stock_critico INT,
+    stock_bajo INT,
+    stock_normal INT,
+    stock_alto INT,
+    valor_total_inventario DECIMAL(15,2),
+    productos_sin_stock INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        COUNT(*)::INT as total_productos,
+        COUNT(CASE WHEN a.cantidad_unidades = 0 THEN 1 END)::INT as stock_critico,
+        COUNT(CASE WHEN a.cantidad_unidades > 0 AND a.cantidad_unidades <= 100 THEN 1 END)::INT as stock_bajo,
+        COUNT(CASE WHEN a.cantidad_unidades > 100 AND a.cantidad_unidades <= 500 THEN 1 END)::INT as stock_normal,
+        COUNT(CASE WHEN a.cantidad_unidades > 500 THEN 1 END)::INT as stock_alto,
+        SUM(a.cantidad_unidades * p.precio) as valor_total_inventario,
+        COUNT(CASE WHEN a.cantidad_unidades = 0 THEN 1 END)::INT as productos_sin_stock
+    FROM almacen a
+    JOIN presentacion p ON a.fk_presentacion = p.clave;
+END;
+$$;

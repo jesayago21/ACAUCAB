@@ -64,6 +64,16 @@ export interface TasaRuptura {
   tasa_ruptura: number;
 }
 
+export interface EstadisticasAlmacen {
+  total_productos: number;
+  stock_critico: number;
+  stock_bajo: number;
+  stock_normal: number;
+  stock_alto: number;
+  valor_total_inventario: number;
+  productos_sin_stock: number;
+}
+
 export interface VentasPorEmpleado {
   empleado_id: number;
   empleado_nombre: string;
@@ -296,6 +306,19 @@ export const dashboardService = {
   async getInventarioActual(): Promise<InventarioActual[]> {
     const data = await fetchAPI('/dashboard/inventario/actual');
     return data.data || [];
+  },
+
+  async getEstadisticasAlmacen(): Promise<EstadisticasAlmacen> {
+    const data = await fetchAPI('/dashboard/almacen/estadisticas');
+    return data.data || {
+      total_productos: 0,
+      stock_critico: 0,
+      stock_bajo: 0,
+      stock_normal: 0,
+      stock_alto: 0,
+      valor_total_inventario: 0,
+      productos_sin_stock: 0
+    };
   },
 
   // =============================================

@@ -19,6 +19,7 @@ import ComprasManagement from './ComprasManagement';
 import EntradasManagement from './EntradasManagement';
 import AsistenciaManagement from './AsistenciaManagement';
 import VentasEventoManagement from './VentasEventoManagement';
+import AlmacenManagement from './AlmacenManagement';
 
 import type { Usuario } from '../../types/auth';
 
@@ -90,7 +91,7 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             
             // Módulos de inventario
             case 'almacen':
-                return <ModulePlaceholder title="Gestión de Almacén" user={user} />;
+                return <AlmacenManagement user={user} />;
             case 'inventario-tienda':
                 return <ModulePlaceholder title="Inventario de Tienda" user={user} />;
             case 'reposicion':
@@ -142,7 +143,7 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             case 'ofertas':
                 return <OfertasManagement />;
             case 'compras':
-                return <ComprasManagement user={user} />;
+                return <ComprasManagement onClose={() => setActiveModule('dashboard')} />;
             
             // Módulos de reportes
             case 'reportes':

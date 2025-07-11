@@ -526,6 +526,37 @@ const getDashboardCompleto = async (req, res) => {
   }
 };
 
+// =============================================
+// 4. NUEVO ENDPOINT PARA ESTADÍSTICAS DE ALMACÉN
+// =============================================
+
+// Obtener estadísticas del almacén central
+const getEstadisticasAlmacen = async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM obtener_estadisticas_almacen()');
+
+    res.json({
+      success: true,
+      data: result.rows[0] || {
+        total_productos: 0,
+        stock_critico: 0,
+        stock_bajo: 0,
+        stock_normal: 0,
+        stock_alto: 0,
+        valor_total_inventario: 0,
+        productos_sin_stock: 0
+      }
+    });
+  } catch (error) {
+    console.error('Error al obtener estadísticas del almacén:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener estadísticas del almacén',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   // Indicadores de ventas
   getVentasTotales,
@@ -542,6 +573,7 @@ module.exports = {
   getRotacionInventario,
   getTasaRupturaStock,
   getVentasPorEmpleado,
+  getEstadisticasAlmacen,
   
   // Reportes adicionales
   getVentasPorCanal,

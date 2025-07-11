@@ -35,6 +35,8 @@ router.delete('/subeventos/:id', eventController.deleteSubevento);
 router.get('/:eventoId/inventario', eventController.getInventarioEvento);
 router.put('/:eventoId/inventario', eventController.updateInventarioEvento);
 router.post('/:eventoId/inventario/transferir', eventController.transferirInventarioEvento);
+router.get('/:eventoId/inventario/estadisticas', eventController.getEstadisticasInventarioEvento);
+router.get('/almacen-disponible', eventController.getAlmacenDisponible);
 
 // =============================================
 // RUTAS PARA ASISTENCIA Y PARTICIPANTES
@@ -42,8 +44,16 @@ router.post('/:eventoId/inventario/transferir', eventController.transferirInvent
 router.post('/:eventoId/asistencia', eventController.registrarAsistencia);
 router.get('/:eventoId/asistentes', eventController.getAsistentes);
 router.post('/:eventoId/entradas', eventController.venderEntrada);
+
+// =============================================
+// RUTAS PARA GESTIÓN DE INVITADOS
+// =============================================
+router.get('/tipos-invitado', eventController.getTiposInvitado);
 router.get('/:eventoId/invitados', eventController.getInvitados);
 router.post('/:eventoId/invitados', eventController.agregarInvitado);
+router.put('/:eventoId/invitados/:invitadoId/entrada', eventController.registrarEntradaInvitado);
+router.put('/:eventoId/invitados/:invitadoId/salida', eventController.registrarSalidaInvitado);
+router.get('/:eventoId/invitados/estadisticas', eventController.getEstadisticasInvitados);
 
 // =============================================
 // RUTAS PARA ESTADÍSTICAS Y REPORTES

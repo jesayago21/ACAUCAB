@@ -137,4 +137,90 @@ export interface PuntosCliente {
   puntos_disponibles: number;
   valor_en_bolivares: number;
   tasa_cambio: number;
+}
+
+// =============================================
+// TIPOS PARA GESTIÓN DE COMPRAS
+// =============================================
+
+export interface OrdenCompra {
+  clave: number;
+  fecha: string;
+  monto_total: number;
+  miembro_rif: number;
+  miembro_nombre: string;
+  estado_actual: string;
+  fecha_estado: string;
+  cantidad_detalles: number;
+}
+
+export interface DetalleOrdenCompra {
+  clave: number;
+  fecha: string;
+  monto_total: number;
+  miembro: {
+    rif: number;
+    nombre: string;
+  };
+  estado_actual: string;
+  fecha_estado: string;
+  detalles: Array<{
+    clave: number;
+    almacen_clave: number;
+    presentacion_nombre: string;
+    cerveza_nombre: string;
+    cantidad: number;
+    precio_unitario: number;
+  }>;
+}
+
+export interface EstadisticasCompras {
+  total_ordenes: number;
+  total_monto: number;
+  promedio_por_orden: number;
+  ordenes_pendientes: number;
+  ordenes_procesando: number;
+  ordenes_completadas: number;
+  top_proveedores: Array<{
+    miembro_rif: number;
+    miembro_nombre: string;
+    total_ordenes: number;
+    total_monto: number;
+  }>;
+}
+
+export interface MiembroProveedor {
+  rif: number;
+  razon_social: string;
+  denominacion_comercial: string;
+  total_ordenes: number;
+  total_monto: number;
+  ultima_orden: string;
+}
+
+export interface EstadoCompra {
+  clave: number;
+  estado: string;
+  aplicable_a: string;
+  descripcion?: string;
+}
+
+export interface ProductoCompra {
+  almacen_id: number;
+  presentacion_id: number;
+  presentacion_nombre: string;
+  precio: number;
+  cerveza_nombre: string;
+  tipo_cerveza: string;
+  stock_actual: number;
+  miembro_rif: number;
+  miembro_nombre: string;
+  nivel_stock: 'Crítico' | 'Bajo' | 'Normal' | 'Alto';
+}
+
+export interface HistorialEstado {
+  fecha: string;
+  estado: string;
+  comentario?: string;
+  tipo_entidad: string;
 } 

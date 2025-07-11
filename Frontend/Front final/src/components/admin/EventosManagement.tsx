@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { eventService, type Evento, type TipoEvento } from '../../services/eventService';
 import { lugarService, type Lugar } from '../../services/api';
 import SubeventosManagement from './SubeventosManagement';
+import LugaresSelector from './LugaresSelector';
+import InvitadosManagement from './InvitadosManagement';
+import InventarioEventosManagement from './InventarioEventosManagement';
 
 interface EventosManagementProps {
   onClose?: () => void;
@@ -17,6 +20,10 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
   const [editingEvent, setEditingEvent] = useState<Evento | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Evento | null>(null);
   const [showSubeventos, setShowSubeventos] = useState(false);
+  const [showInvitados, setShowInvitados] = useState(false);
+  const [showInventario, setShowInventario] = useState(false);
+  const [activeTab, setActiveTab] = useState<'eventos' | 'crear' | 'invitados' | 'inventario'>('eventos');
+  
   const [filtros, setFiltros] = useState({
     fecha_inicio: '',
     fecha_fin: '',
@@ -24,11 +31,12 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
     lugar_id: ''
   });
 
-  // Form state
+  // Form state mejorado
   const [formData, setFormData] = useState({
     nombre: '',
     fecha_inicio: '',
     fecha_fin: '',
+    hora_inicio: '',
     direccion: '',
     precio_entrada: '',
     fk_lugar: '',
@@ -84,7 +92,6 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
         lugar_id: filtros.lugar_id ? parseInt(filtros.lugar_id, 10) : undefined,
       };
 
-      // Eliminar claves con valores undefined o vacíos
       const filtrosLimpios = Object.fromEntries(
         Object.entries(filtrosApi).filter(([, value]) => value != null && value !== '')
       ) as { [key: string]: any };
@@ -132,12 +139,19 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
     const tipoEvento = tiposEvento.find(t => t.nombre === evento.tipo_evento);
     const lugar = lugares.find(l => l.nombre === evento.lugar);
 
-    // Helper para formatear la fecha a YYYY-MM-DD
     const formatDate = (dateString: string) => {
       try {
         return new Date(dateString).toISOString().split('T')[0];
       } catch {
-        return ''; // Retorna vacío si la fecha es inválida
+        return '';
+      }
+    };
+
+    const formatTime = (dateString: string) => {
+      try {
+        return new Date(dateString).toISOString().split('T')[1]?.substring(0, 5) || '';
+      } catch {
+        return '';
       }
     };
     
@@ -145,13 +159,14 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
       nombre: evento.nombre,
       fecha_inicio: formatDate(evento.fecha_inicio),
       fecha_fin: formatDate(evento.fecha_fin),
+      hora_inicio: formatTime(evento.fecha_inicio),
       direccion: evento.direccion,
       precio_entrada: evento.precio_entrada?.toString() || '',
       fk_lugar: lugar ? lugar.clave.toString() : '',
       fk_tipo_evento: tipoEvento ? tipoEvento.clave.toString() : '',
       fk_evento: evento.evento_padre_id?.toString() || ''
     });
-    setShowForm(true);
+    setActiveTab('crear');
   };
 
   const handleDelete = async (eventoId: number) => {
@@ -173,6 +188,7 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
       nombre: '',
       fecha_inicio: '',
       fecha_fin: '',
+      hora_inicio: '',
       direccion: '',
       precio_entrada: '',
       fk_lugar: '',
@@ -180,12 +196,30 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
       fk_evento: ''
     });
     setEditingEvent(null);
-    setShowForm(false);
+    setActiveTab('eventos');
   };
 
   const verSubeventos = (evento: Evento) => {
     setSelectedEvent(evento);
     setShowSubeventos(true);
+  };
+
+  const verInvitados = (evento: Evento) => {
+    setSelectedEvent(evento);
+    setShowInvitados(true);
+  };
+
+  const verInventario = (evento: Evento) => {
+    setSelectedEvent(evento);
+    setShowInventario(true);
+  };
+
+  /** Manejar cambio de lugar con el selector jerárquico */
+  const handleLugarChange = (lugarId: number | null, lugar?: Lugar) => {
+    setFormData(prev => ({
+      ...prev,
+      fk_lugar: lugarId ? lugarId.toString() : ''
+    }));
   };
 
   if (loading && eventos.length === 0) {
@@ -202,11 +236,11 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Gestión de Eventos</h2>
-          <p className="text-gray-600">Administra eventos, sub-eventos e inventarios</p>
+          <p className="text-gray-600">Administra eventos, sub-eventos, invitados e inventarios</p>
         </div>
         <div className="flex space-x-2">
           <button
-            onClick={() => setShowForm(true)}
+            onClick={() => setActiveTab('crear')}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Nuevo Evento
@@ -228,6 +262,35 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
         </div>
       )}
 
+      {/* Tabs */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('eventos')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'eventos'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Eventos ({eventos.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('crear')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'crear'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            {editingEvent ? 'Editar Evento' : 'Crear Evento'}
+          </button>
+        </nav>
+      </div>
+
+      {/* Contenido de tabs */}
+      {activeTab === 'eventos' && (
+        <div className="space-y-6">
       {/* Filtros */}
       <div className="bg-white p-4 rounded-lg shadow border">
         <h3 className="text-lg font-semibold mb-4">Filtros</h3>
@@ -318,7 +381,7 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
                   Lugar
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Sub-eventos
+                  Actividades
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Asistentes
@@ -342,6 +405,14 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
                       <div className="text-sm text-gray-500">
                         {evento.direccion}
                       </div>
+                          {evento.precio_entrada && (
+                            <div className="text-sm text-green-600">
+                              Entrada: {new Intl.NumberFormat('es-VE', {
+                                style: 'currency',
+                                currency: 'VES'
+                              }).format(evento.precio_entrada)}
+                            </div>
+                          )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -372,7 +443,29 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
                       currency: 'VES'
                     }).format(evento.ingresos_totales)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex flex-col space-y-1">
+                          <div className="flex space-x-2">
+                    <button
+                      onClick={() => verSubeventos(evento)}
+                      className="text-green-600 hover:text-green-900"
+                    >
+                      Actividades
+                    </button>
+                            <button
+                              onClick={() => verInvitados(evento)}
+                              className="text-purple-600 hover:text-purple-900"
+                            >
+                              Invitados
+                            </button>
+                          </div>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => verInventario(evento)}
+                              className="text-orange-600 hover:text-orange-900"
+                            >
+                              Inventario
+                            </button>
                     <button
                       onClick={() => handleEdit(evento)}
                       className="text-blue-600 hover:text-blue-900"
@@ -380,17 +473,13 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
                       Editar
                     </button>
                     <button
-                      onClick={() => verSubeventos(evento)}
-                      className="text-green-600 hover:text-green-900"
-                    >
-                      Sub-eventos
-                    </button>
-                    <button
                       onClick={() => handleDelete(evento.clave)}
                       className="text-red-600 hover:text-red-900"
                     >
                       Eliminar
                     </button>
+                          </div>
+                        </div>
                   </td>
                 </tr>
               ))}
@@ -398,12 +487,12 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
           </table>
         </div>
       </div>
+        </div>
+      )}
 
-      {/* Modal de Formulario */}
-      {showForm && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
+      {/* Tab de Crear/Editar Evento */}
+      {activeTab === 'crear' && (
+        <div className="bg-white p-6 rounded-lg shadow border">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 {editingEvent ? 'Editar Evento' : 'Nuevo Evento'}
               </h3>
@@ -460,6 +549,18 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
                       className="w-full border border-gray-300 rounded-md px-3 py-2"
                     />
                   </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Hora de Inicio
+                </label>
+                <input
+                  type="time"
+                  value={formData.hora_inicio}
+                  onChange={(e) => setFormData(prev => ({ ...prev, hora_inicio: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+              </div>
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -480,20 +581,32 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
                     </select>
                   </div>
                   
-                  <div>
+              <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Lugar *
                     </label>
+                <LugaresSelector
+                  value={formData.fk_lugar ? parseInt(formData.fk_lugar) : undefined}
+                  onChange={handleLugarChange}
+                  placeholder="Seleccionar lugar del evento"
+                  required
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Evento Padre (opcional)
+                </label>
                     <select
-                      required
-                      value={formData.fk_lugar}
-                      onChange={(e) => setFormData(prev => ({ ...prev, fk_lugar: e.target.value }))}
+                  value={formData.fk_evento}
+                  onChange={(e) => setFormData(prev => ({ ...prev, fk_evento: e.target.value }))}
                       className="w-full border border-gray-300 rounded-md px-3 py-2"
                     >
-                      <option value="">Seleccionar lugar</option>
-                      {lugares.map((lugar) => (
-                        <option key={lugar.clave} value={lugar.clave}>
-                          {lugar.nombre}
+                  <option value="">Evento principal</option>
+                  {eventos.filter(e => !e.evento_padre_id).map((evento) => (
+                    <option key={evento.clave} value={evento.clave}>
+                      {evento.nombre}
                         </option>
                       ))}
                     </select>
@@ -530,8 +643,6 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
                   </button>
                 </div>
               </form>
-            </div>
-          </div>
         </div>
       )}
 
@@ -561,7 +672,64 @@ export default function EventosManagement({ onClose }: EventosManagementProps) {
                 onClose={() => setShowSubeventos(false)}
                 onUpdate={loadInitialData}
               />
+            </div>
+          </div>
+        </div>
+      )}
 
+      {/* Modal de Invitados */}
+      {showInvitados && selectedEvent && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border w-11/12 md:w-4/5 lg:w-3/4 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Invitados de: {selectedEvent.nombre}
+                </h3>
+                <button
+                  onClick={() => setShowInvitados(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <InvitadosManagement
+                eventoId={selectedEvent.clave}
+                eventoNombre={selectedEvent.nombre}
+                onClose={() => setShowInvitados(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Inventario */}
+      {showInventario && selectedEvent && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-10 mx-auto p-5 border w-11/12 md:w-4/5 lg:w-3/4 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Inventario de: {selectedEvent.nombre}
+                </h3>
+                <button
+                  onClick={() => setShowInventario(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <InventarioEventosManagement
+                eventoId={selectedEvent.clave}
+                eventoNombre={selectedEvent.nombre}
+                onClose={() => setShowInventario(false)}
+              />
             </div>
           </div>
         </div>

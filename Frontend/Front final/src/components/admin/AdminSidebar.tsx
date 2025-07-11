@@ -52,6 +52,7 @@ const canAccessModule = (user: User, module: string): boolean => {
 
         // Gestión de inventario - usar permisos básicos
         case 'inventario':
+            return true; // El módulo padre siempre debe ser visible si tiene hijos
         case 'almacen':
             return hasPermission(user, 'Consultar almacen');
         case 'inventario-tienda':
@@ -78,7 +79,13 @@ const canAccessModule = (user: User, module: string): boolean => {
         // Gestión de compras - usar permisos básicos
         case 'compras':
         case 'estados-compra':
-            return hasPermission(user, 'Consultar compra');
+            const canAccessCompras = hasPermission(user, 'Consultar compra') || hasPermission(user, 'consultar compra');
+            console.log('Verificando acceso a compras:', {
+                module: module,
+                userPermisos: user.permisos.map(p => p.nombre),
+                hasPermission: canAccessCompras
+            });
+            return canAccessCompras;
 
         // Gestión de eventos - usar permisos básicos
         case 'eventos':
@@ -189,6 +196,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
         canAccessModule(user, module.id) || module.children.length > 0
     );
 
+    console.log('Módulos visibles:', {
+        allModules: menuModules,
+        visibleModules: visibleModules,
+        userPermisos: user.permisos.map(p => p.nombre)
+    });
+
     return (
         <div className={`bg-gray-900 text-white h-screen fixed left-0 top-0 z-50 transition-all duration-300 ${
             isCollapsed ? 'w-16' : 'w-64'
@@ -240,7 +253,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                     {visibleModules.map(module => (
                         <div key={module.id} className="mb-2">
                             {/* Módulo principal */}
-                            {module.children.length > 0 && (module.id === 'inventario' || module.id === 'eventos') ? (
+                            {module.children.length > 0 && (module.id === 'inventario' || module.id === 'eventos' || module.id === 'usuarios' || module.id === 'ventas') ? (
                                 // Módulos padre que no son clickeables
                                 <div className={`w-full flex items-center p-3 rounded-lg text-gray-400 cursor-default ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
                                     <span className="text-lg">{module.icon}</span>

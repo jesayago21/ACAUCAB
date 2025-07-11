@@ -346,7 +346,7 @@ const DashboardAvanzado: React.FC = () => {
                                             Monto
                                         </th>
                                         <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            %
+                                            % de ganancias totales
                                         </th>
                                     </tr>
                                 </thead>

@@ -28,6 +28,11 @@ router.get('/inventario/ruptura-stock', dashboardController.getTasaRupturaStock)
 router.get('/inventario/actual', dashboardController.getInventarioActual);
 
 // =============================================
+// RUTAS PARA ESTADÍSTICAS DE ALMACÉN
+// =============================================
+router.get('/almacen/estadisticas', dashboardController.getEstadisticasAlmacen);
+
+// =============================================
 // RUTA PARA DASHBOARD COMPLETO
 // =============================================
 router.get('/completo', dashboardController.getDashboardCompleto);
