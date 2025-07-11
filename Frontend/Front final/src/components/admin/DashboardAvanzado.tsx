@@ -239,6 +239,37 @@ const DashboardAvanzado: React.FC = () => {
                 </div>
             )}
 
+            {/* Análisis de Clientes */}
+            {dashboard.indicadores_clientes && dashboard.indicadores_clientes.clientes_nuevos_vs_recurrentes && (
+                <div className="bg-white p-6 rounded-lg shadow border">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Análisis de Clientes</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {dashboard.indicadores_clientes.clientes_nuevos_vs_recurrentes.map((cliente) => (
+                            <div key={cliente.tipo_cliente} className="bg-gray-50 p-4 rounded-lg border flex items-center">
+                                <div className="mr-4">
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                                        cliente.tipo_cliente === 'Nuevos' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                                    }`}>
+                                        <span className="text-2xl">{cliente.tipo_cliente === 'Nuevos' ? '👋' : '👑'}</span>
+                                    </div>
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-sm font-medium text-gray-600">
+                                        Clientes {cliente.tipo_cliente}
+                                    </p>
+                                    <p className="text-2xl font-bold text-gray-900">
+                                        {cliente.cantidad.toLocaleString()}
+                                    </p>
+                                    <p className="text-sm text-gray-500">
+                                        {formatPercentage(cliente.porcentaje)} del total
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {dashboard.indicadores_ventas.volumen_unidades && (
                  <div className="bg-white p-6 rounded-lg shadow border">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Volumen de Unidades Vendidas</h3>
@@ -397,6 +428,66 @@ const DashboardAvanzado: React.FC = () => {
                 </div>
             )}
 
+            {/* Mejores Productos */}
+            {dashboard.indicadores_ventas.mejores_productos && dashboard.indicadores_ventas.mejores_productos.length > 0 && (
+                <div className="bg-white p-6 rounded-lg shadow border">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Mejores Productos Vendidos</h3>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Producto</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Productor</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
+                                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Unidades</th>
+                                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ingresos</th>
+                                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">% Total</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {dashboard.indicadores_ventas.mejores_productos.map((producto, index) => (
+                                    <tr key={`mejor-producto-${index}`} className="hover:bg-gray-50">
+                                        <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{producto.producto_nombre}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{producto.productor_nombre}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{producto.categoria}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-right text-gray-900">{producto.unidades_vendidas.toLocaleString()}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900">{safeFormatCurrency(producto.ingresos_generados)}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-right text-gray-500">{formatPercentage(producto.porcentaje_del_total)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {/* Rotación de Inventario */}
+            {dashboard.indicadores_inventario.rotacion_inventario && dashboard.indicadores_inventario.rotacion_inventario.length > 0 && (
+                <div className="bg-white p-6 rounded-lg shadow border">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Eficiencia del Inventario</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {dashboard.indicadores_inventario.rotacion_inventario.map((item) => (
+                            <div key={item.tipo_inventario} className="bg-gray-50 p-4 rounded-lg border">
+                                <p className="text-sm font-medium text-gray-600 mb-2">
+                                    Inventario de {item.tipo_inventario}
+                                </p>
+                                <div className="flex justify-between items-center mb-1">
+                                    <p className="text-gray-800">Rotación de Inventario</p>
+                                    <p className="text-lg font-bold text-blue-600">{formatDecimal(item.rotacion_inventario)}</p>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <p className="text-gray-800">Días para Vender</p>
+                                    <p className="text-lg font-bold text-blue-600">{formatDecimal(item.dias_inventario)} días</p>
+                                </div>
+                                <div className="mt-2 text-xs text-gray-500">
+                                    Valor Promedio: {safeFormatCurrency(item.valor_promedio_inventario)}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {/* Reporte de Inventario Actual */}
             {dashboard.indicadores_inventario && dashboard.indicadores_inventario.inventario_actual && (
                 <div className="bg-white p-6 rounded-lg shadow border col-span-1 md:col-span-2 lg:col-span-3">
@@ -431,6 +522,40 @@ const DashboardAvanzado: React.FC = () => {
                                                 {item.estado_stock}
                                             </span>
                                         </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {/* Ventas por Empleado */}
+            {dashboard.indicadores_operaciones && dashboard.indicadores_operaciones.ventas_por_empleado && dashboard.indicadores_operaciones.ventas_por_empleado.length > 0 && (
+                <div className="bg-white p-6 rounded-lg shadow border col-span-1 md:col-span-2 lg:col-span-3">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Rendimiento de Ventas por Empleado</h3>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Empleado</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cargo</th>
+                                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">N° Ventas</th>
+                                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto Total</th>
+                                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket Promedio</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {dashboard.indicadores_operaciones.ventas_por_empleado.map((empleado) => (
+                                    <tr key={empleado.empleado_id}>
+                                        <td className="px-4 py-4 whitespace-nowrap">
+                                            <div className="text-sm font-medium text-gray-900">{empleado.empleado_nombre}</div>
+                                            <div className="text-sm text-gray-500">ID: {empleado.empleado_id}</div>
+                                        </td>
+                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{empleado.cargo}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-right text-gray-900">{empleado.cantidad_ventas.toLocaleString()}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900">{safeFormatCurrency(empleado.monto_total_ventas)}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-right text-gray-500">{safeFormatCurrency(empleado.ticket_promedio)}</td>
                                     </tr>
                                 ))}
                             </tbody>
