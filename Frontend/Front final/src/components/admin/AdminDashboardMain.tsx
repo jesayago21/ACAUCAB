@@ -20,6 +20,7 @@ import EntradasManagement from './EntradasManagement';
 import AsistenciaManagement from './AsistenciaManagement';
 import VentasEventoManagement from './VentasEventoManagement';
 import AlmacenManagement from './AlmacenManagement';
+import InventarioEventosManagement from './InventarioEventosManagement';
 
 import type { Usuario } from '../../types/auth';
 
@@ -139,7 +140,8 @@ const AdminDashboardMain: React.FC<AdminDashboardMainProps> = ({ user, onLogout 
             case 'asistencia':
                 return <AsistenciaManagement />;
             case 'inventario-eventos':
-                return <ModulePlaceholder title="Inventario de Eventos" user={user} />;
+                // Este módulo se maneja desde EventosManagement, no como módulo independiente
+                return <EventosManagement />;
             case 'ofertas':
                 return <OfertasManagement />;
             case 'compras':

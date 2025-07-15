@@ -35,8 +35,10 @@ router.delete('/subeventos/:id', eventController.deleteSubevento);
 router.get('/:eventoId/inventario', eventController.getInventarioEvento);
 router.put('/:eventoId/inventario', eventController.updateInventarioEvento);
 router.post('/:eventoId/inventario/transferir', eventController.transferirInventarioEvento);
+router.post('/:eventoId/inventario/crear', eventController.crearInventarioEvento);
 router.get('/:eventoId/inventario/estadisticas', eventController.getEstadisticasInventarioEvento);
 router.get('/almacen-disponible', eventController.getAlmacenDisponible);
+router.get('/presentaciones-disponibles', eventController.getPresentacionesDisponibles);
 
 // =============================================
 // RUTAS PARA ASISTENCIA Y PARTICIPANTES

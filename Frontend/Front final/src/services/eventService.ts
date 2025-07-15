@@ -53,6 +53,43 @@ export interface EstadisticasEntrada {
   ingresos_totales: number;
 }
 
+/** Interfaces para inventario de eventos */
+export interface InventarioEvento {
+  inventario_id: number;
+  presentacion_id: number;
+  presentacion_nombre: string;
+  cerveza_nombre: string;
+  tipo_cerveza: string;
+  cantidad_unidades: number;
+  precio: number;
+  ean_13: string;
+  miembro_nombre: string;
+}
+
+export interface ProductoAlmacen {
+  almacen_id: number;
+  presentacion_id: number;
+  presentacion_nombre: string;
+  cerveza_nombre: string;
+  tipo_cerveza: string;
+  cantidad_disponible: number;
+  precio: number;
+  miembro_nombre: string;
+}
+
+export interface PresentacionDisponible {
+  presentacion_id: number;
+  presentacion_nombre: string;
+  precio: number;
+  ean_13: string;
+  cantidad_unidades: number;
+  cerveza_nombre: string;
+  grado_alcohol: number;
+  tipo_cerveza: string;
+  miembro_rif: number;
+  miembro_nombre: string;
+}
+
 
 /** Función utilitaria para realizar peticiones */
 async function fetchAPI(endpoint: string, options?: RequestInit) {
@@ -208,7 +245,7 @@ export const eventService = {
   // INVENTARIO DE EVENTOS
   // =============================================
 
-  async getInventarioEvento(eventoId: number): Promise<any[]> { // Changed from InventarioEvento[] to any[]
+  async getInventarioEvento(eventoId: number): Promise<InventarioEvento[]> {
     const data = await fetchAPI(`/eventos/${eventoId}/inventario`);
     return data.data || [];
   },
@@ -228,6 +265,16 @@ export const eventService = {
       method: 'POST',
       body: JSON.stringify({
         almacen_id: almacenId,
+        cantidad: cantidad,
+      }),
+    });
+  },
+
+  async crearInventarioEvento(eventoId: number, presentacionId: number, cantidad: number): Promise<void> {
+    await fetchAPI(`/eventos/${eventoId}/inventario/crear`, {
+      method: 'POST',
+      body: JSON.stringify({
+        presentacion_id: presentacionId,
         cantidad: cantidad,
       }),
     });
@@ -347,17 +394,13 @@ export const eventService = {
     return data.data;
   },
 
-  async getAlmacenDisponible(): Promise<Array<{
-    almacen_id: number;
-    presentacion_id: number;
-    presentacion_nombre: string;
-    cerveza_nombre: string;
-    tipo_cerveza: string;
-    miembro: string;
-    cantidad_disponible: number;
-    precio: number;
-  }>> {
+  async getAlmacenDisponible(): Promise<ProductoAlmacen[]> {
     const data = await fetchAPI('/eventos/almacen-disponible');
+    return data.data || [];
+  },
+
+  async getPresentacionesDisponibles(): Promise<PresentacionDisponible[]> {
+    const data = await fetchAPI('/eventos/presentaciones-disponibles');
     return data.data || [];
   }
 }; 

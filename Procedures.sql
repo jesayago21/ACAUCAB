@@ -4480,7 +4480,8 @@ BEGIN
             AVG(COALESCE(items_por_venta.cantidad_items, 0)) as avg_items
         FROM venta_tienda_fisica vf
         LEFT JOIN (
-            SELECT fk_venta_tienda_fisica, SUM(cantidad) as cantidad_items FROM detalle_venta_fisica GROUP BY fk_venta_tienda_fisica
+            SELECT fk_venta_tienda_fisica, SUM(cantidad) as cantidad_items FROM detalle_venta_fisica 
+            GROUP BY fk_venta_tienda_fisica
         ) items_por_venta ON vf.clave = items_por_venta.fk_venta_tienda_fisica
         WHERE vf.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
         
@@ -4615,9 +4616,13 @@ AS $$
 BEGIN
     RETURN QUERY
     WITH clientes_inicio AS (
-        SELECT DISTINCT fk_cliente as cliente_id FROM venta_tienda_fisica WHERE fecha < p_fecha_inicio AND fk_cliente IS NOT NULL UNION
-        SELECT DISTINCT c.clave as cliente_id FROM venta_online vo JOIN usuario u ON vo.fk_usuario = u.clave JOIN cliente c ON u.fk_cliente = c.clave WHERE vo.fecha < p_fecha_inicio AND c.clave IS NOT NULL UNION
-        SELECT DISTINCT fk_cliente as cliente_id FROM venta_evento WHERE fecha < p_fecha_inicio AND fk_cliente IS NOT NULL
+        SELECT DISTINCT fk_cliente as cliente_id FROM venta_tienda_fisica 
+        
+        WHERE fecha < p_fecha_inicio AND fk_cliente IS NOT NULL UNION
+        SELECT DISTINCT c.clave as cliente_id FROM venta_online vo JOIN usuario u ON vo.fk_usuario = u.clave 
+        JOIN cliente c ON u.fk_cliente = c.clave WHERE vo.fecha < p_fecha_inicio AND c.clave IS NOT NULL UNION
+        SELECT DISTINCT fk_cliente as cliente_id FROM venta_evento WHERE fecha < p_fecha_inicio 
+        AND fk_cliente IS NOT NULL
     ),
     clientes_periodo AS (
         SELECT DISTINCT fk_cliente as cliente_id FROM venta_tienda_fisica WHERE fecha BETWEEN p_fecha_inicio AND p_fecha_fin AND fk_cliente IS NOT NULL UNION
@@ -4663,7 +4668,8 @@ BEGIN
     RETURN QUERY
     WITH ventas_periodo AS (
         SELECT 'Almacén'::VARCHAR(20) as tipo, COALESCE(SUM(dvo.cantidad), 0) as unidades_vendidas
-        FROM detalle_venta_online dvo JOIN venta_online vo ON dvo.fk_venta_online = vo.clave WHERE vo.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+        FROM detalle_venta_online dvo JOIN venta_online vo ON dvo.fk_venta_online = vo.clave 
+        WHERE vo.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
         UNION ALL
         SELECT 'Tienda'::VARCHAR(20) as tipo, COALESCE(SUM(dvf.cantidad), 0) as unidades_vendidas
         FROM detalle_venta_fisica dvf JOIN venta_tienda_fisica vf ON dvf.fk_venta_tienda_fisica = vf.clave WHERE vf.fecha BETWEEN p_fecha_inicio AND p_fecha_fin
@@ -5003,7 +5009,8 @@ BEGIN
             ELSE c.razon_social
         END::TEXT AS nombre_cliente,
         -- Se corrige el nombre de la columna a 'direccion_email'
-        (SELECT ce.direccion_email FROM correo_electronico ce WHERE ce.fk_cliente = c.clave LIMIT 1) AS email_cliente,
+        (SELECT ce.direccion_email FROM correo_electronico ce 
+        WHERE ce.fk_cliente = c.clave LIMIT 1) AS email_cliente,
         -- Obtiene el estado más reciente de la venta desde el histórico
         (SELECT e.estado 
          FROM historico h
@@ -5047,7 +5054,8 @@ BEGIN
             WHEN c.tipo = 'natural' THEN c.primer_nombre || ' ' || c.primer_apellido
             ELSE c.razon_social
         END::TEXT AS nombre_cliente,
-        (SELECT ce.direccion_email FROM correo_electronico ce WHERE ce.fk_cliente = c.clave LIMIT 1) AS email_cliente,
+        (SELECT ce.direccion_email FROM correo_electronico ce 
+        WHERE ce.fk_cliente = c.clave LIMIT 1) AS email_cliente,
         (SELECT e.estado
          FROM historico h
          JOIN estatus e ON h.fk_estatus = e.clave

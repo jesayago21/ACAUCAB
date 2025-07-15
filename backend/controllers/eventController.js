@@ -628,6 +628,53 @@ const transferirInventarioEvento = async (req, res) => {
   }
 };
 
+// Crear nueva entrada de inventario para evento
+const crearInventarioEvento = async (req, res) => {
+  try {
+    const { eventoId } = req.params;
+    const { presentacion_id, cantidad } = req.body;
+
+    if (!presentacion_id || !cantidad) {
+      return res.status(400).json({
+        success: false,
+        message: 'Se requiere presentacion_id y cantidad'
+      });
+    }
+
+    // Verificar si ya existe inventario para esta presentación en el evento
+    const existingResult = await pool.query(
+      'SELECT clave FROM inventario_evento WHERE fk_evento = $1 AND fk_presentacion = $2',
+      [eventoId, presentacion_id]
+    );
+
+    if (existingResult.rows.length > 0) {
+      // Si ya existe, actualizar la cantidad
+      const updateResult = await pool.query(
+        'UPDATE inventario_evento SET cantidad_unidades = cantidad_unidades + $1 WHERE fk_evento = $2 AND fk_presentacion = $3',
+        [cantidad, eventoId, presentacion_id]
+      );
+    } else {
+      // Si no existe, crear nueva entrada
+      const insertResult = await pool.query(
+        'INSERT INTO inventario_evento (fk_presentacion, fk_evento, cantidad_unidades) VALUES ($1, $2, $3)',
+        [presentacion_id, eventoId, cantidad]
+      );
+    }
+
+    res.json({
+      success: true,
+      message: 'Inventario asignado exitosamente'
+    });
+  } catch (error) {
+    console.error('Error al crear inventario de evento:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al crear inventario de evento',
+      error: error.message
+    });
+  }
+};
+
 // 5. GESTIÓN DE ASISTENCIA Y PARTICIPANTES
 // ---------------------------------------------
 
@@ -989,6 +1036,42 @@ const getAlmacenDisponible = async (req, res) => {
   }
 };
 
+// Obtener todas las presentaciones disponibles para asignar a eventos
+const getPresentacionesDisponibles = async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        p.clave as presentacion_id,
+        p.nombre as presentacion_nombre,
+        p.precio,
+        p.ean_13,
+        p.cantidad_unidades,
+        c.nombre as cerveza_nombre,
+        c.grado_alcohol,
+        tc.nombre as tipo_cerveza,
+        m.rif as miembro_rif,
+        m.razon_social as miembro_nombre
+      FROM presentacion p
+      JOIN cerveza c ON p.fk_cerveza = c.clave
+      JOIN tipo_cerveza tc ON c.fk_tipo_cerveza = tc.clave
+      JOIN miembro m ON c.fk_miembro = m.rif
+      ORDER BY c.nombre, p.nombre
+    `);
+
+    res.json({
+      success: true,
+      data: result.rows
+    });
+  } catch (error) {
+    console.error('Error al obtener presentaciones disponibles:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener presentaciones disponibles',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   // Tipos de evento
   getTiposEvento,
@@ -1015,8 +1098,10 @@ module.exports = {
   getInventarioEvento,
   updateInventarioEvento,
   transferirInventarioEvento,
+  crearInventarioEvento, // Added this line
   getEstadisticasInventarioEvento,
   getAlmacenDisponible,
+  getPresentacionesDisponibles,
   
   // Asistencia y participantes
   registrarAsistencia,
